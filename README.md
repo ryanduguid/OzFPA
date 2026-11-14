@@ -155,13 +155,18 @@ Read on 12 November 2026:
 Read on 15 November 2026:
 
 - [XBert 13-Week Cashflow](https://github.com/XBertIntelligence/XBert-Plugins/tree/main/plugins/xbert-cashflow-13week)
-  (MIT in its plugin manifest, at commit e8f489f5; the plugin last changed on 23 July 2026): a Claude plugin for
+  (MIT in its plugin manifest, though the repository has no licence file; at commit e8f489f5, and the plugin last
+  changed on 23 July 2026): a Claude plugin for
   accountants that pulls the bank balance, receivables, payables, payroll and tax obligations from a client's live
   Xero, MYOB or QuickBooks Online ledger and bank feed through XBert's service. Its instructions put each open invoice
   in the week of its due date plus that debtor's average delay past due (the median when skewed), name each week below
   a chosen cash threshold with its drivers, and suggest 3 actions for each: chase debtors, delay suppliers or draw on a
   facility. It needs an XBert account and at least 90 days of bank feed history. This pack needs no account and works
-  from the records the firm supplies.
+  from the records the firm supplies. From those records, `predicted_receipts` places each open invoice on the median
+  days to pay of its customer's paid invoices that took at least as long as the open one is old (every customer's
+  below 6 of those, and no date below 6 again), and `risk_week_actions` ranks up to 3 actions for each risk week:
+  chase an overdue invoice or pay a bill on its due date instead of earlier, never later than due and never a
+  facility draw.
 - [Xero's Cash flow manager](https://central.xero.com/0/article/Cash-flow-manager-with-Analytics-powered-by-Syft), in
   Analytics: projects 7 to 180 days from the bank balances in Xero, the amounts owing on invoices and bills, quotes,
   cash movements entered by hand and [recurring weekly and monthly payments](https://central.xero.com/0/article/About-cash-flow-predictions-in-Analytics-powered-by-Syft)
