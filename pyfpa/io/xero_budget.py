@@ -151,9 +151,9 @@ def _tracking_label(budget: Mapping[str, Any]) -> str:
 def _account(line: Mapping[str, Any], chart: Mapping[str, dict[str, Any]]) -> tuple[str, str, str, float]:
     """AccountID, code, name and sign of a budget line's account, from the chart."""
     account_id = line.get("AccountID")
-    account = chart.get(account_id) if isinstance(account_id, str) else None
-    if account is None:
+    if not isinstance(account_id, str) or account_id not in chart:
         raise ValueError(f"budget account {account_id!r} is not in the chart of accounts")
+    account = chart[account_id]
     code = account.get("Code") or ""
     if "AccountCode" in line and line["AccountCode"] != code:
         raise ValueError(f"budget code {line['AccountCode']!r} differs from the chart's {code!r}")
