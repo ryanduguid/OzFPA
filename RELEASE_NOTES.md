@@ -20,6 +20,11 @@ Added:
   invoice keeps one row, so the amounts add up to the receivables ledger. `predicted_receipt_flows` turns the rows
   inside the window into named 13-week receipts. It refuses a receipt before its invoice, an open invoice issued
   after the window starts, an invoice both paid and open, and customer names that differ only in case or spacing.
+- `risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each week the 13-week forecast flags
+  (`negative_weeks`, or `headroom_breach_weeks` with a facility), ranked by amount and naming each source row: chase
+  an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
+  week. An action counts only when it moves its whole amount into that week's ending cash, and nothing moves past its
+  due date, so a tax payment is never deferred past its due date. A week no action clears has no rows.
 
 Changed:
 

@@ -19,6 +19,7 @@ from pyfpa.backtest import (
     score_forecast,
     snapshot_forecast,
 )
+from pyfpa.cash13.actions import risk_week_actions
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
@@ -279,6 +280,7 @@ __all__ = [
     "render_scorecard",
     "revenue_from_config",
     "roll_up_segments",
+    "risk_week_actions",
     "runway_summary",
     "save_connector_manifest",
     "save_correction",
