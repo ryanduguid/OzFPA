@@ -85,10 +85,11 @@ def test_a_tax_payment_is_never_moved_past_its_due_date():
     assert not actions["source"].str.contains("BAS").any()
 
 
-def test_a_later_lodgment_due_date_the_business_qualifies_for_can_rank():
-    # Lodged online, the September quarter's BAS is due 11 November, week 6, so it
-    # can leave week 4, ranking between the stock bill and INV-A. It cannot help
-    # week 3, which it was never in.
+def test_a_bas_the_forecast_pays_before_its_due_date_can_rank():
+    # The business lodges online, so the September quarter's BAS is due 11 November,
+    # week 6. The forecast pays it in week 4, so paying on the due date takes it out
+    # of week 4, ranking between the stock bill and INV-A. It cannot help week 3,
+    # which it was never in.
     due = quarterly_bas_due_date(SEP_QUARTER, LodgmentChannel.ONLINE)
     assert due == date(2026, 11, 11)
     payables = _payables_with_bas(due, "BAS 2026Q1 lodged online")
@@ -108,7 +109,7 @@ def test_with_a_facility_the_weeks_below_the_buffer_are_the_risk_weeks():
     assert actions.groupby("week")["shortfall"].first().to_dict() == {3: 1000.0, 4: 10000.0}
 
 
-def test_weeks_no_action_clears_say_nothing():
+def test_weeks_no_action_helps_say_nothing():
     # Week 1 is below zero, but rent is paid on its due date and INV-C is not yet due.
     receivables = _receivables(("INV-C", "Bay Co", 500.0, "2026-10-20", 3))
     payables = _payables(("RENT-10", "Landlord", 4000.0, "2026-10-05", 1),
@@ -136,6 +137,10 @@ def test_no_risk_weeks_gives_no_actions():
         ("receivables", lambda f: f.assign(week=[2.5, *f["week"][1:]]), "from 1 to 13 or missing"),
         ("payables", lambda f: f.assign(week=[pd.NA, *f["week"][1:]]), r"from 1 to 13$"),
         ("payables", lambda f: f.assign(amount=[float("nan"), *f["amount"][1:]]), "finite number above 0"),
+        # A row that would name nobody in its action.
+        ("receivables", lambda f: f.assign(customer=[None, *f["customer"][1:]]), "needs its invoice and a customer name"),
+        ("receivables", lambda f: f.assign(invoice=[None, *f["invoice"][1:]]), "needs its invoice and a customer name"),
+        ("payables", lambda f: f.assign(payee=[" ", *f["payee"][1:]]), "needs its bill and a payee name"),
     ],
 )
 def test_rows_that_cannot_be_ranked_are_refused(which, change, match):

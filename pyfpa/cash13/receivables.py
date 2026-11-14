@@ -7,11 +7,16 @@ A paid invoice's days to pay run from its issue date to the receipt that
 cleared it. An open invoice already `age` days old can only be paid by a
 customer who takes at least that long, so its forecast uses the customer's
 paid invoices that took `age` days or more, and lands the invoice on the
-nearest-rank median of them: the ceil(n / 2)-th smallest, always a day count
-the customer actually took. With fewer than `MIN_SAMPLE` such invoices it uses
-every customer's paid invoices that took `age` days or more instead, and with
-fewer than that again it forecasts nothing: the invoice stays owed and its row
-says why. Nothing is random, so the same records give the same forecast.
+nearest-rank median of them: the ceil(n / 2)-th smallest, the lower of the 2
+middle values for an even count, and always a day count one of those invoices
+took. With fewer than `MIN_SAMPLE` such invoices it uses every customer's paid
+invoices that took `age` days or more instead, and with fewer than that again
+it forecasts nothing: the invoice stays owed and its row says why. Nothing is
+random, so the same records give the same forecast.
+
+Only paid invoices count. Open invoices older than `age` will take longer
+still, so a customer whose slowest invoices are still open is forecast to pay
+sooner than it will; check the oldest open invoices before relying on a date.
 """
 
 from __future__ import annotations
@@ -25,9 +30,10 @@ import pandas as pd
 from pyfpa.cash13.schemas import WeeklyFlow
 from pyfpa.models.working_capital import _dates, _paid_history
 
-# 6 is the smallest sample whose lowest and highest values bracket the true
-# median with at least 95% confidence whatever the distribution: the chance
-# they miss it is 2 x 0.5^n, 3.1% at 6 and 6.3% at 5.
+# 6 is the smallest sample of independent payments whose lowest and highest
+# values bracket the true median with at least 95% confidence whatever the
+# distribution: the chance they miss it is at most 2 x 0.5^n, 3.1% at 6 and
+# 6.3% at 5.
 MIN_SAMPLE = 6
 PERCENTILE = 50
 
@@ -54,6 +60,9 @@ def _validated_open(open_invoices: pd.DataFrame, paid: set[str], window_start: d
     missing = {"invoice", "customer", "issued_on", "amount"} - set(open_invoices.columns)
     if missing:
         raise ValueError(f"open_invoices needs columns invoice, customer, issued_on and amount; missing {sorted(missing)}")
+    if not open_invoices.index.is_unique:
+        # Joining the forecast on a repeated label would repeat rows and overstate the ledger.
+        raise ValueError("open_invoices needs a unique index, so each invoice keeps exactly one row")
     _require_customers(open_invoices, "open_invoices")
     amounts = pd.to_numeric(open_invoices["amount"], errors="coerce")
     if not (np.isfinite(amounts) & (amounts > 0)).all():
@@ -94,9 +103,9 @@ def predicted_receipts(
     forecast's receipts.
 
     Refuses a receipt before its invoice, an open invoice issued after
-    `window_start`, an invoice both paid and open, a repeated open invoice, an
-    open invoice with no customer, and customer names that differ only in case
-    or spacing.
+    `window_start`, an invoice both paid and open, a repeated open invoice or
+    index label, an open invoice with no customer, and customer names that
+    differ only in case or spacing.
     """
     if weeks < 1:
         raise ValueError("weeks must be at least 1")

@@ -39,6 +39,8 @@ def _checked(frame: pd.DataFrame, name: str, key: str, party: str, weeks: int, *
     amounts = pd.to_numeric(frame["amount"], errors="coerce")
     if not (np.isfinite(amounts) & (amounts > 0)).all():
         raise ValueError(f"each {name} amount must be a finite number above 0")
+    if frame[key].isna().any() or not all(isinstance(value, str) and value.strip() for value in frame[party]):
+        raise ValueError(f"every {name} row needs its {key} and a {party} name")
     if frame[key].duplicated().any():
         raise ValueError(f"each {key} must appear once in {name}")
     if frame["due_on"].isna().any():
@@ -65,14 +67,17 @@ def risk_week_actions(cfg: Cash13Config, receivables: pd.DataFrame, payables: pd
     forecast expects the money (missing when it is not expected in the window),
     as `predicted_receipts` gives them with a due_on column. `payables` has bill,
     payee, amount, due_on and week, the week the forecast pays it. For a tax
-    payment, due_on is its effective due date under the lodgment channel the
-    business uses or states it qualifies for (`LodgmentChannel`), such as a
-    `bas_schedule` or `payg_instalment_schedule` due_date; never a payment plan
-    date. Name the channel in `bill` when it differs from the forecast's.
+    payment, due_on is the `bas_schedule` or `payg_instalment_schedule` due_date
+    under the `LodgmentChannel` the business already lodges by, the one the
+    forecast was built with; never a payment plan date, and never another
+    channel's later date, because nothing here can check that the business
+    qualifies for it.
 
     Returns one row per action, columns week, shortfall, rank, action, amount,
-    source and detail; a risk week no action clears has no rows. Ties in amount
-    rank by source, so the same rows always give the same answer.
+    source and detail; a risk week no action helps has no rows. An action that
+    helps several risk weeks appears in each, so its amount is not extra cash
+    for every week: add amounts within a week, never across weeks. Ties in
+    amount rank by source, so the same rows always give the same answer.
     """
     if cfg.window_start is None:
         raise ValueError("risk_week_actions needs the config's window_start to place due dates in weeks")

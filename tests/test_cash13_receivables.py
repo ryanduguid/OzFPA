@@ -145,6 +145,15 @@ def test_records_that_cannot_be_placed_without_guessing_are_refused(history, ope
         predicted_receipts(invoices, receipts, _open(*open_rows), START)
 
 
+def test_open_invoices_with_a_repeated_index_label_are_refused():
+    # Frames joined without ignore_index repeat labels; joining the forecast on
+    # them would give 4 rows for these 2 invoices and overstate the ledger.
+    open_invoices = _open(("Q-1", "Quickpay", "2026-10-26", 1000.0), ("Q-2", "Quickpay", "2026-10-26", 500.0))
+    open_invoices.index = [0, 0]
+    with pytest.raises(ValueError, match="unique index"):
+        predicted_receipts(*_history(), open_invoices, START)
+
+
 def test_open_invoices_without_the_columns_or_a_window_are_refused():
     with pytest.raises(ValueError, match=r"missing \['issued_on'\]"):
         predicted_receipts(*_history(), _open().drop(columns="issued_on"), START)
