@@ -3,11 +3,14 @@
 
 import json
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import pytest
 
+from pyfpa.au.gst import bas_schedule, monthly_gst
 from pyfpa.io.xero_budget import read_xero_budget
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -64,6 +67,23 @@ def test_overall_budget_is_untracked(tmp_path: Path) -> None:
     path.write_text(json.dumps(budget), encoding="utf-8")
     report = read_xero_budget(path, ACCOUNTS).reports["2019-08"]
     assert set(report.by_tracking()) == {"(untracked)"}
+
+
+def test_budget_feeds_monthly_gst_and_the_bas_schedule(tmp_path: Path) -> None:
+    budget = json.loads(BUDGET.read_text(encoding="utf-8"))
+    for line in _lines(budget):
+        for balance, month in zip(line["BudgetBalances"], ("2026-07", "2026-08", "2026-09"), strict=True):
+            balance["Period"] = month
+    path = tmp_path / "fy2027.json"
+    path.write_text(json.dumps(budget), encoding="utf-8")
+    read = read_xero_budget(path, ACCOUNTS)
+    months = pd.PeriodIndex(read.periods, freq="M")
+    revenue = pd.Series([read.reports[p].by_account()["Sales"] for p in read.periods], index=months)
+    purchases = pd.Series([-read.reports[p].by_account()["Entertainment"] for p in read.periods], index=months)
+    schedule = bas_schedule(monthly_gst(revenue, purchases)["net_gst"])
+    assert list(schedule["period_label"]) == ["2027Q1"]
+    assert schedule["due_date"].iloc[0] == date(2026, 10, 28)
+    assert schedule["amount"].iloc[0] == pytest.approx((3152 - 1515) * 0.1)
 
 
 def test_gst_basis_from_controls() -> None:
