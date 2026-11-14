@@ -21,6 +21,7 @@ from pyfpa.backtest import (
 )
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
+from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
 from pyfpa.cash13.runway import runway_summary
 from pyfpa.cash13.scenarios import (
     FlowChange,
@@ -258,6 +259,8 @@ __all__ = [
     "opex_from_config",
     "pareto_breakpoint",
     "persistent_miss",
+    "predicted_receipt_flows",
+    "predicted_receipts",
     "profile_table",
     "promote_challenger",
     "promote_prior",

@@ -107,6 +107,17 @@ def collection_profile_from_history(invoices: pd.DataFrame, receipts: pd.DataFra
     long enough ago that the whole cohort has paid. Text dates must be ISO
     (YYYY-MM-DD), because pandas reads '01/08/2026' as 8 January.
     """
+    paid = _paid_history(invoices, receipts)
+    lags = (paid["received"].dt.to_period("M") - paid["issued"].dt.to_period("M")).map(lambda offset: offset.n)
+    by_lag = paid["amount"].groupby(lags.to_numpy()).sum()
+    # Over the money received, which matches the invoices to the cent, so the shares add up to 1.
+    total = math.fsum(by_lag)
+    return [float(by_lag.get(lag, 0.0)) / total for lag in range(int(by_lag.index.max()) + 1)]
+
+
+def _paid_history(invoices: pd.DataFrame, receipts: pd.DataFrame) -> pd.DataFrame:
+    """Each receipt's invoice, issue date, receipt date and amount, once the history passes
+    `collection_profile_from_history`'s checks."""
     amount_of: dict[str, pd.Series] = {}
     for frame, name, date_column in ((invoices, "invoices", "issued_on"), (receipts, "receipts", "received_on")):
         missing = {"invoice", date_column, "amount"} - set(frame.columns)
@@ -134,11 +145,8 @@ def collection_profile_from_history(invoices: pd.DataFrame, receipts: pd.DataFra
               if abs(owed - got) >= 0.005]
     if unpaid:
         raise ValueError(f"invoices not paid to the cent: {unpaid}; leave out invoices still open")
-    lags = (received.dt.to_period("M") - pd.PeriodIndex(issued_for_receipt, freq="M")).map(lambda offset: offset.n)
-    by_lag = amount_of["receipts"].groupby(lags.to_numpy()).sum()
-    # Over the money received, which matches the invoices to the cent, so the shares add up to 1.
-    total = math.fsum(by_lag)
-    return [float(by_lag.get(lag, 0.0)) / total for lag in range(int(by_lag.index.max()) + 1)]
+    return pd.DataFrame({"invoice": receipts["invoice"].to_numpy(), "issued": issued_for_receipt,
+                         "received": received.to_numpy(), "amount": amount_of["receipts"].to_numpy()})
 
 
 def working_capital_from_config(

@@ -1,5 +1,16 @@
 # Unreleased
 
+Added:
+
+- `predicted_receipts(invoices, receipts, open_invoices, window_start)` forecasts when each open invoice will be paid
+  from how its customer has paid before. A paid invoice's days to pay run from its issue date to the receipt that
+  cleared it. An open invoice lands on the median of its customer's paid invoices that took at least as long as the
+  open one is already old; with fewer than 6 of those it uses every customer's, and with fewer than 6 again it is not
+  forecast and its row says so. Each row names its basis, sample size, percentile and days to pay, and every open
+  invoice keeps one row, so the amounts add up to the receivables ledger. `predicted_receipt_flows` turns the rows
+  inside the window into named 13-week receipts. It refuses a receipt before its invoice, an open invoice issued
+  after the window starts, an invoice both paid and open, and customer names that differ only in case or spacing.
+
 Changed:
 
 - `public_holidays.yaml` now holds Melbourne Cup on 3 November 2026 and Christmas Eve and New Year's Eve 2026, as
