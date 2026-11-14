@@ -42,7 +42,13 @@ the operating loop.
    on sales tied separately to 1A; (b) wages/super/payroll tax vs
    `pyfpa.au.payroll_forecast` for a matching month. Record
    differences as corrections, not adjustments in the fixture.
-6. **Connector** only for recurring pulls: `connector-scaffold` from
+6. **Budget** (optional): read a Budget Manager budget from the Accounting API with
+   `pyfpa.io.xero_budget.read_xero_budget`, from saved `GET /Budgets/{BudgetID}` and `GET /Accounts`
+   responses, as the recipe's Budget section sets out. Each month becomes a report that steps 3 to 5 apply
+   to. Settle the GST basis with `gst_inclusive` and monthly GST-exclusive controls; treat `None` as
+   unresolved. Not yet run against a live organisation; the recipe lists what is assumed. New Budgets
+   cannot export, and Xero's official MCP server has no budget tool.
+7. **Connector** only for recurring pulls: `connector-scaffold` from
    the redacted fixture, `connector-validate` as the fixture-mode
    contract test, live OAuth 2.0 PKCE implemented per company with
    host-managed credentials. Register its pulls as their own source with
@@ -77,6 +83,6 @@ the operating loop.
 
 ## Verification
 
-- `pytest tests/test_io_xero_au.py`
+- `pytest tests/test_io_xero_au.py tests/test_io_xero_budget.py`
 - One historical month end-to-end: fixture -> mapping -> reconcile ->
   payroll/GST tie-out -> record evidence in `.fpa/research/`.

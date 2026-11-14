@@ -215,6 +215,88 @@ supplied objects and writes nothing. Review removed codes against the export's
 scope: an omitted zero balance does not establish that an account was deleted.
 Amounts and GST basis still need the existing reconciliation checks.
 
+## Budget from the Xero API
+
+`pyfpa.io.xero_budget.read_xero_budget` reads a Xero budget into one `XeroReport` per month, so a budget goes through
+the same mapping, GST and reconciliation checks as an actuals export. It takes 2 JSON responses from Xero's Accounting
+API, saved by the company connector (scope `accounting.budgets.read` for the first):
+
+1. `GET /Budgets/{BudgetID}` with `DateFrom` and `DateTo`. Without them Xero returns 3 months; one request returns at
+   most 24. Only a single-budget request returns budget lines.
+2. `GET /Accounts`, because a budget line carries an account ID and code but no account name or type.
+
+**Not yet run against a live Xero organisation.** The reader is built and tested against the shape Xero publishes: the
+Budgets, Accounts and Types and Codes pages on developer.xero.com and the budget schemas in Xero's OpenAPI file
+(version 20.1.0), all read on 15 November 2026. Until it has been checked on a live organisation, these points are
+assumptions or refusals:
+
+- Expense lines are taken as positive natural balances, as in Xero's 2 published examples, and negated to this
+  module's convention (income positive, expenses negative).
+- Every line must hold the same unbroken run of months, so a month with no budget must come back as a zero. A month
+  missing from some lines, or from inside the run, is refused rather than filled with zeros. A month missing from the
+  start or end of every line cannot be told from a month outside the request, so compare `budget.periods` with the
+  months requested, as the example below does.
+- Xero's OpenAPI types the single-budget response as a list of budgets, whilst both examples show one object. Either
+  is read; a list holding more than one budget is refused.
+- The Budgets page describes `Amount` as 'LineItem Quantity' and `UnitAmount` as 'Budgeted amount', but both examples
+  carry the budget in `Amount` alone. A balance holding both is refused.
+- Lines on balance-sheet accounts and account types the Types and Codes page does not list are refused.
+
+Neither the response nor Xero's documentation states a GST basis for budget amounts. With a GST-exclusive control for
+each month, such as last year's revenue for a budget seeded from actuals, `gst_inclusive` runs `detect_gst_inclusive`
+month by month. It returns `True` if any month reads inclusive, `False` only when every month has a control and reads
+exclusive, and `None` otherwise. It refuses a budget whose months disagree. Treat `None` as unresolved, as for exports:
+only a `False` result lets the amounts feed `monthly_gst`. A `TRACKING` budget covers only its tracking options, so the
+BAS timing needs an `OVERALL` budget.
+
+```python
+import csv
+from pathlib import Path
+
+import pandas as pd
+
+from pyfpa.au.gst import bas_schedule, monthly_gst
+from pyfpa.io.xero_budget import read_xero_budget
+
+# Requested with DateFrom=2026-07-01 and DateTo=2026-09-30.
+budget = read_xero_budget("data/xero_budget_2026q3.json", "data/xero_accounts.json")
+if budget.periods != ("2026-07", "2026-08", "2026-09"):
+    raise ValueError(f"budget holds {budget.periods}, not the months requested")
+if budget.budget_type != "OVERALL":
+    raise ValueError("BAS timing needs the whole entity's budget")
+# One GST-exclusive revenue control per budget month.
+if budget.gst_inclusive({"2026-07": 41_000.0, "2026-08": 43_500.0, "2026-09": 42_000.0}) is not False:
+    raise ValueError("GST basis not shown exclusive; settle it before monthly_gst")
+
+for period in budget.periods:  # one account-total file per month for reconcile-source
+    with Path(f"data/xero_budget_{period}.csv").open("x", encoding="utf-8", newline="") as output:
+        writer = csv.writer(output)
+        writer.writerow(["Account", "Amount"])
+        writer.writerows(sorted(budget.reports[period].by_account().items()))
+
+months = pd.PeriodIndex(budget.periods, freq="M")
+revenue = pd.Series([budget.reports[p].by_account()["Sales"] for p in budget.periods], index=months)
+purchases = pd.Series([-budget.reports[p].by_account()["Purchases"] for p in budget.periods], index=months)
+schedule = bas_schedule(monthly_gst(revenue, purchases)["net_gst"])
+```
+
+Register the monthly files as their own source (for example `xero-au-budget`, `--kind api`), map them as for actuals
+and run `reconcile-source` against the totals in Xero's Budget Summary report for the same budget and month. The Xero
+API terms in Connector below apply to budget data too.
+
+Not supported, as read on 15 November 2026:
+
+- New Budgets (early access) cannot export a budget, according to Xero Central's 'Export a budget' article. Whether
+  its budgets appear in the Budgets endpoint is unconfirmed.
+- Xero Central documents what a Budget Manager import file must look like, not the layout of the file Budget Manager
+  exports, so the export is not read.
+- Xero's official MCP server (`XeroAPI/xero-mcp-server` 0.0.18) has no budget tool. Its `list-accounts` tool returns
+  text, not JSON.
+- MYOB: the MYOB MCP connector (beta) lists no budget tool. MYOB documents the fields of the
+  `GeneralLedger/AccountBudget` endpoint, one set of account budgets per financial year, but not how it relates to
+  the named budgets in MYOB Business's Budget management, whose CSV export layout is described only in outline. No
+  MYOB budget reader is provided.
+
 ## Connector
 
 Only when recurring access is worth it. The connector's pulls are a source of

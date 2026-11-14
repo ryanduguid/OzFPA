@@ -1,0 +1,43 @@
+{
+  "_fixture": "Not real data: Xero's example response for GET /Budgets/{BudgetID} on developer.xero.com/documentation/api/accounting/budgets, copied as published on 15 November 2026 (string amounts included). Not captured from a live organisation.",
+  "Budgets": {
+    "BudgetID": "c1d195d4-92aa-4abd-867a-7ac2f9d60500",
+    "Type": "TRACKING",
+    "Description": "Daniel's Northern Budget",
+    "UpdatedDateUTC": "2017-08-14T01:18:26.74",
+    "Tracking": [
+      {
+        "Name": "Region",
+        "Option": "North",
+        "TrackingCategoryID": "e94ba240-3edf-4ef3-8317-10147b968f94",
+        "Options": []
+      },
+      {
+        "Name": "Salesperson",
+        "Option": "Daniel",
+        "TrackingCategoryID": "d8580491-4167-4a81-9624-ad3bdd8e46ce",
+        "Options": []
+      }
+    ],
+    "BudgetLines": [
+      {
+        "AccountID": "9c24de87-a2b7-439d-a216-35d1af7bdec3",
+        "AccountCode": "200",
+        "BudgetBalances": [
+          {"Period": "2019-08", "Amount": "1000"},
+          {"Period": "2019-09", "Amount": "1050"},
+          {"Period": "2019-10", "Amount": "1102"}
+        ]
+      },
+      {
+        "AccountID": "385f90ae-e798-4990-9b1c-db8eb8b735c2",
+        "AccountCode": "420",
+        "BudgetBalances": [
+          {"Period": "2019-08", "Amount": "500"},
+          {"Period": "2019-09", "Amount": "505"},
+          {"Period": "2019-10", "Amount": "510"}
+        ]
+      }
+    ]
+  }
+}

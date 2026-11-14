@@ -34,7 +34,9 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
   notice given once the quarter has ended (`pyfpa.au.payg_instalments`)
 - **Xero** - report parser with tracking-category and GST-basis
   detection plus the full register/map/reconcile recipe
-  (`pyfpa.io.xero_au`, [`docs/recipes/xero-au.md`](../docs/recipes/xero-au.md))
+  (`pyfpa.io.xero_au`, [`docs/recipes/xero-au.md`](../docs/recipes/xero-au.md)),
+  and a Budget Manager budget read from the Accounting API into the same
+  monthly reports, not yet run against a live organisation (`pyfpa.io.xero_budget`)
 - **Accounting depreciation** - an opt-in charge read from a calculation-evidence
   file on disk, with the asset movement reconciled or refused and expense,
   purchases and tax kept apart (`pyfpa.au.depreciation`,
