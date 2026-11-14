@@ -25,6 +25,12 @@ Added:
   an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
   week. An action counts only when it moves its whole amount into that week's ending cash, and nothing moves past its
   due date, so a tax payment is never deferred past its due date. A week no action clears has no rows.
+- `settlement_events(..., role_withholding=...)` can take each role's Schedule 1 withholding from the Australian Tax
+  Calculators executable (`calculate_role_withholding` in `pyfpa.io.native_tax`) instead of a declared average rate,
+  which stays the default. A refusal, timeout, missing executable, other engine version, result for another scale or
+  period, fractional-dollar withholding or result without evidence stops the calculation; nothing falls back to the
+  average rate. Scale 4 and quarterly pays are refused. The [schedule withholding recipe](docs/recipes/schedule-withholding.md)
+  installs the calculator from a pinned commit, as it has no release yet (#326).
 
 Changed:
 
@@ -36,6 +42,13 @@ Changed:
   table lists it, but also gives 28 September as the first business day after 25 September, and Karratha and Port
   Hedland held that holiday on 3 August 2026, so it was not a public holiday for the whole of WA. A due date on 28
   September 2026 therefore stands, a day before the ATO's 29 September.
+
+Fixed:
+
+- Briefings refuse missing or non-finite financial values, runway cash and overflowing headline totals included,
+  and keep integer headlines and monthly rows as whole dollars without int64 wraparound or conversion to floating
+  point. Forecast exports refuse missing cells and non-finite numbers before creating staging files, and an invalid
+  report leaves the existing file in place (#322).
 
 # v0.6.0
 
