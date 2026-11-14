@@ -59,6 +59,16 @@ def test_numeric_amounts_as_the_openapi_schema_types_them(tmp_path: Path) -> Non
     _read_with(tmp_path, numbers)
 
 
+def test_single_budget_as_the_openapi_schema_types_the_response(tmp_path: Path) -> None:
+    # Xero's OpenAPI gives GET /Budgets/{BudgetID} the Budgets schema, a list of
+    # budgets, whilst both published examples show one object.
+    budget = json.loads(BUDGET.read_text(encoding="utf-8"))
+    budget["Budgets"] = [budget["Budgets"]]
+    path = tmp_path / "listed.json"
+    path.write_text(json.dumps(budget), encoding="utf-8")
+    assert read_xero_budget(path, ACCOUNTS) == read_xero_budget(BUDGET, ACCOUNTS)
+
+
 def test_overall_budget_is_untracked(tmp_path: Path) -> None:
     budget = json.loads(BUDGET.read_text(encoding="utf-8"))
     budget["Budgets"]["Type"] = "OVERALL"
@@ -135,6 +145,10 @@ def _month_13(budget: dict[str, Any], _a: dict[str, Any]) -> None:
     _lines(budget)[0]["BudgetBalances"][0]["Period"] = "2019-13"
 
 
+def _period_in_other_digits(budget: dict[str, Any], _a: dict[str, Any]) -> None:
+    _lines(budget)[0]["BudgetBalances"][0]["Period"] = "٢٠١٩-08"
+
+
 def _unit_amount(budget: dict[str, Any], _a: dict[str, Any]) -> None:
     _lines(budget)[0]["BudgetBalances"][0]["UnitAmount"] = "1000"
 
@@ -176,7 +190,7 @@ def _chart_repeats_id(_b: dict[str, Any], accounts: dict[str, Any]) -> None:
 
 
 def _list_endpoint(budget: dict[str, Any], _a: dict[str, Any]) -> None:
-    budget["Budgets"] = [budget["Budgets"]]
+    budget["Budgets"] = [budget["Budgets"], dict(budget["Budgets"], BudgetID="another")]
 
 
 def _no_lines(budget: dict[str, Any], _a: dict[str, Any]) -> None:
@@ -228,9 +242,11 @@ def _no_accounts_key(_b: dict[str, Any], accounts: dict[str, Any]) -> None:
         (_no_balances, "missing periods"),
         (_month_name, "period 'Aug-2019'"),
         (_month_13, "period '2019-13'"),
+        (_period_in_other_digits, "is not YYYY-MM"),
         (_unit_amount, "UnitAmount"),
         (_amount("1,000"), "amount '1,000'"),
         (_amount("1e3"), "amount '1e3'"),
+        (_amount("١٠٠٠"), "not a plain finite number"),
         (_amount("NaN"), "amount 'NaN'"),
         (_amount(float("inf")), "amount inf"),
         (_amount(True), "amount True"),

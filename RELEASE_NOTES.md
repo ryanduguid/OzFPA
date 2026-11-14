@@ -4,7 +4,7 @@ Added:
 
 - `pyfpa.io.xero_budget.read_xero_budget(budget, accounts)` reads a Xero budget from 2 saved Accounting API
   responses, `GET /Budgets/{BudgetID}` and `GET /Accounts`, into one `XeroReport` per month, so a budget takes the
-  same mapping, GST and `reconcile-source` checks as an export and can feed `monthly_gst`. It refuses a budget list,
+  same mapping, GST and `reconcile-source` checks as an export and can feed `monthly_gst`. It refuses a list of more than one budget,
   lines that do not share one unbroken run of months, a repeated month or account, an account missing from the chart,
   a code that disagrees with it, balance-sheet and unlisted account types, amounts that are not plain numbers, and a
   balance carrying `UnitAmount`. `XeroBudget.gst_inclusive(controls)` checks the GST basis month by month and refuses

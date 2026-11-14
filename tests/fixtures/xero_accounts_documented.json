@@ -1,5 +1,5 @@
 {
-  "_fixture": "Fabricated, not real data. A GET /Accounts response built from the fields on developer.xero.com/documentation/api/accounting/accounts and the account and Australian tax types on .../accounting/types, read 15 November 2026. The AccountIDs match the budget example in xero_budget_documented.json; names, codes and types are invented. Not captured from a live organisation.",
+  "_fixture": "Fabricated, not real data. A GET /Accounts response built from the fields on developer.xero.com/documentation/api/accounting/accounts and the account and Australian tax types on .../accounting/types, read 15 November 2026. The AccountIDs and the codes 200 and 420 match the budget example in xero_budget_documented.json; names, types and the third account are invented. Not captured from a live organisation.",
   "Accounts": [
     {
       "AccountID": "9c24de87-a2b7-439d-a216-35d1af7bdec3",

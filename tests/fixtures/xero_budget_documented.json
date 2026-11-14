@@ -1,5 +1,5 @@
 {
-  "_fixture": "Fabricated, not real data. The example response for GET /Budgets/{BudgetID} on developer.xero.com/documentation/api/accounting/budgets, copied as published on 15 November 2026 (string amounts included). Not captured from a live organisation.",
+  "_fixture": "Not real data: Xero's example response for GET /Budgets/{BudgetID} on developer.xero.com/documentation/api/accounting/budgets, copied as published on 15 November 2026 (string amounts included). Not captured from a live organisation.",
   "Budgets": {
     "BudgetID": "c1d195d4-92aa-4abd-867a-7ac2f9d60500",
     "Type": "TRACKING",

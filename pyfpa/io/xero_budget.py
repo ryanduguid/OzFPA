@@ -17,7 +17,7 @@ check must still confirm.
 
 A budget line carries an AccountID and AccountCode but no account name or
 type, so the chart of accounts supplies both. Refused rather than guessed:
-a list response (lines come back only for a single budget), a line on an
+a list of more than one budget (lines come back only for a single budget), a line on an
 account the chart lacks or on a balance-sheet or unknown account type, a code
 that disagrees with the chart, lines that do not cover the same unbroken run
 of months, a repeated month or account, an amount that is not a plain number,
@@ -48,8 +48,8 @@ _BALANCE_SHEET_TYPES = {
     "BANK", "CURRENT", "CURRLIAB", "EQUITY", "FIXED", "INVENTORY",
     "LIABILITY", "NONCURRENT", "PREPAYMENT", "TERMLIAB",
 }
-_PERIOD = re.compile(r"\d{4}-(?:0[1-9]|1[0-2])")
-_PLAIN_NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
+_PERIOD = re.compile(r"[0-9]{4}-(?:0[1-9]|1[0-2])")
+_PLAIN_NUMBER = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
 
 
 @dataclass(frozen=True)
@@ -99,6 +99,23 @@ def _objects(value: object, what: str) -> list[dict[str, Any]]:
     if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
         raise ValueError(f"expected {what} to be a list of objects")
     return items
+
+
+def _single_budget(path: str | Path) -> dict[str, Any]:
+    """The one budget a GET /Budgets/{BudgetID} response holds.
+
+    Xero's OpenAPI types this response as a list of budgets, whilst its example
+    and the Budgets page's show one object, so either shape is read. A list of
+    any other length is a GET /Budgets response, which carries no lines.
+    """
+    budget = _load(path, "Budgets")
+    if isinstance(budget, list) and len(budget) == 1:
+        budget = budget[0]
+    if not isinstance(budget, dict):
+        raise ValueError(
+            "expected a single budget; budget lines come back only from GET /Budgets/{BudgetID}"
+        )
+    return budget
 
 
 def _amount(balance: Mapping[str, Any]) -> float:
@@ -190,11 +207,7 @@ def read_xero_budget(budget_path: str | Path, accounts_path: str | Path) -> Xero
     expenses negative. Whether a live budget returns expenses positive is
     unconfirmed; see docs/recipes/xero-au.md.
     """
-    budget = _load(budget_path, "Budgets")
-    if not isinstance(budget, dict):
-        raise ValueError(
-            "expected a single budget; budget lines come back only from GET /Budgets/{BudgetID}"
-        )
+    budget = _single_budget(budget_path)
     if budget.get("Type") not in {"OVERALL", "TRACKING"}:
         raise ValueError(f"unknown budget type {budget.get('Type')!r}")
     tracking = _tracking_label(budget)

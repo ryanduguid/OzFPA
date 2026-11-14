@@ -232,8 +232,12 @@ assumptions or refusals:
 
 - Expense lines are taken as positive natural balances, as in Xero's 2 published examples, and negated to this
   module's convention (income positive, expenses negative).
-- Every line must hold the same unbroken run of months. If Xero leaves out months with no budget, the reader refuses
-  the response rather than filling zeros.
+- Every line must hold the same unbroken run of months, so a month with no budget must come back as a zero. A month
+  missing from some lines, or from inside the run, is refused rather than filled with zeros. A month missing from the
+  start or end of every line cannot be told from a month outside the request, so compare `budget.periods` with the
+  months requested, as the example below does.
+- Xero's OpenAPI types the single-budget response as a list of budgets, whilst both examples show one object. Either
+  is read; a list holding more than one budget is refused.
 - The Budgets page describes `Amount` as 'LineItem Quantity' and `UnitAmount` as 'Budgeted amount', but both examples
   carry the budget in `Amount` alone. A balance holding both is refused.
 - Lines on balance-sheet accounts and account types the Types and Codes page does not list are refused.
@@ -241,7 +245,9 @@ assumptions or refusals:
 Neither the response nor Xero's documentation states a GST basis for budget amounts. With a GST-exclusive control for
 each month, such as last year's revenue for a budget seeded from actuals, `gst_inclusive` runs `detect_gst_inclusive`
 month by month. It returns `True` if any month reads inclusive, `False` only when every month has a control and reads
-exclusive, and `None` otherwise. It refuses a budget whose months disagree. Treat `None` as unresolved, as for exports.
+exclusive, and `None` otherwise. It refuses a budget whose months disagree. Treat `None` as unresolved, as for exports:
+only a `False` result lets the amounts feed `monthly_gst`. A `TRACKING` budget covers only its tracking options, so the
+BAS timing needs an `OVERALL` budget.
 
 ```python
 import csv
@@ -252,8 +258,15 @@ import pandas as pd
 from pyfpa.au.gst import bas_schedule, monthly_gst
 from pyfpa.io.xero_budget import read_xero_budget
 
-budget = read_xero_budget("data/xero_budget_fy2027.json", "data/xero_accounts.json")
-basis = budget.gst_inclusive({"2026-07": 41_000.0, "2026-08": 43_500.0, "2026-09": 42_000.0})
+# Requested with DateFrom=2026-07-01 and DateTo=2026-09-30.
+budget = read_xero_budget("data/xero_budget_2026q3.json", "data/xero_accounts.json")
+if budget.periods != ("2026-07", "2026-08", "2026-09"):
+    raise ValueError(f"budget holds {budget.periods}, not the months requested")
+if budget.budget_type != "OVERALL":
+    raise ValueError("BAS timing needs the whole entity's budget")
+# One GST-exclusive revenue control per budget month.
+if budget.gst_inclusive({"2026-07": 41_000.0, "2026-08": 43_500.0, "2026-09": 42_000.0}) is not False:
+    raise ValueError("GST basis not shown exclusive; settle it before monthly_gst")
 
 for period in budget.periods:  # one account-total file per month for reconcile-source
     with Path(f"data/xero_budget_{period}.csv").open("x", encoding="utf-8", newline="") as output:
