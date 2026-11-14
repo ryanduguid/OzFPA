@@ -15,8 +15,8 @@ it forecasts nothing: the invoice stays owed and its row says why. Nothing is
 random, so the same records give the same forecast.
 
 Only paid invoices count. Open invoices older than `age` will take longer
-still, so a customer whose slowest invoices are still open is forecast to pay
-sooner than it will; check the oldest open invoices before relying on a date.
+still, so a customer whose slowest invoices are still open may be forecast to
+pay sooner than it will; check the oldest open invoices before relying on a date.
 """
 
 from __future__ import annotations
@@ -33,9 +33,15 @@ from pyfpa.models.working_capital import _dates, _paid_history
 # 6 is the smallest sample of independent payments whose lowest and highest
 # values bracket the true median with at least 95% confidence whatever the
 # distribution: the chance they miss it is at most 2 x 0.5^n, 3.1% at 6 and
-# 6.3% at 5.
+# 6.3% at 5. It sets how much history a median needs, not how close a forecast
+# date will be.
 MIN_SAMPLE = 6
 PERCENTILE = 50
+
+
+def _any_bool(values: pd.Series) -> bool:
+    """True when a value is True or False, which pandas would otherwise read as the number 1 or 0."""
+    return any(isinstance(value, (bool, np.bool_)) for value in values)
 
 
 def _require_customers(frame: pd.DataFrame, name: str) -> None:
@@ -65,11 +71,15 @@ def _validated_open(open_invoices: pd.DataFrame, paid: set[str], window_start: d
         raise ValueError("open_invoices needs a unique index, so each invoice keeps exactly one row")
     _require_customers(open_invoices, "open_invoices")
     amounts = pd.to_numeric(open_invoices["amount"], errors="coerce")
-    if not (np.isfinite(amounts) & (amounts > 0)).all():
+    if _any_bool(open_invoices["amount"]) or not (np.isfinite(amounts) & (amounts > 0)).all():
         raise ValueError("each open_invoices amount must be a finite number above 0: the amount still owed")
-    if open_invoices["invoice"].duplicated().any():
+    if open_invoices["invoice"].isna().any() or not all(str(invoice).strip() for invoice in open_invoices["invoice"]):
+        raise ValueError("every open_invoices row needs its invoice")
+    # As text, so invoice 1 and invoice '1' count as one invoice, as they read the same in each row's name.
+    keys = open_invoices["invoice"].map(str)
+    if keys.duplicated().any():
         raise ValueError("each invoice must appear once in open_invoices")
-    both = sorted(set(open_invoices["invoice"]) & paid, key=str)
+    both = sorted(set(keys) & {str(invoice) for invoice in paid})
     if both:
         raise ValueError(f"invoices are both paid in the history and open: {both}")
     if open_invoices["issued_on"].isna().any():
@@ -104,11 +114,11 @@ def predicted_receipts(
 
     Refuses a receipt before its invoice, an open invoice issued after
     `window_start`, an invoice both paid and open, a repeated open invoice or
-    index label, an open invoice with no customer, and customer names that
-    differ only in case or spacing.
+    index label, an open invoice with no invoice or customer, an amount of True
+    or False, and customer names that differ only in case or spacing.
     """
-    if weeks < 1:
-        raise ValueError("weeks must be at least 1")
+    if isinstance(weeks, bool) or not isinstance(weeks, int) or weeks < 1:
+        raise ValueError("weeks must be a whole number of at least 1")
     _require_customers(invoices, "invoices")
     paid = _paid_history(invoices, receipts)
     customer_of = dict(zip(invoices["invoice"], invoices["customer"], strict=True))

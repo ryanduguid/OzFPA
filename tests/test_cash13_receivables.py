@@ -134,6 +134,11 @@ def test_no_open_invoices_gives_no_rows():
         (None, [("X-1", "Quickpay", "2026-10-26", 0.0)], "finite number above 0"),
         (None, [("X-1", "Quickpay", "2026-10-26", float("inf"))], "finite number above 0"),
         (None, [("X-1", "Quickpay", None, 10.0)], "needs an issued_on date"),
+        # Rows that would be unnamed, read as numbers they are not, or named twice.
+        (None, [(None, "Quickpay", "2026-10-26", 10.0)], "needs its invoice"),
+        (None, [(" ", "Quickpay", "2026-10-26", 10.0)], "needs its invoice"),
+        (None, [("X-1", "Quickpay", "2026-10-26", True)], "finite number above 0"),
+        (None, [(1, "Quickpay", "2026-10-26", 10.0), ("1", "Quickpay", "2026-10-27", 5.0)], "appear once"),
         (None, [("X-1", "Quickpay", "26/10/2026", 10.0)], "ISO date"),
     ],
 )
@@ -157,8 +162,9 @@ def test_open_invoices_with_a_repeated_index_label_are_refused():
 def test_open_invoices_without_the_columns_or_a_window_are_refused():
     with pytest.raises(ValueError, match=r"missing \['issued_on'\]"):
         predicted_receipts(*_history(), _open().drop(columns="issued_on"), START)
-    with pytest.raises(ValueError, match="weeks must be at least 1"):
-        predicted_receipts(*_history(), _open(), START, weeks=0)
+    for weeks in (0, 1.5, True):
+        with pytest.raises(ValueError, match="weeks must be a whole number of at least 1"):
+            predicted_receipts(*_history(), _open(), START, weeks=weeks)  # type: ignore[arg-type]
 
 
 def _random_case(rng: random.Random) -> tuple[dict[str, list[int]], pd.DataFrame]:

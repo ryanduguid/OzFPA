@@ -141,6 +141,11 @@ def test_no_risk_weeks_gives_no_actions():
         ("receivables", lambda f: f.assign(customer=[None, *f["customer"][1:]]), "needs its invoice and a customer name"),
         ("receivables", lambda f: f.assign(invoice=[None, *f["invoice"][1:]]), "needs its invoice and a customer name"),
         ("payables", lambda f: f.assign(payee=[" ", *f["payee"][1:]]), "needs its bill and a payee name"),
+        ("payables", lambda f: f.assign(bill=["", *f["bill"][1:]]), "needs its bill and a payee name"),
+        ("receivables", lambda f: f.assign(invoice=[1, "1", *f["invoice"][2:]]), "each invoice must appear once"),
+        # True is not the amount 1 or week 1.
+        ("payables", lambda f: f.assign(amount=[True, *f["amount"][1:]]), "finite number above 0"),
+        ("payables", lambda f: f.assign(week=[True, *f["week"][1:]]), r"from 1 to 13$"),
     ],
 )
 def test_rows_that_cannot_be_ranked_are_refused(which, change, match):
@@ -149,6 +154,19 @@ def test_rows_that_cannot_be_ranked_are_refused(which, change, match):
     frames[which] = change(frames[which])
     with pytest.raises(ValueError, match=match):
         risk_week_actions(config, frames["receivables"], frames["payables"])
+
+
+def test_rows_the_forecast_does_not_hold_are_refused():
+    # Without RENT-10 the forecast pays nothing in week 2, so the payables row for it
+    # cannot be one of its flows; without INV-A it receives nothing in week 6.
+    payables = _payables_with_bas(quarterly_bas_due_date(SEP_QUARTER))
+    config = _config(RECEIVABLES, payables, 10000.0)
+    no_rent = config.model_copy(update={"disbursements": config.disbursements[1:]})
+    with pytest.raises(ValueError, match=r"payables in weeks \[2\] add up to more than the forecast's disbursements"):
+        risk_week_actions(no_rent, RECEIVABLES, payables)
+    no_inv_a = config.model_copy(update={"receipts": [f for f in config.receipts if f.name != "INV-A"]})
+    with pytest.raises(ValueError, match=r"receivables in weeks \[6\] add up to more than the forecast's receipts"):
+        risk_week_actions(no_inv_a, RECEIVABLES, payables)
 
 
 def test_a_config_without_window_start_is_refused():

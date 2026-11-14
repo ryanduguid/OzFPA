@@ -16,18 +16,20 @@ Added:
   from how its customer has paid before. A paid invoice's days to pay run from its issue date to the receipt that
   cleared it. An open invoice lands on the median of its customer's paid invoices that took at least as long as the
   open one is already old; with fewer than 6 of those it uses every customer's, and with fewer than 6 again it is not
-  forecast and its row says so. Only paid invoices count, so a customer whose slowest invoices are still open is
+  forecast and its row says so. Only paid invoices count, so a customer whose slowest invoices are still open may be
   forecast to pay sooner than it will. Each row names its basis, sample size, percentile and days to pay, and every open
   invoice keeps one row, so the amounts add up to the receivables ledger. `predicted_receipt_flows` turns the rows
   inside the window into named 13-week receipts. It refuses a receipt before its invoice, an open invoice issued
-  after the window starts, an invoice both paid and open, and customer names that differ only in case or spacing.
+  after the window starts, an invoice both paid and open, a row without its invoice, and customer names that differ
+  only in case or spacing.
 - `risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each week the 13-week forecast flags
   (`negative_weeks`, or `headroom_breach_weeks` with a facility), ranked by amount and naming each source row: chase
   an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
   week. An action counts only when it moves its whole amount into that week's ending cash, and nothing moves past its
   due date, so a tax payment is never deferred past its due date. A tax payment's due date is the one under the
   lodgment channel the forecast was built with, as nothing checks eligibility for another. A week no action helps has
-  no rows.
+  no rows. It refuses receivables or payables that add up to more in a week than the forecast's receipts or
+  disbursements that week.
 - `settlement_events(..., role_withholding=...)` can take each role's Schedule 1 withholding from the Australian Tax
   Calculators executable (`calculate_role_withholding` in `pyfpa.io.native_tax`) instead of a declared average rate,
   which stays the default. A refusal, timeout, missing executable, other engine version, result for another scale or
