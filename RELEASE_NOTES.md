@@ -1,5 +1,13 @@
 # Unreleased
 
+Added:
+
+- `risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each week the 13-week forecast flags
+  (`negative_weeks`, or `headroom_breach_weeks` with a facility), ranked by amount and naming each source row: chase
+  an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
+  week. An action counts only when it moves its whole amount into that week's ending cash, and nothing moves past its
+  due date, so a tax payment is never deferred past its due date. A week no action clears has no rows.
+
 Changed:
 
 - `public_holidays.yaml` now holds Melbourne Cup on 3 November 2026 and Christmas Eve and New Year's Eve 2026, as

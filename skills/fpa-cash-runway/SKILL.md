@@ -33,7 +33,8 @@ Build the 13-week direct-method cash forecast - the operator's near-term liquidi
    ```
 4. **Interpret** (see **fpa-cfo-judgment**): a negative `min_cash` means 'needs a draw of at least this much,' not "insolvent." `first_negative_week` is the deadline to act, and `negative_weeks` names every week that ends below zero, so a short dip reads apart from a long one. Size the credit line to the trough plus a buffer.
    With an approved overdraft or facility, set `facility_limit` (and optionally `headroom_buffer`) on the config: the forecast adds a `headroom` column, and `pyfpa.runway_summary(weekly, cfg.headroom_buffer)` adds `min_headroom`, `first_headroom_breach_week` and `headroom_breach_weeks`. The limit is capacity only, so `ending_cash` stays the raw position; take the limit from the facility document, not from memory.
-5. **Report**: trough amount + week, first-negative week, the weeks below zero, and the recommended line size / action.
+5. **Actions**: with the open receivables and payables the flows came from, `pyfpa.risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each risk week, ranked by amount: chase an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of earlier. Each names its source row. Nothing moves past its due date, so give a tax payment its due date under the lodgment channel the business actually uses or qualifies for, never a payment plan date. A week with no rows has no such action: say so, and apply the guardrail below to any other option.
+6. **Report**: trough amount + week, first-negative week, the weeks below zero, the actions, and the recommended line size.
 
 ## Statutory deferral guardrail
 
