@@ -17,6 +17,7 @@ check must still confirm.
 
 A budget line carries an AccountID and AccountCode but no account name or
 type, so the chart of accounts supplies both. Refused rather than guessed:
+a JSON object that repeats a key, a budget without a BudgetID,
 a list of more than one budget (lines come back only for a single budget), a line on an
 account the chart lacks or on a balance-sheet or unknown account type, a code
 that disagrees with the chart, lines that do not cover the same unbroken run
@@ -86,8 +87,17 @@ class XeroBudget:
         return None
 
 
+def _unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """A JSON object, refused when a key repeats: json would keep only the last value."""
+    keys = [key for key, _ in pairs]
+    repeated = sorted({key for key in keys if keys.count(key) > 1})
+    if repeated:
+        raise ValueError(f"JSON object repeats {repeated}")
+    return dict(pairs)
+
+
 def _load(path: str | Path, key: str) -> Any:
-    payload = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    payload = json.loads(Path(path).read_text(encoding="utf-8-sig"), object_pairs_hook=_unique_keys)
     if not isinstance(payload, dict) or key not in payload:
         raise ValueError(f"expected a Xero API response holding {key!r} in {path}")
     return payload[key]
@@ -115,6 +125,9 @@ def _single_budget(path: str | Path) -> dict[str, Any]:
         raise ValueError(
             "expected a single budget; budget lines come back only from GET /Budgets/{BudgetID}"
         )
+    budget_id = budget.get("BudgetID")
+    if not isinstance(budget_id, str) or not budget_id.strip():
+        raise ValueError(f"budget without a BudgetID: {budget_id!r}")
     return budget
 
 
@@ -125,11 +138,18 @@ def _amount(balance: Mapping[str, Any]) -> float:
             "Xero's documentation does not settle which is the budgeted amount"
         )
     raw = balance.get("Amount")
-    if isinstance(raw, str) and _PLAIN_NUMBER.fullmatch(raw):
-        return float(raw)
-    if isinstance(raw, (int, float)) and not isinstance(raw, bool) and math.isfinite(raw):
-        return float(raw)
-    raise ValueError(f"budget amount {raw!r} is not a plain finite number")
+    refusal = ValueError(f"budget amount {raw!r} is not a plain finite number")
+    if isinstance(raw, bool) or not isinstance(raw, (int, float, str)):
+        raise refusal
+    if isinstance(raw, str) and not _PLAIN_NUMBER.fullmatch(raw):
+        raise refusal
+    try:
+        value = float(raw)
+    except OverflowError:  # an integer too large for a float
+        raise refusal from None
+    if not math.isfinite(value):
+        raise refusal
+    return value
 
 
 def _period(raw: object) -> str:
@@ -241,7 +261,7 @@ def read_xero_budget(budget_path: str | Path, accounts_path: str | Path) -> Xero
     if months[-1] - months[0] + 1 != len(months):
         raise ValueError(f"budget has missing periods between {periods[0]} and {periods[-1]}")
     return XeroBudget(
-        budget_id=str(budget.get("BudgetID") or ""),
+        budget_id=budget["BudgetID"],
         description=str(budget.get("Description") or ""),
         budget_type=budget["Type"],
         periods=periods,

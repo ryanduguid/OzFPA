@@ -69,6 +69,17 @@ def test_single_budget_as_the_openapi_schema_types_the_response(tmp_path: Path) 
     assert read_xero_budget(path, ACCOUNTS) == read_xero_budget(BUDGET, ACCOUNTS)
 
 
+def test_repeated_json_key_is_refused(tmp_path: Path) -> None:
+    # json keeps only the last of repeated keys, so the second Amount would replace the first.
+    text = BUDGET.read_text(encoding="utf-8")
+    once = '{"Period": "2019-08", "Amount": "1000"}'
+    assert text.count(once) == 1
+    path = tmp_path / "repeated.json"
+    path.write_text(text.replace(once, '{"Period": "2019-08", "Amount": "1000", "Amount": "9000"}'), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"repeats \['Amount'\]"):
+        read_xero_budget(path, ACCOUNTS)
+
+
 def test_overall_budget_is_untracked(tmp_path: Path) -> None:
     budget = json.loads(BUDGET.read_text(encoding="utf-8"))
     budget["Budgets"]["Type"] = "OVERALL"
@@ -193,6 +204,14 @@ def _list_endpoint(budget: dict[str, Any], _a: dict[str, Any]) -> None:
     budget["Budgets"] = [budget["Budgets"], dict(budget["Budgets"], BudgetID="another")]
 
 
+def _no_budget_id(budget: dict[str, Any], _a: dict[str, Any]) -> None:
+    del budget["Budgets"]["BudgetID"]
+
+
+def _numeric_budget_id(budget: dict[str, Any], _a: dict[str, Any]) -> None:
+    budget["Budgets"]["BudgetID"] = 123
+
+
 def _no_lines(budget: dict[str, Any], _a: dict[str, Any]) -> None:
     budget["Budgets"]["BudgetLines"] = []
 
@@ -247,6 +266,10 @@ def _no_accounts_key(_b: dict[str, Any], accounts: dict[str, Any]) -> None:
         (_amount("1,000"), "amount '1,000'"),
         (_amount("1e3"), "amount '1e3'"),
         (_amount("١٠٠٠"), "not a plain finite number"),
+        (_amount("9" * 400), "not a plain finite number"),
+        (_amount(10**400), "not a plain finite number"),
+        (_no_budget_id, "without a BudgetID"),
+        (_numeric_budget_id, "without a BudgetID: 123"),
         (_amount("NaN"), "amount 'NaN'"),
         (_amount(float("inf")), "amount inf"),
         (_amount(True), "amount True"),
