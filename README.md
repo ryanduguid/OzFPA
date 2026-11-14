@@ -162,6 +162,13 @@ Read on 13 November 2026:
   actions for each risk week. It needs an XBert account and at least 90 days of bank feed history. This pack needs no
   account and works from the records the firm supplies.
 
+Read on 15 November 2026: Xero Central's [Export a budget](https://central.xero.com/s/article/Export-a-budget) article
+says New Budgets, in early access, cannot export a budget; Budget Manager exports CSV, Excel or Google Sheets files.
+This pack reads a Budget Manager budget from Xero's Accounting API (`pyfpa.io.xero_budget`, see the
+[Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries it through the BAS timing above. The
+reader is built to Xero's published API documentation and has not been run against a live Xero organisation. XBert's
+13-week plugin README and skill (commit e8f489f5) do not mention a budget as an input.
+
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>
 

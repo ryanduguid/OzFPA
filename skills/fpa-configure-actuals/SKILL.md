@@ -1,6 +1,6 @@
 ---
 name: fpa-configure-actuals
-description: Use when wiring a company's real numbers into an openfpa model - from local spreadsheets (P&L, balance sheet, AR/AP ageing, inventory), a live system via MCP or API (QuickBooks, NetSuite), public filings (10-K/10-Q), or anything else. Not married to one source - build the ingestion for whatever the company has; produces one normalised account-amount shape the rest of the toolkit reads.
+description: Use when wiring a company's real numbers into an openfpa model - from local spreadsheets (P&L, balance sheet, AR/AP ageing, inventory), a live system via MCP or API (QuickBooks, NetSuite, Xero, MYOB), public filings (10-K/10-Q), or anything else. Not married to one source - build the ingestion for whatever the company has; produces one normalised account-amount shape the rest of the toolkit reads.
 ---
 
 # Configure actuals and data sources (Phase 2)
@@ -13,6 +13,7 @@ Connect the model to the available data and normalise it to one shape (`{account
 
 - **Local spreadsheets** (always works, no credentials). A P&L, balance sheet, AR/AP ageing, or inventory export. `pyfpa.read_pl_csv(path)` reads any 2-column `Account, Amount` CSV (handles `$`, commas, `(parens)` negatives) → `{account: amount}` - it is generic, not P&L-only. For **richer tables** (aged AR/AP buckets, item-level inventory) there is no rigid reader by design: parse the file to what the model needs - derive **DSO** from AR ageing, **DIO** from inventory, **DPO** from AP ageing.
 - **A live accounting system via MCP** - the cleanest live path. If a **QuickBooks** or **NetSuite** MCP server is connected, pull the trial balance / P&L / balance sheet through it and map the result to `{account: amount}`. openfpa never handles credentials - the MCP server owns auth.
+- **Xero or MYOB via MCP** (tools as listed on 15 November 2026). Xero's official MCP server (`XeroAPI/xero-mcp-server`) has `list-profit-and-loss`, which returns the report rows as JSON, and `list-accounts`, which returns text. The MYOB connector (`mcp.myob.com`, beta, read-only) has `myob_get_profit_loss` and publishes no response schema. The pack has no reader for either output: reshape it to `Code, Account, Amount`, register it as its own `api` source, and run the same GST-exclusive check and `reconcile-source` as for an export. For an Australian Xero company use **fpa-au-xero**. Neither server has a budget tool; a Xero budget comes through the Accounting API (`pyfpa.io.xero_budget`, recipe in `docs/recipes/xero-au.md`), and there is no MYOB budget route.
 - **A live system via API** - build a company-specific connector around the
   source API and its actual report shape.
 - **Public filings** - a 10-K / 10-Q from SEC EDGAR (curl + a compliant User-Agent), as in the Fox Factory example.
