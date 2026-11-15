@@ -19,8 +19,10 @@ from pyfpa.backtest import (
     score_forecast,
     snapshot_forecast,
 )
+from pyfpa.cash13.actions import risk_week_actions
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
+from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
 from pyfpa.cash13.runway import runway_summary
 from pyfpa.cash13.scenarios import (
     FlowChange,
@@ -258,6 +260,8 @@ __all__ = [
     "opex_from_config",
     "pareto_breakpoint",
     "persistent_miss",
+    "predicted_receipt_flows",
+    "predicted_receipts",
     "profile_table",
     "promote_challenger",
     "promote_prior",
@@ -276,6 +280,7 @@ __all__ = [
     "render_scorecard",
     "revenue_from_config",
     "roll_up_segments",
+    "risk_week_actions",
     "runway_summary",
     "save_connector_manifest",
     "save_correction",

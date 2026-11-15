@@ -12,6 +12,30 @@ Added:
   a mix. Built to Xero's published API documentation and not yet run against a live organisation: the Xero recipe
   lists what is assumed. `fpa-au-xero` and `fpa-configure-actuals`
   now name the Xero and MYOB MCP servers' tools and their limits.
+- `predicted_receipts(invoices, receipts, open_invoices, window_start)` forecasts when each open invoice will be paid
+  from how its customer has paid before. A paid invoice's days to pay run from its issue date to the receipt that
+  cleared it. An open invoice lands on the median of its customer's paid invoices that took at least as long as the
+  open one is already old; with fewer than 6 of those it uses every customer's, and with fewer than 6 again it is not
+  forecast and its row says so. Only paid invoices count, so a customer whose slowest invoices are still open may be
+  forecast to pay sooner than it will. Each row names its basis, sample size, percentile and days to pay, and every open
+  invoice keeps one row, so the amounts add up to the receivables ledger. `predicted_receipt_flows` turns the rows
+  inside the window into named 13-week receipts. It refuses a receipt before its invoice, an open invoice issued
+  after the window starts, an invoice both paid and open, a row without its invoice, and customer names that differ
+  only in case or spacing.
+- `risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each week the 13-week forecast flags
+  (`negative_weeks`, or `headroom_breach_weeks` with a facility), ranked by amount and naming each source row: chase
+  an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
+  week. An action counts only when it moves its whole amount into that week's ending cash, and nothing moves past its
+  due date, so a tax payment is never deferred past its due date. A tax payment's due date is the one under the
+  lodgment channel the forecast was built with, as nothing checks eligibility for another. A week no action helps has
+  no rows. It refuses receivables or payables that add up to more in a week than the forecast's receipts or
+  disbursements that week.
+- `settlement_events(..., role_withholding=...)` can take each role's Schedule 1 withholding from the Australian Tax
+  Calculators executable (`calculate_role_withholding` in `pyfpa.io.native_tax`) instead of a declared average rate,
+  which stays the default. A refusal, timeout, missing executable, other engine version, result for another scale or
+  period, fractional-dollar withholding or result without evidence stops the calculation; nothing falls back to the
+  average rate. Scale 4 and quarterly pays are refused. The [schedule withholding recipe](docs/recipes/schedule-withholding.md)
+  installs the calculator from a pinned commit, as it has no release yet (#326).
 
 Changed:
 
@@ -23,6 +47,15 @@ Changed:
   table lists it, but also gives 28 September as the first business day after 25 September, and Karratha and Port
   Hedland held that holiday on 3 August 2026, so it was not a public holiday for the whole of WA. A due date on 28
   September 2026 therefore stands, a day before the ATO's 29 September.
+
+Fixed:
+
+- Briefings refuse missing or non-finite financial values, runway cash and overflowing headline totals included,
+  and keep integer headlines and monthly rows as whole dollars without int64 wraparound or conversion to floating
+  point. Forecast exports refuse missing cells and non-finite numbers before creating staging files, and an invalid
+  report leaves the existing file in place (#322).
+- `collection_profile_from_history` refuses a missing amount in a nullable (`Float64`) column with its usual
+  message; it accepted an invoice's missing amount before.
 
 # v0.6.0
 

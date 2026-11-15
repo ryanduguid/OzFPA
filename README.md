@@ -138,7 +138,7 @@ tools cover nearby ground:
   cash forecast appeared in its listing.
 - [adoptai/cpa-skills](https://github.com/adoptai/cpa-skills): budget-versus-actual, flux-narrative and board-package
   skills with scripts, framed for US practice.
-- Agicap, Float, Calxa and Tidely: commercial cash flow forecasting products.
+- Agicap, Calxa and Tidely: commercial cash flow forecasting products.
 
 Read on 12 November 2026:
 
@@ -152,15 +152,40 @@ Read on 12 November 2026:
   PAYG and FBT due dates moved past whole-of-state public holidays, lodgment-channel dates and the GIC cost of paying an
   ATO debt by instalments.
 
-Read on 13 November 2026:
+Read on 15 November 2026:
 
 - [XBert 13-Week Cashflow](https://github.com/XBertIntelligence/XBert-Plugins/tree/main/plugins/xbert-cashflow-13week)
-  (MIT, at commit e8f489f5): a Claude plugin for accountants that pulls the bank balance,
-  receivables, payables, payroll and tax obligations from a client's live Xero, MYOB or QuickBooks Online ledger and
-  bank feed through XBert's service, and names each week that falls below a chosen cash threshold. It does what this
-  pack does not: it predicts when each receipt will land from that debtor's past payment delays, and it ranks 3
-  actions for each risk week. It needs an XBert account and at least 90 days of bank feed history. This pack needs no
-  account and works from the records the firm supplies.
+  (MIT in its plugin manifest, though the repository has no licence file; at commit e8f489f5, and the plugin last
+  changed on 23 July 2026): a Claude plugin for
+  accountants that pulls the bank balance, receivables, payables, payroll and tax obligations from a client's live
+  Xero, MYOB or QuickBooks Online ledger and bank feed through XBert's service. Its instructions put each open invoice
+  in the week of its due date plus that debtor's average delay past due (the median when skewed), name each week below
+  a chosen cash threshold with its drivers, and suggest 3 actions for each: chase debtors, delay suppliers or draw on a
+  facility. It needs an XBert account and at least 90 days of bank feed history. This pack needs no account and works
+  from the records the firm supplies. From those records, `predicted_receipts` places each open invoice on the median
+  days to pay of its customer's paid invoices that took at least as long as the open one is old (every customer's
+  below 6 of those, and no date below 6 again), and `risk_week_actions` ranks up to 3 actions for each risk week:
+  chase an overdue invoice or pay a bill on its due date instead of earlier, never later than due and never a
+  facility draw.
+- [Xero's Cash flow manager](https://central.xero.com/0/article/Cash-flow-manager-with-Analytics-powered-by-Syft), in
+  Analytics: projects 7 to 180 days from the bank balances in Xero, the amounts owing on invoices and bills, quotes,
+  cash movements entered by hand and [recurring weekly and monthly payments](https://central.xero.com/0/article/About-cash-flow-predictions-in-Analytics-powered-by-Syft)
+  predicted from the previous 3 months. [ITBrief reported](https://itbrief.co.nz/story/xero-adds-ai-analytics-cash-flow-forecasting-in-anz)
+  on 11 March 2026 that its forecasts use predicted payment dates based on observed payment behaviour; the Xero Central
+  articles do not say how. The articles, the report and Xero's [Australian cash flow page](https://www.xero.com/au/accounting-software/analytics/cash-flow/)
+  do not mention GST, BAS or PAYG due dates.
+- [Float](https://floatapp.com/pricing): cash flow forecasting connected to Xero or QuickBooks, with a 13-week view,
+  36-month forecasts and 8 scenarios, from A$300 a month billed annually after a 14-day trial.
+- [Luca AI](https://ask-luca.com/product-docs/forecasting/cash-flow-forecast): 13-week and 12-month forecasts for
+  online brands from Xero or QuickBooks beside Shopify, refreshed overnight and checked against actuals every night.
+- [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business/skills/cash-flow-snapshot)
+  `cash-flow-snapshot` (at commit e91a1345): a 30/60/90-day forecast that times each customer's receipts by its mean
+  days from invoice to receipt, using every customer's mean below 3 payments. It is written instructions without
+  scripts.
+- [OneWave-AI/claude-skills](https://github.com/OneWave-AI/claude-skills/tree/main/cash-flow-forecaster)
+  `cash-flow-forecaster` (MIT): a 13-week method that places open invoices at their due date plus the customer's
+  historical lateness and lists levers for each crunch week. It is a single instruction file and names no Australian
+  tax dates.
 
 Read on 15 November 2026: Xero Central's [Export a budget](https://central.xero.com/s/article/Export-a-budget) article
 says New Budgets, in early access, cannot export a budget; Budget Manager exports CSV, Excel or Google Sheets files.
