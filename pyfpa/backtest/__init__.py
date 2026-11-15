@@ -14,12 +14,15 @@ from pyfpa.backtest.snapshot import (
     save_snapshot,
     snapshot_forecast,
 )
+from pyfpa.backtest.weekly import WEEKLY_SCORE_LINES, WeeklyScore, weekly_actuals_score
 
 __all__ = [
     "DEFAULT_SCORE_LINES",
     "DEFAULT_WEIGHTS",
+    "WEEKLY_SCORE_LINES",
     "ScoreResult",
     "Snapshot",
+    "WeeklyScore",
     "aggregate_periods",
     "extract_lines",
     "holdout_backtest",
@@ -30,4 +33,5 @@ __all__ = [
     "save_snapshot",
     "score_forecast",
     "snapshot_forecast",
+    "weekly_actuals_score",
 ]

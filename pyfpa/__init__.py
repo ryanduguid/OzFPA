@@ -10,6 +10,7 @@ from pyfpa.analysis.sku import Sku, pareto_breakpoint, sku_profitability
 from pyfpa.backtest import (
     ScoreResult,
     Snapshot,
+    WeeklyScore,
     holdout_backtest,
     load_snapshot,
     magnitude_cap,
@@ -18,6 +19,7 @@ from pyfpa.backtest import (
     save_snapshot,
     score_forecast,
     snapshot_forecast,
+    weekly_actuals_score,
 )
 from pyfpa.cash13.actions import risk_week_actions
 from pyfpa.cash13.flows import expand_flow
@@ -208,6 +210,7 @@ __all__ = [
     "SourceRecord",
     "SourceRegistry",
     "WeeklyFlow",
+    "WeeklyScore",
     "WorkingCapitalConfig",
     "Workspace",
     "apply_corrections",
@@ -308,6 +311,7 @@ __all__ = [
     "validate_prior",
     "verify_structure",
     "verify_workbook",
+    "weekly_actuals_score",
     "withdraw_prior",
     "working_capital_from_config",
     "write_onboarding_outputs",

@@ -180,6 +180,9 @@ Read on 15 November 2026:
   for companies over £2m, forecasts 36 months for A$300 a month billed annually or A$379 monthly. Prices exclude VAT.
 - [Luca AI](https://ask-luca.com/product-docs/forecasting/cash-flow-forecast): 13-week and 12-month forecasts for
   online brands from Xero or QuickBooks beside Shopify, refreshed overnight and checked against actuals every night.
+  This pack's `weekly_actuals_score` is a check a person runs on their own closed weeks: it scores the 13-week
+  forecast against actual receipts, payments and bank balances, week by week and together, and refuses actuals that
+  do not line up. It does not fetch actuals, run nightly or correct the forecast.
 - [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business/skills/cash-flow-snapshot)
   `cash-flow-snapshot` (at commit e91a1345): a 30/60/90-day forecast that times each customer's receipts by its mean
   days from invoice to receipt, using every customer's mean below 3 payments. It is written instructions without

@@ -2,6 +2,12 @@
 
 Added:
 
+- `weekly_actuals_score(cfg, actuals_by_week)` scores the 13-week cash forecast against the weeks that have closed,
+  each week and all of them together, with `holdout_backtest`'s weighted MAPE and default weights. It refuses a
+  config without `window_start`, a week that does not start one of the forecast's weeks, a missing week before the
+  last one given, a missing or non-finite value, and closing balances the week's receipts and disbursements do not
+  carry, to the cent, from the forecast's opening cash, which would be on a different basis. A zero actual on a
+  weighted line refuses the score and names its week, as for a month. It does not change the forecast.
 - `pyfpa.io.xero_budget.read_xero_budget(budget, accounts)` reads a Xero budget from 2 saved Accounting API
   responses, `GET /Budgets/{BudgetID}` and `GET /Accounts`, into one `XeroReport` per month, so a budget takes the
   same mapping, GST and `reconcile-source` checks as an export and can feed `monthly_gst`. It refuses a list of more
