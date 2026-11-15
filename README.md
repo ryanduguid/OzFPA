@@ -174,8 +174,10 @@ Read on 15 November 2026:
   on 11 March 2026 that its forecasts use predicted payment dates based on observed payment behaviour; the Xero Central
   articles do not say how. The articles, the report and Xero's [Australian cash flow page](https://www.xero.com/au/accounting-software/analytics/cash-flow/)
   do not mention GST, BAS or PAYG due dates.
-- [Float](https://floatapp.com/pricing): cash flow forecasting connected to Xero or QuickBooks, with a 13-week view,
-  36-month forecasts and 8 scenarios, from A$300 a month billed annually after a 14-day trial.
+- [Float](https://floatapp.com/pricing): cash flow forecasting connected to Xero or QuickBooks, with a 13-week view
+  and 8 scenarios, after a 14-day trial. Its [Small Business](https://floatapp.com/pricing-for-small-businesses) plan,
+  for companies below £2m in revenue, forecasts 12 months for A$155 a month billed annually or A$189 monthly; Growth,
+  for companies over £2m, forecasts 36 months for A$300 a month billed annually or A$379 monthly. Prices exclude VAT.
 - [Luca AI](https://ask-luca.com/product-docs/forecasting/cash-flow-forecast): 13-week and 12-month forecasts for
   online brands from Xero or QuickBooks beside Shopify, refreshed overnight and checked against actuals every night.
 - [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business/skills/cash-flow-snapshot)
