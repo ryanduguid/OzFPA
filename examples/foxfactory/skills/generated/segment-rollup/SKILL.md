@@ -44,7 +44,7 @@ consolidated P&L + indirect cash flow (revenue → … → FCF)
    `cashflow_from_config`. Set `segment_opex` to
    `gross_profit − total_adjusted_ebitda`, then add a separate `corporate_expense`
    line. Consolidated EBITDA equals segment Adjusted EBITDA less corporate expense.
-   `forecast_year` carries FY2025 corporate expense of US$57.338 million forward
+   `forecast_year` carries FY2025 corporate expense of USD 57.338 million forward
    as an explicit annual forecast assumption, not a reported future cost.
 5. Keep the goodwill impairment and discrete tax items **out** of the engine and
    in a documented bridge to GAAP net income - the lean engine models the
