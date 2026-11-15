@@ -83,9 +83,10 @@ def weekly_actuals_score(
     Refuses a config without window_start, a week that does not start a
     forecast week, a missing week before the last one given, a missing or
     non-finite receipts, disbursements or ending_cash, and actual balances the
-    actual flows do not carry from the forecast's opening_cash, which would be
-    on a different basis. A zero actual on a weighted line is refused for the
-    week it falls in, as `score_forecast` refuses it for a month.
+    actual flows do not carry, to the cent, from the forecast's opening_cash,
+    which would be on a different basis. A zero actual on a weighted line
+    refuses the whole call, naming its week, as `score_forecast` refuses it for
+    a month.
     """
     if cfg.window_start is None:
         raise ValueError("the forecast needs window_start, the date it was made as at")

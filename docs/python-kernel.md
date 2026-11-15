@@ -81,11 +81,11 @@ match to the dollar, which hides a 1,000 miss each way in the weeks themselves.
 Actual weeks are keyed by their first day and run from week 1 without a gap; a
 week that does not start on a forecast week, a missing week before the last one
 given, or a missing value is refused. Each week's closing balance must equal the
-last one plus that week's receipts less disbursements, starting from the
-forecast's `opening_cash`, or the actuals are refused as being on a different
-basis, such as flows net of GST against bank balances. A zero actual on a
-weighted line is refused for its week, as it is for a month: give that line a
-zero weight to leave it out.
+last one plus that week's receipts less disbursements, to the cent, starting
+from the forecast's `opening_cash`, or the actuals are refused as being on a
+different basis, such as flows net of GST against bank balances. A zero actual
+on a weighted line refuses the whole score and names its week, as it does for a
+month: give that line a zero weight to leave it out of every week.
 
 The base kernel includes:
 

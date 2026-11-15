@@ -49,6 +49,15 @@ def test_one_closed_week_is_scored_alone():
     assert score.overall == score.per_week[1]
 
 
+def test_closing_balances_agree_to_the_cent_whatever_the_float_sum():
+    # 10,000 + 3,000.10 - 3,000.20 is 9,999.900000000001 in floating point.
+    week = {"receipts": 3000.1, "disbursements": 3000.2, "ending_cash": 9999.9}
+    score = weekly_actuals_score(CONFIG, {"2026-11-02": week})
+    assert score.per_week[1].per_line["ending_cash"] == pytest.approx(1000.1 / 9999.9)
+    with pytest.raises(ValueError, match="ends at 9999.89, not the 9999.90 .* different basis"):
+        weekly_actuals_score(CONFIG, {"2026-11-02": {**week, "ending_cash": 9999.89}})
+
+
 def test_weights_and_lines_follow_the_monthly_holdout():
     score = weekly_actuals_score(CONFIG, ACTUALS, score_lines=["ending_cash", "net_cash"],
                                  weights={"ending_cash": 1.0, "net_cash": 0.0})
