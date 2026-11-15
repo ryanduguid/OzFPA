@@ -27,7 +27,7 @@ from pyfpa.backtest.score import (
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.schemas import Cash13Config
 
-WEEKLY_SCORE_LINES = ["ending_cash", "receipts", "disbursements"]
+WEEKLY_SCORE_LINES = ("ending_cash", "receipts", "disbursements")  # a tuple: it is the default argument
 # Dollars. A difference up to half a cent is rounding, not a different basis.
 # shortcut: float sums hold cent-exact amounts to this below about 10^12 dollars;
 # above that, correct actuals can be refused, and Decimal amounts would be needed.
