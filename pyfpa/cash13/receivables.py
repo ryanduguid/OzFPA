@@ -71,7 +71,7 @@ def _validated_open(open_invoices: pd.DataFrame, paid: set[str], window_start: d
         raise ValueError("open_invoices needs a unique index, so each invoice keeps exactly one row")
     _require_customers(open_invoices, "open_invoices")
     amounts = pd.to_numeric(open_invoices["amount"], errors="coerce")
-    if _any_bool(open_invoices["amount"]) or not (np.isfinite(amounts) & (amounts > 0)).all():
+    if _any_bool(open_invoices["amount"]) or amounts.isna().any() or not (np.isfinite(amounts) & (amounts > 0)).all():
         raise ValueError("each open_invoices amount must be a finite number above 0: the amount still owed")
     if open_invoices["invoice"].isna().any() or not all(str(invoice).strip() for invoice in open_invoices["invoice"]):
         raise ValueError("every open_invoices row needs its invoice")

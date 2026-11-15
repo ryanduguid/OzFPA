@@ -62,7 +62,7 @@ def _checked(frame: pd.DataFrame, name: str, key: str, party: str, weeks: int, *
     if missing:
         raise ValueError(f"{name} needs columns {key}, {party}, amount, due_on and week; missing {sorted(missing)}")
     amounts = pd.to_numeric(frame["amount"], errors="coerce")
-    if _any_bool(frame["amount"]) or not (np.isfinite(amounts) & (amounts > 0)).all():
+    if _any_bool(frame["amount"]) or amounts.isna().any() or not (np.isfinite(amounts) & (amounts > 0)).all():
         raise ValueError(f"each {name} amount must be a finite number above 0")
     _require_names(frame, name, key, party)
     if frame["due_on"].isna().any():

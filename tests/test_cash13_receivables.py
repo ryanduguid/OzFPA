@@ -159,6 +159,18 @@ def test_open_invoices_with_a_repeated_index_label_are_refused():
         predicted_receipts(*_history(), open_invoices, START)
 
 
+def test_a_missing_amount_in_a_nullable_column_is_refused():
+    # Float64's missing value makes the finite check missing too, which .all() skips.
+    open_invoices = _open(("Q-1", "Quickpay", "2026-10-26", 1000.0), ("Q-2", "Quickpay", "2026-10-26", 500.0))
+    open_invoices["amount"] = pd.array([1000.0, pd.NA], dtype="Float64")
+    with pytest.raises(ValueError, match="finite number above 0"):
+        predicted_receipts(*_history(), open_invoices, START)
+    invoices, receipts = _history()
+    invoices["amount"] = pd.array([pd.NA, *invoices["amount"][1:]], dtype="Float64")
+    with pytest.raises(ValueError, match="finite number above 0"):
+        predicted_receipts(invoices, receipts, _open(), START)
+
+
 def test_open_invoices_without_the_columns_or_a_window_are_refused():
     with pytest.raises(ValueError, match=r"missing \['issued_on'\]"):
         predicted_receipts(*_history(), _open().drop(columns="issued_on"), START)

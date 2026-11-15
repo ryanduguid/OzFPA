@@ -124,7 +124,7 @@ def _paid_history(invoices: pd.DataFrame, receipts: pd.DataFrame) -> pd.DataFram
         if missing:
             raise ValueError(f"{name} needs columns invoice, {date_column} and amount; missing {sorted(missing)}")
         amounts = pd.to_numeric(frame["amount"], errors="coerce")
-        if frame.empty or not (np.isfinite(amounts) & (amounts > 0)).all():
+        if frame.empty or amounts.isna().any() or not (np.isfinite(amounts) & (amounts > 0)).all():
             raise ValueError(f"{name} must have rows, and each amount must be a finite number above 0")
         amount_of[name] = amounts.astype(float)
         if frame[date_column].isna().any():

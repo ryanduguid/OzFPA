@@ -143,6 +143,8 @@ def test_no_risk_weeks_gives_no_actions():
         ("payables", lambda f: f.assign(payee=[" ", *f["payee"][1:]]), "needs its bill and a payee name"),
         ("payables", lambda f: f.assign(bill=["", *f["bill"][1:]]), "needs its bill and a payee name"),
         ("receivables", lambda f: f.assign(invoice=[1, "1", *f["invoice"][2:]]), "each invoice must appear once"),
+        ("payables", lambda f: f.assign(amount=pd.array([pd.NA, *f["amount"][1:]], dtype="Float64")),
+         "finite number above 0"),
         # True is not the amount 1 or week 1.
         ("payables", lambda f: f.assign(amount=[True, *f["amount"][1:]]), "finite number above 0"),
         ("payables", lambda f: f.assign(week=[True, *f["week"][1:]]), r"from 1 to 13$"),
