@@ -10,7 +10,7 @@ out by hand beside each case: week n runs 7 days from 2 November 2026 plus
 
 import math
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -178,6 +178,21 @@ def test_open_invoices_without_the_columns_or_a_window_are_refused():
     for weeks in (0, 1.5, True):
         with pytest.raises(ValueError, match="weeks must be a whole number of at least 1"):
             predicted_receipts(*_history(), _open(), START, weeks=weeks)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("start", [datetime(2026, 11, 2, 9, 30), pd.Timestamp("2026-11-02 17:00")])
+def test_a_datetime_window_start_counts_from_its_date(start):
+    open_invoices = _open(("Q-1", "Quickpay", "2026-10-26", 1000.0), ("S-1", "Slowpay", "2026-11-02", 5000.0))
+    expected = predicted_receipts(*_history(), open_invoices, START)
+    pd.testing.assert_frame_equal(predicted_receipts(*_history(), open_invoices, start), expected)
+
+
+@pytest.mark.parametrize("column", ["week", "basis"])
+def test_open_invoices_with_a_column_the_forecast_adds_are_refused(column):
+    # Overwriting or renaming the caller's column would hide which value is whose.
+    open_invoices = _open(("Q-1", "Quickpay", "2026-10-26", 1000.0)).assign(**{column: 3})
+    with pytest.raises(ValueError, match=rf"already has columns \['{column}'\], which the forecast adds"):
+        predicted_receipts(*_history(), open_invoices, START)
 
 
 def _random_case(rng: random.Random) -> tuple[dict[str, list[int]], pd.DataFrame]:

@@ -19,9 +19,13 @@ make a customer pay, and a supplier may want its money earlier than the due date
 
 from __future__ import annotations
 
+from collections import Counter
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 
+from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.receivables import _any_bool
 from pyfpa.cash13.runway import runway_summary
@@ -42,17 +46,34 @@ def _require_names(frame: pd.DataFrame, name: str, key: str, party: str) -> None
         raise ValueError(f"each {key} must appear once in {name}")
 
 
-def _require_in_forecast(weekly: pd.DataFrame, receivables: pd.DataFrame, payables: pd.DataFrame) -> None:
-    """Refuse rows the forecast cannot hold: more in a week than its receipts or disbursements that week.
+def _require_in_forecast(cfg: Cash13Config, weekly: pd.DataFrame, receivables: pd.DataFrame,
+                         payables: pd.DataFrame) -> None:
+    """Refuse rows the forecast cannot hold: more in a week than its receipts or disbursements that
+    week, or a row with no flow of its amount that week left for it.
 
     A necessary check, not a full match: the forecast's flows carry no invoice or bill, so a row
-    that fits inside a week's total is taken to be one of that week's flows.
+    is taken to be a flow of the same amount, to the cent, in its week; each flow serves one row.
     """
-    for name, frame, column in (("receivables", receivables, "receipts"), ("payables", payables, "disbursements")):
+    for name, frame, column, key in (("receivables", receivables, "receipts", "invoice"),
+                                     ("payables", payables, "disbursements", "bill")):
         by_week = frame.groupby("week")["amount"].sum()
         over = [int(week) for week, total in by_week.items() if total > weekly.at[int(week), column] + 0.005]
         if over:
             raise ValueError(f"{name} in weeks {over} add up to more than the forecast's {column} there; "
+                             "pass the rows the forecast's flows came from")
+        unused = Counter((week, round(amount, 2)) for flow in getattr(cfg, column)
+                         for week, amount in enumerate(expand_flow(flow, cfg.weeks, cfg.window_start), start=1)
+                         if amount)
+        unmatched = []
+        placed = frame[frame["week"].notna()]
+        for week, amount, source in zip(placed["week"], placed["amount"], placed[key], strict=True):
+            flow = (int(week), round(amount, 2))
+            if unused[flow]:
+                unused[flow] -= 1
+            else:
+                unmatched.append(str(source))
+        if unmatched:
+            raise ValueError(f"{name} {unmatched} match no {column} flow of the same amount in their week; "
                              "pass the rows the forecast's flows came from")
 
 
@@ -101,10 +122,14 @@ def risk_week_actions(cfg: Cash13Config, receivables: pd.DataFrame, payables: pd
     for every week: add amounts within a week, never across weeks. Ties in
     amount rank by source, so the same rows always give the same answer.
     Refuses receivables or payables that add up to more in a week than the
-    forecast's receipts or disbursements that week, which cannot be its flows.
+    forecast's receipts or disbursements that week, or a row with no flow of
+    its amount in its week, which cannot be its flows.
     """
     if cfg.window_start is None:
         raise ValueError("risk_week_actions needs the config's window_start to place due dates in weeks")
+    if isinstance(cfg.window_start, datetime):
+        # model_copy and model_construct skip validation, which would have made it a date.
+        cfg = cfg.model_copy(update={"window_start": cfg.window_start.date()})
     start = cfg.window_start
     receivables = _checked(receivables, "receivables", "invoice", "customer", cfg.weeks, week_optional=True)
     payables = _checked(payables, "payables", "bill", "payee", cfg.weeks, week_optional=False)
@@ -123,7 +148,7 @@ def risk_week_actions(cfg: Cash13Config, receivables: pd.DataFrame, payables: pd
                            f"(week {due_week}), not in week {row.week}"))
 
     weekly = cash13_forecast(cfg)
-    _require_in_forecast(weekly, receivables, payables)
+    _require_in_forecast(cfg, weekly, receivables, payables)
     summary = runway_summary(weekly, cfg.headroom_buffer)
     if cfg.facility_limit is None:
         risk = {week: -weekly.at[week, "ending_cash"] for week in summary["negative_weeks"]}

@@ -9,7 +9,7 @@ in week 6. Expected figures are worked out by hand beside each case.
 """
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -169,6 +169,38 @@ def test_rows_the_forecast_does_not_hold_are_refused():
     no_inv_a = config.model_copy(update={"receipts": [f for f in config.receipts if f.name != "INV-A"]})
     with pytest.raises(ValueError, match=r"receivables in weeks \[6\] add up to more than the forecast's receipts"):
         risk_week_actions(no_inv_a, RECEIVABLES, payables)
+
+
+def test_rows_that_fit_a_weeks_total_but_match_no_flow_are_refused():
+    # The forecast pays 3,000 and 1,000 in week 2: a 4,000 rent row fits the week's
+    # total but is neither flow, so moving it would move cash the forecast never held.
+    payables = _payables(("RENT-10", "Landlord", 4000.0, "2026-10-20", 2))
+    config = _config(_receivables(), payables, 10000.0).model_copy(update={"disbursements": [
+        WeeklyFlow(name="Wages", amount=3000.0, start_week=2), WeeklyFlow(name="Fees", amount=1000.0, start_week=2)]})
+    with pytest.raises(ValueError, match=r"payables \['RENT-10'\] match no disbursements flow of the same amount"):
+        risk_week_actions(config, _receivables(), payables)
+    # 2 rows of one amount need 2 flows of it.
+    receivables = _receivables(("INV-1", "Bay Co", 500.0, "2026-09-01", 3), ("INV-2", "Cape Co", 500.0, "2026-09-01", 3))
+    config = _config(receivables, _payables(), 10000.0).model_copy(update={"receipts": [
+        WeeklyFlow(name="INV-1", amount=500.0, start_week=3), WeeklyFlow(name="Other", amount=600.0, start_week=3)]})
+    with pytest.raises(ValueError, match=r"receivables \['INV-2'\] match no receipts flow"):
+        risk_week_actions(config, receivables, _payables())
+
+
+def test_a_recurring_flow_matches_a_row_in_each_week_it_lands():
+    payables = _payables(("RENT-10", "Landlord", 4000.0, "2026-10-20", 2))
+    config = _config(_receivables(), payables, 100000.0).model_copy(update={"disbursements": [
+        WeeklyFlow(name="Rent", amount=4000.0, start_week=1, recurrence="weekly")]})
+    assert risk_week_actions(config, _receivables(), payables).empty
+
+
+def test_a_datetime_window_start_counts_from_its_date():
+    # Validation turns a datetime into a date, but model_copy skips validation.
+    payables = _payables_with_bas(quarterly_bas_due_date(SEP_QUARTER))
+    config = _config(RECEIVABLES, payables, 10000.0)
+    timed = config.model_copy(update={"window_start": datetime(2026, 10, 5, 9, 30)})
+    pd.testing.assert_frame_equal(risk_week_actions(timed, RECEIVABLES, payables),
+                                  risk_week_actions(config, RECEIVABLES, payables))
 
 
 def test_a_config_without_window_start_is_refused():
