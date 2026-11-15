@@ -63,8 +63,8 @@ carrying the last entry forward is not evidence that it remains applicable.
   SA/interstate wages are refused. Use an entity-specific calculator for
   grouping, apportionment, part-year adjustments and annual reconciliation.
 - SG maximum contribution base not modelled (quarterly before 1 July 2026,
-  annual from that date; only matters above $62,500 of ordinary time
-  earnings a quarter for 2025-26 or $270,830 of qualifying earnings a year
+  annual from that date; only matters above AUD 62,500 of ordinary time
+  earnings a quarter for 2025-26 or AUD 270,830 of qualifying earnings a year
   from one employer for 2026-27).
 - PAYG withholding timing is not split out; `total_cash` assumes wages
   and withholding leave in the wage month. Add a lag in a generated

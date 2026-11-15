@@ -12,7 +12,7 @@ naive P&L-to-cash bridge misses entirely.
 ## Workflow
 
 1. Establish facts (intake): BAS cycle (quarterly default; monthly
-   mandatory at $20m+ GST turnover), share of GST-free or input-taxed
+   mandatory at AUD 20m+ GST turnover), share of GST-free or input-taxed
    revenue, share of purchases without input tax credits, whether a
    tax/BAS agent lodges (extensions).
 2. Compute the monthly net GST position from GST-EXCLUSIVE series:
