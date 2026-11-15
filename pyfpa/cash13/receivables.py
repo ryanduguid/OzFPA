@@ -22,7 +22,7 @@ pay sooner than it will; check the oldest open invoices before relying on a date
 from __future__ import annotations
 
 import math
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -37,6 +37,7 @@ from pyfpa.models.working_capital import _dates, _paid_history
 # date will be.
 MIN_SAMPLE = 6
 PERCENTILE = 50
+FORECAST_COLUMNS = ["age_days", "basis", "sample_size", "percentile", "days_to_pay", "expected_on", "week"]
 
 
 def _any_bool(values: pd.Series) -> bool:
@@ -66,6 +67,9 @@ def _validated_open(open_invoices: pd.DataFrame, paid: set[str], window_start: d
     missing = {"invoice", "customer", "issued_on", "amount"} - set(open_invoices.columns)
     if missing:
         raise ValueError(f"open_invoices needs columns invoice, customer, issued_on and amount; missing {sorted(missing)}")
+    taken = [column for column in FORECAST_COLUMNS if column in open_invoices.columns]
+    if taken:
+        raise ValueError(f"open_invoices already has columns {taken}, which the forecast adds; rename or drop them first")
     if not open_invoices.index.is_unique:
         # Joining the forecast on a repeated label would repeat rows and overstate the ledger.
         raise ValueError("open_invoices needs a unique index, so each invoice keeps exactly one row")
@@ -108,6 +112,7 @@ def predicted_receipts(
     sample_size (the paid invoices the median came from, or the most there were
     when basis is "none"), percentile, days_to_pay, expected_on and week (1 to
     `weeks`; missing when expected after the window or when basis is "none").
+    A datetime `window_start` counts from its date.
     Every open invoice keeps one row, so the amounts still add up to the
     receivables ledger. Pass the result to `predicted_receipt_flows` for the
     forecast's receipts.
@@ -115,10 +120,13 @@ def predicted_receipts(
     Refuses a receipt before its invoice, an open invoice issued after
     `window_start`, an invoice both paid and open, a repeated open invoice or
     index label, an open invoice with no invoice or customer, an amount of True
-    or False, and customer names that differ only in case or spacing.
+    or False, customer names that differ only in case or spacing, and
+    open_invoices that already have a column the forecast adds.
     """
     if isinstance(weeks, bool) or not isinstance(weeks, int) or weeks < 1:
         raise ValueError("weeks must be a whole number of at least 1")
+    if isinstance(window_start, datetime):
+        window_start = window_start.date()
     _require_customers(invoices, "invoices")
     paid = _paid_history(invoices, receipts)
     customer_of = dict(zip(invoices["invoice"], invoices["customer"], strict=True))
@@ -144,8 +152,7 @@ def predicted_receipts(
         week = (expected - window_start).days // 7 + 1
         rows.append({"age_days": age, "basis": basis, "sample_size": len(sample), "percentile": PERCENTILE,
                      "days_to_pay": days, "expected_on": expected, "week": week if week <= weeks else pd.NA})
-    columns = ["age_days", "basis", "sample_size", "percentile", "days_to_pay", "expected_on", "week"]
-    forecast = pd.DataFrame(rows, index=open_invoices.index, columns=columns)
+    forecast = pd.DataFrame(rows, index=open_invoices.index, columns=FORECAST_COLUMNS)
     integers = {"percentile": "Int64", "days_to_pay": "Int64", "week": "Int64"}
     return open_invoices.assign(amount=amounts).join(forecast.astype(integers))
 
