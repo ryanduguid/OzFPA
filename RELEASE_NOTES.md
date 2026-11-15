@@ -55,7 +55,7 @@ Fixed:
   point. Forecast exports refuse missing cells and non-finite numbers before creating staging files, and an invalid
   report leaves the existing file in place (#322).
 - `collection_profile_from_history` refuses a missing amount in a nullable (`Float64`) column with its usual
-  message, where an invoice's missing amount raised a `TypeError`.
+  message; it accepted an invoice's missing amount before.
 
 # v0.6.0
 
