@@ -42,6 +42,51 @@ trough (`min_cash`), its week, the first negative week, every week below zero
 list of weeks headroom is below the buffer. It compares declared assumptions; it
 does not say which scenario is likely.
 
+### The 13-week forecast against actuals
+
+`holdout_backtest` scores a monthly forecast against held-out monthly actuals.
+`weekly_actuals_score` is its weekly counterpart for the 13-week forecast: once
+weeks have closed, it scores the forecast against what happened, each week on its
+own and the closed weeks together, with the same weighted MAPE, default weights
+and refusals. You run it on your own actuals; it does not change or refresh the
+forecast.
+
+A forecast made as at Monday 2 November 2026 starts with 10,000 in the bank and
+expects 4,000 in and 3,000 out each week. The first 2 weeks close like this:
+
+```python
+from datetime import date
+
+config = pyfpa.Cash13Config(
+    opening_cash=10000.0, window_start=date(2026, 11, 2),
+    receipts=[pyfpa.WeeklyFlow(name="Sales", amount=4000.0, start_week=1, recurrence="weekly")],
+    disbursements=[pyfpa.WeeklyFlow(name="Costs", amount=3000.0, start_week=1, recurrence="weekly")])
+score = pyfpa.weekly_actuals_score(config, {
+    "2026-11-02": {"receipts": 3000.0, "disbursements": 3000.0, "ending_cash": 10000.0},
+    "2026-11-09": {"receipts": 5000.0, "disbursements": 2500.0, "ending_cash": 12500.0},
+})
+```
+
+| | Ending cash | Receipts | Disbursements | Fitness |
+| --- | ---: | ---: | ---: | ---: |
+| Week 1 | +10.0% (11,000 against 10,000) | +33.3% | 0.0% | 0.1556 |
+| Week 2 | -4.0% (12,000 against 12,500) | -20.0% | +20.0% | 0.1733 |
+| Both weeks | -4.0% | 0.0% | +9.1% | 0.0445 |
+
+Each error is (forecast - actual) / |actual|, and fitness weighs ending cash at
+0.4 and each flow at 1.0, as the monthly holdout does. Together, the receipts
+match to the dollar, which hides a 1,000 miss each way in the weeks themselves.
+`tests/test_backtest_weekly.py` asserts these figures.
+
+Actual weeks are keyed by their first day and run from week 1 without a gap; a
+week that does not start on a forecast week, a missing week before the last one
+given, or a missing value is refused. Each week's closing balance must equal the
+last one plus that week's receipts less disbursements, starting from the
+forecast's `opening_cash`, or the actuals are refused as being on a different
+basis, such as flows net of GST against bank balances. A zero actual on a
+weighted line is refused for its week, as it is for a month: give that line a
+zero weight to leave it out.
+
 The base kernel includes:
 
 - monthly P&L and indirect cash-flow modelling
@@ -51,7 +96,8 @@ The base kernel includes:
 - CSV ingestion and Markdown or Excel reporting: static value export via
   `forecast_to_excel`, and a live-formula model workbook via `model_to_excel`
   (named assumption cells, real formulas, verified against the engine in CI);
-- forecast snapshots, scoring, and holdout backtests
+- forecast snapshots, scoring, holdout backtests, and the 13-week forecast
+  scored against closed weeks
 - workspace, intake, correction, experiment, retrieval, and research records
 - experimental cross-company prior and skill mining.
 

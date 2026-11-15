@@ -18,6 +18,20 @@ from pyfpa.models.cashflow import cashflow_from_config
 BuildCfgFn = Callable[[dict[str, Mapping[str, float]]], EntityConfig]
 
 
+def scored_lines(
+    score_lines: Sequence[str], weights: Mapping[str, float] | None
+) -> tuple[Mapping[str, float], list[str]]:
+    """The weights to score with, and the lines they leave switched on.
+
+    Without weights, each line takes its `DEFAULT_WEIGHTS` entry, or 1.0. A zero
+    weight disables a metric, so its line is neither extracted nor aggregated:
+    evidence missing for a disabled line must not stop the rest."""
+    selected = weights if weights is not None else {
+        line: DEFAULT_WEIGHTS.get(line, 1.0) for line in score_lines
+    }
+    return selected, [line for line in score_lines if selected.get(line, 0) > 0]
+
+
 def holdout_backtest(
     actuals_by_period: Mapping[str, Mapping[str, float]],
     build_cfg_fn: BuildCfgFn,
@@ -48,12 +62,7 @@ def holdout_backtest(
     fit_actuals: dict[str, Mapping[str, float]] = {
         p: dict(actuals_by_period[p]) for p in fit_periods
     }
-    selected_weights = weights if weights is not None else {
-        line: DEFAULT_WEIGHTS.get(line, 1.0) for line in score_lines
-    }
-    # A zero weight disables a metric, so its line is neither extracted nor
-    # aggregated: evidence missing for a disabled line must not stop the rest.
-    scored = [line for line in score_lines if selected_weights.get(line, 0) > 0]
+    selected_weights, scored = scored_lines(score_lines, weights)
     cfg = build_cfg_fn(fit_actuals)
     forecast = cashflow_from_config(cfg)
     expected = pd.PeriodIndex([months[period] for period in holdout_periods], freq="M")

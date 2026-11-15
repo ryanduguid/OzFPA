@@ -9,7 +9,7 @@
 
 ## What is here
 
-- Kernel (`pyfpa/`): forecast schemas and accounting mechanics (`models/`, `cash13/`, `analysis/`, `config/`, `io/`), verified Excel export (`excel/`), Australian rules (`au/`), forecast scoring and holdouts (`backtest/`), company memory (`memory/`), the champion and challenger loop (`research/`) and cross-client learning (`portfolio/`).
+- Kernel (`pyfpa/`): forecast schemas and accounting mechanics (`models/`, `cash13/`, `analysis/`, `config/`, `io/`), verified Excel export (`excel/`), Australian rules (`au/`), forecast scoring, monthly holdouts and the 13-week forecast scored against closed weeks (`backtest/`), company memory (`memory/`), the champion and challenger loop (`research/`) and cross-client learning (`portfolio/`).
 - CLI (`openfpa`): JSON-emitting workspace commands for intake, source registration, mappings, reconciliation, connector scaffolding, corrections, scorecards, context packs and Excel export.
 - Skills (`skills/`): 16 `fpa-` skills covering Australian drivers, GST and BAS, payroll, Xero onboarding, model scaffolding, actuals wiring, Excel export, monthly close, cash runway, board briefings, CFO judgement, corrections, backtesting, the research loop and portfolio learning, plus `generated/sku-profitability` as a worked company-specific skill.
 - Australian scope: `FY2027`, `Q1 FY2027` and `1H FY2027` labels and dd/mm/yyyy dates; super guarantee, effective-dated payroll tax in all 8 states and territories, workers compensation, leave provisions and contractors; net GST from GST-exclusive series with monthly or quarterly settlement feeding the 13-week cash model.
