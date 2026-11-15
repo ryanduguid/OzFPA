@@ -80,6 +80,11 @@ def test_weights_and_lines_follow_the_monthly_holdout():
         ({"2026-11-09": ACTUALS["2026-11-09"]}, r"missing for weeks \[1\], before week 2"),
         ({"2026-11-02": {"receipts": 3000.0, "ending_cash": 10000.0}}, "week 1 is missing 'disbursements'"),
         ({"2026-11-02": {**ACTUALS["2026-11-02"], "receipts": float("nan")}}, "week 1 'receipts' must be finite"),
+        # True would pass math.isfinite and score as one dollar.
+        ({"2026-11-02": {"receipts": True, "disbursements": True, "ending_cash": 10000.0}},
+         "week 1 'receipts' must be a number, got True"),
+        ({"2026-11-02": {**ACTUALS["2026-11-02"], "ending_cash": "10000"}},
+         "week 1 'ending_cash' must be a number, got '10000'"),
         # A different basis: flows net of GST against gross balances, or another opening balance.
         ({"2026-11-02": {"receipts": 2727.27, "disbursements": 2727.27, "ending_cash": 10000.0},
           "2026-11-09": {"receipts": 4545.45, "disbursements": 2272.73, "ending_cash": 12500.0}},

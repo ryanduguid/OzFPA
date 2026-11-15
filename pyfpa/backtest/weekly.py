@@ -10,6 +10,7 @@ refresh the forecast.
 from __future__ import annotations
 
 import math
+import numbers
 import re
 from collections.abc import Mapping, Sequence
 from datetime import date
@@ -28,6 +29,8 @@ from pyfpa.cash13.schemas import Cash13Config
 
 WEEKLY_SCORE_LINES = ["ending_cash", "receipts", "disbursements"]
 # Dollars. A difference up to half a cent is rounding, not a different basis.
+# shortcut: float sums hold cent-exact amounts to this below about 10^12 dollars;
+# above that, correct actuals can be refused, and Decimal amounts would be needed.
 _TOLERANCE = 0.005
 
 
@@ -53,7 +56,11 @@ def _require_same_basis(cfg: Cash13Config, weeks: Sequence[Mapping[str, float]])
         for field in ("receipts", "disbursements", "ending_cash"):
             if field not in actual:
                 raise ValueError(f"actual week {week} is missing {field!r}")
-            if not math.isfinite(actual[field]):
+            value = actual[field]
+            # math.isfinite reads True as 1 and float() would score it as a dollar.
+            if isinstance(value, bool) or not isinstance(value, numbers.Real):
+                raise ValueError(f"actual week {week} {field!r} must be a number, got {value!r}")
+            if not math.isfinite(value):
                 raise ValueError(f"actual week {week} {field!r} must be finite")
         expected = balance + actual["receipts"] - actual["disbursements"]
         if abs(actual["ending_cash"] - expected) > _TOLERANCE:
@@ -81,8 +88,8 @@ def weekly_actuals_score(
     default weights.
 
     Refuses a config without window_start, a week that does not start a
-    forecast week, a missing week before the last one given, a missing or
-    non-finite receipts, disbursements or ending_cash, and actual balances the
+    forecast week, a missing week before the last one given, a missing,
+    non-numeric or non-finite receipts, disbursements or ending_cash, and actual balances the
     actual flows do not carry, to the cent, from the forecast's opening_cash,
     which would be on a different basis. A zero actual on a weighted line
     refuses the whole call, naming its week, as `score_forecast` refuses it for
