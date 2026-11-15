@@ -30,7 +30,8 @@ START = date(2026, 11, 2)
 PAID_DAYS = {"Quickpay": [10, 12, 14, 14, 16, 20], "Slowpay": [40, 45, 50, 55, 60, 70], "Newco": [30]}
 
 
-def _history(paid_days=PAID_DAYS) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _history(paid_days=None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    paid_days = PAID_DAYS if paid_days is None else paid_days
     invoices, receipts = [], []
     for customer, all_days in paid_days.items():
         for number, days in enumerate(all_days):
