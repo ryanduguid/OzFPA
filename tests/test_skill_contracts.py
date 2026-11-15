@@ -1,6 +1,7 @@
 # Copyright 2026 Ryan Duguid
 # SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
 
+import re
 from pathlib import Path
 
 import pytest
@@ -45,6 +46,20 @@ def test_monthly_close_variance_drivers_sum_with_a_labelled_remainder() -> None:
 def test_both_cash_skills_carry_the_deferral_guardrail(skill: str, wording: str) -> None:
     text = " ".join((ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split())
     assert wording in text
+
+
+def test_skill_bodies_have_no_dollar_digit() -> None:
+    # Claude Code reads `$` and a digit in a SKILL.md body as an argument
+    # placeholder (`$0` is the first argument), code spans included, and
+    # OpenCode blanks one, so a skill writes an amount as AUD 62,500.
+    found = [
+        f"{path.relative_to(ROOT).as_posix()}:{number}"
+        for folder in ("skills", "examples")
+        for path in sorted((ROOT / folder).rglob("SKILL.md"))
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if re.search(r"\$\d", line)
+    ]
+    assert found == []
 
 
 def test_readme_warns_against_the_unrelated_pyfpa_distribution() -> None:
