@@ -11,7 +11,7 @@ Added:
   `UnitAmount`. `XeroBudget.gst_inclusive(controls)` checks the GST basis month by month and refuses
   a mix. Built to Xero's published API documentation and not yet run against a live organisation: the Xero recipe
   lists what is assumed. `fpa-au-xero` and `fpa-configure-actuals`
-  now name the Xero and MYOB MCP servers' tools and their limits.
+  now name the Xero and MYOB MCP servers' tools and their limits (#327).
 - `predicted_receipts(invoices, receipts, open_invoices, window_start)` forecasts when each open invoice will be paid
   from how its customer has paid before. A paid invoice's days to pay run from its issue date to the receipt that
   cleared it. An open invoice lands on the median of its customer's paid invoices that took at least as long as the
@@ -21,7 +21,7 @@ Added:
   invoice keeps one row, so the amounts add up to the receivables ledger. `predicted_receipt_flows` turns the rows
   inside the window into named 13-week receipts. It refuses a receipt before its invoice, an open invoice issued
   after the window starts, an invoice both paid and open, a row without its invoice, and customer names that differ
-  only in case or spacing.
+  only in case or spacing (#329).
 - `risk_week_actions(cfg, receivables, payables)` lists up to 3 actions for each week the 13-week forecast flags
   (`negative_weeks`, or `headroom_breach_weeks` with a facility), ranked by amount and naming each source row: chase
   an overdue invoice the forecast expects after the week, or pay a bill on its due date instead of in or before the
@@ -29,7 +29,7 @@ Added:
   due date, so a tax payment is never deferred past its due date. A tax payment's due date is the one under the
   lodgment channel the forecast was built with, as nothing checks eligibility for another. A week no action helps has
   no rows. It refuses receivables or payables that add up to more in a week than the forecast's receipts or
-  disbursements that week.
+  disbursements that week (#329).
 - `settlement_events(..., role_withholding=...)` can take each role's Schedule 1 withholding from the Australian Tax
   Calculators executable (`calculate_role_withholding` in `pyfpa.io.native_tax`) instead of a declared average rate,
   which stays the default. A refusal, timeout, missing executable, other engine version, result for another scale or
@@ -55,7 +55,10 @@ Fixed:
   point. Forecast exports refuse missing cells and non-finite numbers before creating staging files, and an invalid
   report leaves the existing file in place (#322).
 - `collection_profile_from_history` refuses a missing amount in a nullable (`Float64`) column with its usual
-  message; it accepted an invoice's missing amount before.
+  message; it accepted an invoice's missing amount before (#329).
+- Skill bodies write amounts as `AUD 62,500` instead of `$62,500`. Claude Code reads `$` and a digit as an argument
+  placeholder, so `/fpa-au-payroll` run with 63 or more words put the 63rd word in place of the threshold, and
+  OpenCode blanks such a placeholder when a skill runs as a command (#328).
 
 # v0.6.0
 
