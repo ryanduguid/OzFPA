@@ -118,3 +118,15 @@ def test_a_reviewed_until_that_is_not_a_date_is_refused(monkeypatch):
     monkeypatch.setattr(rates, "load_gst_bas_data", lambda: {"reviewed_until": "2027-06-30"})
     with pytest.raises(ValueError, match="gst_bas.yaml must state reviewed_until as an ISO date"):
         rates.require_bas_dates_reviewed(date(2026, 9, 30))
+
+
+def test_a_rate_table_is_parsed_once_and_each_caller_gets_its_own_copy(monkeypatch):
+    from pyfpa.au import rates
+
+    parses = []
+    real_safe_load = rates.yaml.safe_load
+    monkeypatch.setattr(rates.yaml, "safe_load", lambda text: parses.append(1) or real_safe_load(text))
+    first = rates.load_fbt_data()
+    first.clear()
+    assert rates.load_fbt_data(), "a caller's change reached the next caller"
+    assert len(parses) <= 1
