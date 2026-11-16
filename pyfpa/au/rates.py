@@ -14,8 +14,10 @@ and NT), and a lookup before a table's first entry raises ``ValueError``.
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Iterable
 from datetime import date
+from functools import cache
 from importlib import resources
 from typing import Any, TypeVar, cast
 
@@ -75,10 +77,16 @@ class Schedule(list[_Entry]):
         self.reviewed_until = reviewed_until
 
 
-def _load_yaml(name: str) -> dict[str, Any]:
+@cache
+def _parse_yaml(name: str) -> dict[str, Any]:
     ref = resources.files("pyfpa.au.data").joinpath(name)
     loaded: dict[str, Any] = yaml.safe_load(ref.read_text(encoding="utf-8"))
     return loaded
+
+
+def _load_yaml(name: str) -> dict[str, Any]:
+    # Each caller gets its own copy, so mutating one cannot change the cache.
+    return copy.deepcopy(_parse_yaml(name))
 
 
 def _reviewed_until(raw: dict[str, Any], name: str) -> date:

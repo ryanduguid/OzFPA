@@ -27,7 +27,9 @@ REQUIRED = {
         ".github/workflows/ci.yml: ci-gates",
         ".github/workflows/codeql.yml: Analyze (actions)",
         ".github/workflows/codeql.yml: Analyze (python)",
-        ".github/workflows/codeql.yml: codeql-gates"
+        ".github/workflows/codeql.yml: codeql-gates",
+        ".github/workflows/joined-fixtures.yml: public-fixtures-gates",
+        ".github/workflows/secrets.yml: secrets",
     ]
 }
 

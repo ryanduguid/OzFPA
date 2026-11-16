@@ -53,6 +53,10 @@ Changed:
   table lists it, but also gives 28 September as the first business day after 25 September, and Karratha and Port
   Hedland held that holiday on 3 August 2026, so it was not a public holiday for the whole of WA. A due date on 28
   September 2026 therefore stands, a day before the ATO's 29 September.
+- `pyfpa.backtest.DEFAULT_SCORE_LINES` is a tuple, not a list, because it is the default `score_lines` of
+  `holdout_backtest` and `snapshot_forecast`. To extend it, use `[*DEFAULT_SCORE_LINES, "line"]`.
+- Each rate table under `pyfpa/au/data/` is parsed once per process instead of on every due-date lookup; every
+  call still returns its own copy.
 
 Fixed:
 

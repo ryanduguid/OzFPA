@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, FiniteFloat
 
 from pyfpa.analysis.reconcile import reconcile
 
-DEFAULT_SCORE_LINES = ["ending_cash", "ebitda", "revenue", "gross_margin"]
+DEFAULT_SCORE_LINES = ("ending_cash", "ebitda", "revenue", "gross_margin")  # a tuple: it is a default argument
 DEFAULT_WEIGHTS = {"ending_cash": 0.4, "ebitda": 0.3, "revenue": 0.2, "gross_margin": 0.1}
 
 
