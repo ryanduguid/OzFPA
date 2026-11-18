@@ -1,0 +1,1 @@
+Stage B proof, fabricated value (fails the ABN checksum): Supplier ABN: 98 765 432 100
