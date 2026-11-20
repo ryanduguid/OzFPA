@@ -607,6 +607,7 @@ def test_duplicate_audit_preserves_original_key_marks(tmp_path):
         "growth_rate: 0.10", "growth_rate: 0.10\n    growth_rate: 0.0",
     )
     graph = yaml.compose(source)
+    assert graph is not None
     channels = next(value for key, value in graph.value if key.value == "channels")
     keys = [key for key, _ in channels.value[0].value if key.value == "growth_rate"]
     path = tmp_path / "marked.yaml"
