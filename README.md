@@ -133,12 +133,11 @@ au-fpa-pack is built for Australian cash, GST and BAS timing. As read on 5 Novem
 tools cover nearby ground:
 
 - [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
-- [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins): official plugins with a
-  variance-analysis skill and a 30/60/90-day cash flow forecast skill at commit d900840; no 13-week
-  cash forecast appeared in its listing.
-- [adoptai/cpa-skills](https://github.com/adoptai/cpa-skills): budget-versus-actual, flux-narrative and board-package
-  skills with scripts, framed for US practice.
-- Agicap, Calxa and Tidely: commercial cash flow forecasting products.
+- A comparable plugin collection offered variance analysis and a 30/60/90-day cash flow forecast at
+  commit d900840. Its listing showed no 13-week forecast.
+- A skills collection for US practice offered budget-versus-actual analysis, narratives explaining
+  variances and board packs, with scripts.
+- Commercial cash flow forecasting products also cover this work.
 
 Read on 12 November 2026:
 
