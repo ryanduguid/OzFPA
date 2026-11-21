@@ -1,5 +1,9 @@
 # Unreleased
 
+- `pyfpa.au.tax_report(bas=, payg_instalments=, payroll=, fbt=)` lists every payment those schedules hold in one
+  table by due date: GST from `bas_schedule`, `payg_instalment_schedule`, PAYG withholding, super guarantee and payroll
+  tax from `settlement_events`, and `fbt_schedule`. Paydays that share a component and due date are one row. It adds
+  no rule, amount or date, so each obligation's total equals its schedule's.
 - `three_way_from_config(cfg, gst=None, payroll=())` builds a monthly profit and loss, balance sheet and cash flow
   statement from one configuration. The balance sheet balances and its cash is the cash flow statement's in every
   month. GST accrues with `monthly_gst` and is paid on `bas_schedule`'s due dates; payroll costs come from
