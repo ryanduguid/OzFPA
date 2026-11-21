@@ -162,6 +162,31 @@ def test_gst_for_a_quarter_still_open_at_the_end_stays_owed():
     _assert_statements_hold(result, cfg)
     assert result.balance_sheet["gst_payable"].iloc[-1] == pytest.approx(_net_gst(result, GstAssumptions()).sum())
 
+def test_a_gst_refund_is_received_on_the_bas_due_date():
+    # Capex of 30,000 a month buys more than the shop sells, so every quarter is a refund.
+    cfg = _config(capex_monthly=30000.0)
+    gst = GstAssumptions(gst_rate=0.1)
+    result = three_way_from_config(cfg, gst=gst)
+    _assert_statements_hold(result, cfg)
+    net = _net_gst(result, gst)
+    payable, flows = result.balance_sheet["gst_payable"], result.cash_flow
+    september, october = pd.Period("2026-09", freq="M"), pd.Period("2026-10", freq="M")
+    refund = net["2026-07":"2026-09"].sum()
+    assert refund < 0
+    assert payable[september] == pytest.approx(refund)
+    assert payable[october] == pytest.approx(net["2026-10"])
+    # October's GST cash is the GST collected less GST paid that month, plus the refund.
+    sheet = result.balance_sheet
+    trade_gst = net + (sheet["payables"] / 11).diff().iloc[1:] - (sheet["receivables"] / 11).diff().iloc[1:]
+    assert flows["gst"][october] == pytest.approx(trade_gst[october] - refund)
+
+
+def test_statement_totals_that_overflow_are_refused():
+    cfg = _config(opening_balances=OpeningBalances(cash=1e308, ar=14000.0, ap=3500.0, inventory=8000.0,
+                                                   fixed_assets=1e308), horizon_months=1)
+    with pytest.raises(ValueError, match="total_assets contains non-finite values"):
+        three_way_from_config(cfg)
+
 def test_gst_on_bad_debts_is_refused():
     cfg = _config(working_capital=WorkingCapitalConfig(
         collection_profile=[0.5, 0.45], bad_debt_share=0.05, write_off_after_months=3,

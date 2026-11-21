@@ -40,7 +40,7 @@ from pyfpa.au.gst import GstAssumptions, bas_schedule, monthly_gst
 from pyfpa.au.payroll_settlement import COMPONENTS, SettlementEvent, monthly_settlement
 from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import EntityConfig, OpeningBalances
-from pyfpa.models.cashflow import _compose
+from pyfpa.models.cashflow import _compose, _require_finite_columns
 from pyfpa.models.periods import month_index
 
 # Dollars. Net book value this close below nil is floating-point noise.
@@ -157,7 +157,8 @@ def three_way_from_config(
     """Profit and loss, balance sheet and cash flow by month from one configuration.
 
     Raises ValueError when GST is combined with bad debts, when D&A would take
-    fixed assets below nil, or for any error `cashflow_from_config` raises.
+    fixed assets below nil, when a statement total is not finite, or for any
+    error `cashflow_from_config` raises.
     """
     cfg = _validated_snapshot(cfg)
     if gst is not None and cfg.working_capital.bad_debt_share:
@@ -192,6 +193,8 @@ def three_way_from_config(
         "debt": (sum(item.opening_balance for item in cfg.debt), debt["ending_debt"]),
     }
     sheet = _balance_sheet(assets, liabilities, forecast["net_income"])
+    _require_finite_columns(sheet, sheet.columns)
+    _require_finite_columns(cash_flow, cash_flow.columns)
 
     pnl_columns = ["revenue", "cogs", "gross_profit", "opex", "bad_debts", "payroll", "ebitda",
                    "da", "interest", "pretax_income", "tax", "net_income"]
