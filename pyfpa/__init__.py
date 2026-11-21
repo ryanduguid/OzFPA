@@ -118,6 +118,7 @@ from pyfpa.models.cogs import cogs_from_config
 from pyfpa.models.debt import debt_from_config
 from pyfpa.models.opex import opex_from_config
 from pyfpa.models.revenue import revenue_from_config
+from pyfpa.models.three_way import ThreeWayForecast, three_way_from_config
 from pyfpa.models.working_capital import (
     collection_profile_from_history,
     working_capital_from_config,
@@ -209,6 +210,7 @@ __all__ = [
     "SourceKind",
     "SourceRecord",
     "SourceRegistry",
+    "ThreeWayForecast",
     "WeeklyFlow",
     "WeeklyScore",
     "WorkingCapitalConfig",
@@ -306,6 +308,7 @@ __all__ = [
     "segments_to_channels",
     "sku_profitability",
     "snapshot_forecast",
+    "three_way_from_config",
     "to_briefing_md",
     "validate_connector_bundle",
     "validate_prior",

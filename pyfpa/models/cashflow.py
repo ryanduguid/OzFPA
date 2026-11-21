@@ -74,7 +74,17 @@ def _require_finite_columns(frame: pd.DataFrame, columns: Iterable[str]) -> None
 
 def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Compose the monthly forecast, raising ValueError for non-finite results."""
-    cfg = _validated_snapshot(cfg)
+    return _compose(_validated_snapshot(cfg))[0]
+
+
+def _compose(
+    cfg: EntityConfig, payroll: pd.DataFrame | None = None
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """The forecast with the working-capital and debt frames it was built from.
+
+    `payroll` holds an accrued `cost` and the `paid` cash by forecast month: the
+    cost is an expense before EBITDA and operating cash adds back what is unpaid.
+    """
     try:
         revenue = revenue_from_config(cfg)
     except OverflowError as exc:
@@ -96,6 +106,8 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     bad_debts = wc["bad_debts"] if "bad_debts" in wc.columns else None
     if bad_debts is not None:
         ebitda = ebitda - bad_debts
+    if payroll is not None:
+        ebitda = ebitda - payroll["cost"]
     ebit = ebitda - da                 # D&A is a real (non-cash) expense in the P&L...
     interest = debt["interest"]
     pretax = ebit - interest
@@ -112,6 +124,8 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
         tax_paid = pd.Series([cfg.income_tax.payments.get(str(p), 0.0) for p in pretax.index],
                              index=pretax.index, dtype=float)
         operating_cash_flow = operating_cash_flow + tax - tax_paid
+    if payroll is not None:
+        operating_cash_flow = operating_cash_flow + payroll["cost"] - payroll["paid"]
     free_cash_flow = operating_cash_flow - capex
     change_in_cash = free_cash_flow - debt["principal"]
     ending_cash = change_in_cash.cumsum() + cfg.opening_balances.cash
@@ -142,8 +156,11 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
         forecast.insert(list(forecast.columns).index("opex") + 1, "bad_debts", bad_debts)
     if cfg.income_tax is not None:
         forecast.insert(list(forecast.columns).index("tax") + 1, "tax_paid", tax_paid)
+    if payroll is not None:
+        forecast.insert(list(forecast.columns).index("ebitda"), "payroll", payroll["cost"])
+        forecast.insert(list(forecast.columns).index("wc_cash_impact") + 1, "payroll_paid", payroll["paid"])
     _require_finite_columns(forecast, forecast.columns)
-    return forecast
+    return forecast, wc, debt
 
 
 def apply_receipt_delay(

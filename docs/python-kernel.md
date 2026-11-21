@@ -42,6 +42,49 @@ trough (`min_cash`), its week, the first negative week, every week below zero
 list of weeks headroom is below the buffer. It compares declared assumptions; it
 does not say which scenario is likely.
 
+### Three-way forecast
+
+`three_way_from_config` turns the same configuration into a monthly profit and
+loss, balance sheet and cash flow statement. The balance sheet opens on the
+month before `start_month` with the configured opening balances, and opening
+equity is the opening net assets. Each balance rolls forward on its own:
+receivables, stock and payables from the working-capital model, fixed assets
+from capex less D&A, debt from its schedule, income tax from the provision less
+`income_tax.payments`, and equity from net income. Cash is the cash flow
+statement's closing cash, and `check_balance` (assets less liabilities and
+equity) is nil in every month.
+
+```python
+import pyfpa
+from pyfpa.au.gst import GstAssumptions
+
+config = pyfpa.load_config("examples/ridgeline/config.yaml")
+three_way = pyfpa.three_way_from_config(config, gst=GstAssumptions())
+assert three_way.balance_sheet["check_balance"].abs().max() < 0.01
+print(three_way.cash_flow[["operating_cash_flow", "gst", "closing_cash"]])
+```
+
+Without `gst` or `payroll`, the profit and loss and closing cash equal
+`cashflow_from_config`'s. The optional layers use the Australian timing code
+unchanged:
+
+- `gst=GstAssumptions(...)` accrues net GST with `monthly_gst` on revenue and on
+  stock purchases, operating expenses and capex, and pays it on `bas_schedule`'s
+  due dates; a BAS due after the last month stays in `gst_payable`. Receivables
+  and payables carry GST on their taxable and creditable shares. Opening
+  receivables and payables are stated excluding GST, and opening GST payable is nil.
+- `payroll=settlement_events(...)` adds the payroll expense (gross wages, super,
+  payroll tax and workers compensation) and the liabilities left by each
+  component's due-date rule, such as `paygw_due_rule` and `super_due_rule`. An
+  obligation before the first month is an opening liability.
+
+Set `opening_balances.fixed_assets` to the book value `da_monthly` depreciates:
+D&A that would take fixed assets below nil is refused. Set
+`opening_balances.income_tax_payable` (negative when refundable) with
+`income_tax`, whose payments settle it. GST combined with `bad_debt_share` is
+refused, because GST on bad debts is not modelled. Leave provisions and deferred
+tax are not modelled either.
+
 ### The 13-week forecast against actuals
 
 `holdout_backtest` scores a monthly forecast against held-out monthly actuals.
