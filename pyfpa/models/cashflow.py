@@ -74,7 +74,35 @@ def _require_finite_columns(frame: pd.DataFrame, columns: Iterable[str]) -> None
 
 def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     """Compose the monthly forecast, raising ValueError for non-finite results."""
-    cfg = _validated_snapshot(cfg)
+    return _compose(_validated_snapshot(cfg))[0]
+
+
+def _tax_and_payments(cfg: EntityConfig, pretax: pd.Series) -> tuple[pd.Series, pd.Series | None]:
+    """Tax expense by month and, with `income_tax`, the scheduled payments."""
+    if cfg.income_tax is None:
+        return _tax_series(pretax, cfg.opening_balances.nol, cfg.tax_rate), None
+    tax = _income_year_tax(pretax, cfg.opening_balances.nol, cfg.tax_rate,
+                           cfg.income_tax.forecast_losses_deductible)
+    paid = pd.Series([cfg.income_tax.payments.get(str(p), 0.0) for p in pretax.index],
+                     index=pretax.index, dtype=float)
+    return tax, paid
+
+
+def _insert_optional_columns(forecast: pd.DataFrame, columns: dict[str, tuple[str, int, pd.Series | None]]) -> None:
+    """Insert each named column that has values, beside its anchor column."""
+    for name, (anchor, offset, values) in columns.items():
+        if values is not None:
+            forecast.insert(list(forecast.columns).index(anchor) + offset, name, values)
+
+
+def _compose(
+    cfg: EntityConfig, payroll: pd.DataFrame | None = None
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """The forecast with the working-capital and debt frames it was built from.
+
+    `payroll` holds an accrued `cost` and the `paid` cash by forecast month: the
+    cost is an expense before EBITDA and operating cash adds back what is unpaid.
+    """
     try:
         revenue = revenue_from_config(cfg)
     except OverflowError as exc:
@@ -84,9 +112,8 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     wc = working_capital_from_config(cfg, revenue, cogs)
     debt = debt_from_config(cfg)
 
-    n = len(revenue.index)
-    da = pd.Series([cfg.da_monthly] * n, index=revenue.index)
-    capex = pd.Series([cfg.capex_monthly] * n, index=revenue.index)
+    da = pd.Series(cfg.da_monthly, index=revenue.index, dtype=float)
+    capex = pd.Series(cfg.capex_monthly, index=revenue.index, dtype=float)
 
     gross_profit = revenue["total"] - cogs["total"]
     ebitda = gross_profit - opex["total"]
@@ -96,54 +123,39 @@ def cashflow_from_config(cfg: EntityConfig) -> pd.DataFrame:
     bad_debts = wc["bad_debts"] if "bad_debts" in wc.columns else None
     if bad_debts is not None:
         ebitda = ebitda - bad_debts
+    if payroll is not None:
+        ebitda = ebitda - payroll["cost"]
     ebit = ebitda - da                 # D&A is a real (non-cash) expense in the P&L...
-    interest = debt["interest"]
-    pretax = ebit - interest
-    if cfg.income_tax is None:
-        tax = _tax_series(pretax, cfg.opening_balances.nol, cfg.tax_rate)
-    else:
-        tax = _income_year_tax(pretax, cfg.opening_balances.nol, cfg.tax_rate,
-                               cfg.income_tax.forecast_losses_deductible)
+    pretax = ebit - debt["interest"]
+    tax, tax_paid = _tax_and_payments(cfg, pretax)
     net_income = pretax - tax
 
     operating_cash_flow = net_income + da + wc["wc_cash_impact"]  # ...and added back here
-    if cfg.income_tax is not None:
+    if tax_paid is not None:
         # The income-year provision is not cash: add it back and pay the schedule.
-        tax_paid = pd.Series([cfg.income_tax.payments.get(str(p), 0.0) for p in pretax.index],
-                             index=pretax.index, dtype=float)
         operating_cash_flow = operating_cash_flow + tax - tax_paid
+    if payroll is not None:
+        operating_cash_flow = operating_cash_flow + payroll["cost"] - payroll["paid"]
     free_cash_flow = operating_cash_flow - capex
     change_in_cash = free_cash_flow - debt["principal"]
     ending_cash = change_in_cash.cumsum() + cfg.opening_balances.cash
 
-    forecast = pd.DataFrame(
-        {
-            "revenue": revenue["total"],
-            "cogs": cogs["total"],
-            "gross_profit": gross_profit,
-            "opex": opex["total"],
-            "ebitda": ebitda,
-            "da": da,
-            "interest": interest,
-            "pretax_income": pretax,
-            "tax": tax,
-            "net_income": net_income,
-            "wc_cash_impact": wc["wc_cash_impact"],
-            "operating_cash_flow": operating_cash_flow,
-            "capex": capex,
-            "principal": debt["principal"],
-            "free_cash_flow": free_cash_flow,
-            "change_in_cash": change_in_cash,
-            "ending_cash": ending_cash,
-        },
-        index=revenue.index,
-    )
-    if bad_debts is not None:
-        forecast.insert(list(forecast.columns).index("opex") + 1, "bad_debts", bad_debts)
-    if cfg.income_tax is not None:
-        forecast.insert(list(forecast.columns).index("tax") + 1, "tax_paid", tax_paid)
+    forecast = pd.DataFrame({
+        "revenue": revenue["total"], "cogs": cogs["total"], "gross_profit": gross_profit,
+        "opex": opex["total"], "ebitda": ebitda, "da": da, "interest": debt["interest"],
+        "pretax_income": pretax, "tax": tax, "net_income": net_income,
+        "wc_cash_impact": wc["wc_cash_impact"], "operating_cash_flow": operating_cash_flow,
+        "capex": capex, "principal": debt["principal"], "free_cash_flow": free_cash_flow,
+        "change_in_cash": change_in_cash, "ending_cash": ending_cash,
+    }, index=revenue.index)
+    _insert_optional_columns(forecast, {
+        "bad_debts": ("opex", 1, bad_debts),
+        "tax_paid": ("tax", 1, tax_paid),
+        "payroll": ("ebitda", 0, None if payroll is None else payroll["cost"]),
+        "payroll_paid": ("wc_cash_impact", 1, None if payroll is None else payroll["paid"]),
+    })
     _require_finite_columns(forecast, forecast.columns)
-    return forecast
+    return forecast, wc, debt
 
 
 def apply_receipt_delay(

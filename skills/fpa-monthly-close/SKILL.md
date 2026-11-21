@@ -22,7 +22,7 @@ Update the model with the latest actuals and forecast forward from the last clos
    company architecture.
 2. **Ingest the closed month's actuals** (see **fpa-configure-actuals**).
 3. **Establish the freeze line**: closed months use actuals; the forecast resumes from the last closed balance. Never let a not-yet-closed month drive conclusions (see **fpa-cfo-judgment**).
-4. **Recompute the forecast**: `pyfpa.cashflow_from_config(cfg)` after updating config with the new closed position.
+4. **Recompute the forecast**: `pyfpa.cashflow_from_config(cfg)` after updating config with the new closed position. When the reader needs a balance sheet too, `pyfpa.three_way_from_config(cfg)` gives the profit and loss, balance sheet and cash flow; confirm `check_balance` is nil before reporting it.
 5. **Variance**: compare actual versus plan for revenue, gross margin, EBITDA, and ending cash. For each material variance, state the *driver* (volume, price, cost ratio, timing) and quantify it. The quantified drivers must sum to the variance; label any remainder as unexplained, never absorb it into a driver.
 6. **Pick a reforecast posture** and say which you used:
    - **Plan** - frozen forecast unchanged
