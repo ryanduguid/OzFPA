@@ -12,7 +12,6 @@ url: "https://duguid.com.au/evaluate/"
 license:
   - Apache-2.0
   - MIT
-license-url: "https://github.com/ryanduguid/au-fpa-pack/blob/main/LICENSE"
 keywords:
   - ai-agents
   - australia
