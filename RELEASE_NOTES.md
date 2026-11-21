@@ -1,5 +1,9 @@
 # Unreleased
 
+- `pyfpa.au.tax_report(bas=, payg_instalments=, payroll=, fbt=)` lists every payment those schedules hold in one
+  table by due date: GST from `bas_schedule`, `payg_instalment_schedule`, PAYG withholding, super guarantee and payroll
+  tax from `settlement_events`, and `fbt_schedule`. Paydays that share a component and due date are one row. It adds
+  no rule, amount or date, so each obligation's total equals its schedule's.
 - Relicensed Ryan Duguid's original work under Apache-2.0. Earlier releases keep their original terms.
 
 # v0.7.0

@@ -60,6 +60,7 @@ from pyfpa.au.rates import (
     load_super_guarantee_table,
     rate_at,
 )
+from pyfpa.au.tax_report import tax_report
 
 __all__ = [
     "BasCycle",
@@ -101,4 +102,5 @@ __all__ = [
     "rate_at",
     "save_snapshot",
     "straight_line_schedule",
+    "tax_report",
 ]

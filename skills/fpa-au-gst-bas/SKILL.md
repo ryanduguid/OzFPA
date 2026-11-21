@@ -74,6 +74,12 @@ raises: use the original date. FBT left to pay with the return comes from
 enters the forecast only with `expected_receipt_on`, because 21 May is a payment
 deadline and not a refund date.
 
+To show every tax payment in one table, pass the schedules to
+`pyfpa.au.tax_report(bas=..., payg_instalments=..., payroll=events, fbt=...)`
+(each optional). It lists GST, PAYG instalments, PAYG withholding, super
+guarantee, payroll tax and FBT by due date, merging paydays that share a
+component and due date, and computes no amount or date of its own.
+
 ## Pitfalls
 
 - Never apply 10% to a GST-inclusive number; divide by 11 to extract

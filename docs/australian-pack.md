@@ -32,6 +32,9 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
 - **PAYG instalments** - quarterly payers' instalments by instalment rate or
   notified amount, due on the activity statement dates, or 21 days after a
   notice given once the quarter has ended (`pyfpa.au.payg_instalments`)
+- **Tax report** - GST, PAYG instalments, PAYG withholding, super guarantee,
+  payroll tax and FBT from the schedules above in one table by due date
+  (`pyfpa.au.tax_report`)
 - **Xero** - report parser with tracking-category and GST-basis
   detection plus the full register/map/reconcile recipe
   (`pyfpa.io.xero_au`, [`docs/recipes/xero-au.md`](../docs/recipes/xero-au.md)),
