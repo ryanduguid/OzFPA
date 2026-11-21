@@ -30,8 +30,9 @@ au-fpa-pack is an Australian extension of [openfpa](https://github.com/JeffBrine
 by Guiderail, for accountants and analysts doing forecasting and month-end work: 30 June
 financial years, Xero AU account mapping, GST and BAS cash timing and payroll on-costs.
 
-au-fpa-pack builds monthly, weekly and daily cash forecasts and a management briefing
-from a company's own records. Every assumption is declared in a file you can read, and
+au-fpa-pack builds monthly, weekly and daily cash forecasts, a three-way monthly forecast
+(profit and loss, balance sheet and cash flow, with GST and payroll liabilities paid on
+their due dates) and a management briefing from a company's own records. Every assumption is declared in a file you can read, and
 the funding decision stays with a person.
 
 **Start here:** [the worked Lumbridge case](examples/lumbridge-services/README.md) ·

@@ -149,6 +149,10 @@ class OpeningBalances(_ConfigModel):
     ap: float = 0.0
     inventory: float = 0.0
     nol: float = Field(default=0.0, ge=0)  # net operating loss carryforward
+    # Balance sheet only: net book value that da_monthly depreciates, and income
+    # tax owed at the start (negative when refundable), which income_tax.payments settle.
+    fixed_assets: float = Field(default=0.0, ge=0)
+    income_tax_payable: float = 0.0
 
 
 class IncomeTaxConfig(_ConfigModel):
@@ -214,6 +218,9 @@ class EntityConfig(_ConfigModel):
     @model_validator(mode="after")
     def _income_year_tax_starts_in_july(self) -> EntityConfig:
         if self.income_tax is None:
+            if self.opening_balances.income_tax_payable:
+                raise ValueError("opening_balances.income_tax_payable needs income_tax: "
+                                 "without it tax is paid in the month it arises")
             return self
         start = pd.Period(self.start_month, freq="M")
         if start.month != 7:
