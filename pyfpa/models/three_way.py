@@ -126,6 +126,28 @@ def _balance_sheet(
     return sheet
 
 
+def _cash_flow(forecast: pd.DataFrame, payroll: pd.DataFrame | None, gst_cash: pd.Series,
+               opening_cash: float) -> pd.DataFrame:
+    """The cash flow statement: the forecast's operating cash plus GST, then capex and debt repaid."""
+    zero = pd.Series(0.0, index=forecast.index)
+    operating = forecast["operating_cash_flow"] + gst_cash
+    closing_cash = forecast["ending_cash"] + gst_cash.cumsum()
+    return pd.DataFrame({
+        "net_income": forecast["net_income"],
+        "da": forecast["da"],
+        "working_capital": forecast["wc_cash_impact"],
+        "payroll_unpaid": zero if payroll is None else payroll["cost"] - payroll["paid"],
+        "income_tax_unpaid": forecast["tax"] - forecast["tax_paid"] if "tax_paid" in forecast else zero,
+        "gst": gst_cash,
+        "operating_cash_flow": operating,
+        "capex": -forecast["capex"],
+        "debt_repaid": -forecast["principal"],
+        "change_in_cash": operating - forecast["capex"] - forecast["principal"],
+        "opening_cash": closing_cash.shift(1, fill_value=opening_cash),
+        "closing_cash": closing_cash,
+    })
+
+
 def three_way_from_config(
     cfg: EntityConfig,
     *,
@@ -147,26 +169,9 @@ def three_way_from_config(
     forecast, wc, debt = _compose(cfg, costs)
     gst_part = _GstLayer(0.0, 0.0, zero, zero) if gst is None else _gst_layer(gst, forecast, wc, opening)
 
-    tax_unpaid = zero
-    if cfg.income_tax is not None:
-        tax_unpaid = forecast["tax"] - forecast["tax_paid"]
-    payroll_unpaid = zero if costs is None else costs["cost"] - costs["paid"]
-    operating = forecast["operating_cash_flow"] + gst_part.cash
-    closing_cash = forecast["ending_cash"] + gst_part.cash.cumsum()
-    cash_flow = pd.DataFrame({
-        "net_income": forecast["net_income"],
-        "da": forecast["da"],
-        "working_capital": forecast["wc_cash_impact"],
-        "payroll_unpaid": payroll_unpaid,
-        "income_tax_unpaid": tax_unpaid,
-        "gst": gst_part.cash,
-        "operating_cash_flow": operating,
-        "capex": -forecast["capex"],
-        "debt_repaid": -forecast["principal"],
-        "change_in_cash": operating - forecast["capex"] - forecast["principal"],
-        "opening_cash": closing_cash.shift(1, fill_value=opening.cash),
-        "closing_cash": closing_cash,
-    })
+    cash_flow = _cash_flow(forecast, costs, gst_part.cash, opening.cash)
+    closing_cash = cash_flow["closing_cash"]
+    tax_unpaid = cash_flow["income_tax_unpaid"]
 
     fixed_assets = opening.fixed_assets + (forecast["capex"] - forecast["da"]).cumsum()
     short = fixed_assets[fixed_assets < -_NEGATIVE_BALANCE_TOLERANCE]
