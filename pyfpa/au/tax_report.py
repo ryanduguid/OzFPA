@@ -7,7 +7,7 @@ Each source keeps its own rules: `bas_schedule` (net GST), `payg_instalment_sche
 `settlement_events` (PAYG withholding, super guarantee and payroll tax, through the
 due-date rules the caller passed) and `fbt_schedule`. This module only lists their
 rows together; it computes no amount or date. Payroll events that share a component
-and due date are one row, whose period runs from the first payday's month to the last.
+and due date are one row, whose period runs from the first source month to the last.
 A schedule that keeps no nominal date leaves `nominal_due_date` empty.
 """
 

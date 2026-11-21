@@ -12,7 +12,7 @@ from pyfpa.au.fbt import fbt_schedule
 from pyfpa.au.gst import GstAssumptions, bas_schedule, monthly_gst
 from pyfpa.au.payg_instalments import payg_instalment_schedule
 from pyfpa.au.paygw import paygw_due_rule
-from pyfpa.au.payroll_settlement import settlement_events
+from pyfpa.au.payroll_settlement import SettlementEvent, settlement_events
 from pyfpa.au.super_guarantee import super_due_rule
 
 MONTHS = pd.period_range("2026-07", "2026-12", freq="M")
@@ -97,6 +97,8 @@ def test_paydays_sharing_a_due_date_are_one_row():
         date(2027, 1, 21)]
     assert withholding["period"].tolist() == [str(month) for month in MONTHS]
     assert withholding["amount"].tolist() == [2000.0] * 6
+    # Payday Super falls due a week or so after each payday, so each payday is its own row.
+    assert len(report[report["obligation"] == "Super guarantee"]) == 13
 
 
 def test_a_quarterly_withholder_names_the_months_its_row_covers():
@@ -110,3 +112,18 @@ def test_no_schedules_give_an_empty_report():
     report = tax_report()
     assert report.empty
     assert list(report.columns) == ["due_date", "obligation", "period", "amount", "nominal_due_date"]
+
+
+def test_grouped_payroll_amounts_lose_no_cents_to_rounding():
+    # sum() on floats is compensated from Python 3.12, so the 2 dollars survive beside 1e16.
+    due = date(2026, 10, 7)
+    events = [SettlementEvent("payroll_tax", pd.Period(month, freq="M"), date(2026, 9, 30), due, due, amount)
+              for month, amount in [("2026-07", 1e16), ("2026-08", 1.0), ("2026-09", 1.0)]]
+    report = tax_report(payroll=events)
+    assert report[["period", "amount"]].values.tolist() == [["2026-07 to 2026-09", 10000000000000002.0]]
+
+
+def test_a_refund_keeps_its_sign_and_due_date():
+    fbt = fbt_schedule(2027, -500.0)
+    report = tax_report(fbt=fbt)
+    assert report[["due_date", "amount"]].values.tolist() == [[fbt["due_date"].iloc[0], -500.0]]
