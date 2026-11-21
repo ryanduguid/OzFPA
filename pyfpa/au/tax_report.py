@@ -13,6 +13,7 @@ A schedule that keeps no nominal date leaves `nominal_due_date` empty.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from datetime import date
 
@@ -49,7 +50,7 @@ def _payroll_rows(events: Sequence[SettlementEvent]) -> list[dict[str, object]]:
         last = max(event.source_period for event in group)
         rows.append({"due_date": due, "obligation": PAYROLL_OBLIGATIONS[component],
                      "period": str(first) if first == last else f"{first} to {last}",
-                     "amount": sum(event.amount for event in group), "nominal_due_date": None})
+                     "amount": math.fsum(event.amount for event in group), "nominal_due_date": None})
     return rows
 
 

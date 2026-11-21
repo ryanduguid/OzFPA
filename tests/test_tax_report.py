@@ -5,6 +5,7 @@
 
 from datetime import date, timedelta
 
+import numpy as np
 import pandas as pd
 
 from pyfpa.au import tax_report
@@ -115,10 +116,10 @@ def test_no_schedules_give_an_empty_report():
 
 
 def test_grouped_payroll_amounts_lose_no_cents_to_rounding():
-    # sum() on floats is compensated from Python 3.12, so the 2 dollars survive beside 1e16.
+    # Amounts read from a frame can be NumPy scalars, which leave sum()'s compensated float path.
     due = date(2026, 10, 7)
     events = [SettlementEvent("payroll_tax", pd.Period(month, freq="M"), date(2026, 9, 30), due, due, amount)
-              for month, amount in [("2026-07", 1e16), ("2026-08", 1.0), ("2026-09", 1.0)]]
+              for month, amount in [("2026-07", 1e16), ("2026-08", np.float64(1.0)), ("2026-09", 1.0)]]
     report = tax_report(payroll=events)
     assert report[["period", "amount"]].values.tolist() == [["2026-07 to 2026-09", 10000000000000002.0]]
 
