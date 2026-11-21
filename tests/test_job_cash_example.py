@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
+# SPDX-License-Identifier: Apache-2.0
 
 """The file handoff retains cash timing and rejects altered assumptions."""
 import hashlib

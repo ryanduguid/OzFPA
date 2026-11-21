@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
+# SPDX-License-Identifier: Apache-2.0
 
 """Render worked decisions from the existing Ridgeline weekly scenarios."""
 from __future__ import annotations

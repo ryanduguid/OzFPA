@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
+# SPDX-License-Identifier: Apache-2.0
 
 """Describe validated model inputs without running the financial model."""
 from __future__ import annotations

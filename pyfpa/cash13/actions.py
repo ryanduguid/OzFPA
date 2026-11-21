@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
+# SPDX-License-Identifier: Apache-2.0
 
 """Up to 3 actions for each week the 13-week forecast flags, from rows it already holds.
 

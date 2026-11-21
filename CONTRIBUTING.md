@@ -93,7 +93,7 @@ real businesses. The contributions that help most:
   value for its file, with its reason, in `tools/fixture-screen/tests/synthetic-identifiers.txt`.
 - Keep modules small, pure, and immutable; config is pydantic-validated; disk I/O stays in
   the `io/` layer. Match the surrounding style.
-- Licensed under the [Ryan Duguid Public Attribution Licence 1.0](LICENSE). By contributing, you agree your work is offered under the same.
+- By contributing, you agree to offer your work under the [Apache License, Version 2.0](LICENSE). Retained Guiderail code remains under the MIT licence reproduced in [NOTICE](NOTICE).
 
 Questions or ideas about the shared core go to [openfpa's issues](https://github.com/JeffBrines/openfpa/issues);
 for the Australian layer, use [this repository's issues](https://github.com/ryanduguid/au-fpa-pack/issues).
