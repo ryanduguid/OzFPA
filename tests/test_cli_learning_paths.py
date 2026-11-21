@@ -1,5 +1,5 @@
 # Copyright 2026 Ryan Duguid
-# SPDX-License-Identifier: LicenseRef-Duguid-Public-Attribution-1.0
+# SPDX-License-Identifier: Apache-2.0
 
 """Error branches of the correction, scorecard, experiment and context-pack
 commands in pyfpa/cli_commands/learning.py, and the snapshot check in
