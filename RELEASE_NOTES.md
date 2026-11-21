@@ -129,7 +129,7 @@ Known issues:
 
 Breaking for code and workbooks written against 0.4.0:
 
-- Versions made available from 4 November 2026 are licensed under the Ryan Duguid Public Attribution Licence 1.0: the FSL-1.1-ALv2 text unchanged, plus a condition that anyone making a copy, port or derivative available outside their organisation credits Ryan Duguid publicly with a link to this repository (#278). Internal use is exempt, and 0.4.0 keeps its FSL-1.1-ALv2 terms.
+- v0.5.0 is licensed under the [Ryan Duguid Public Attribution Licence 1.0](https://github.com/ryanduguid/au-fpa-pack/blob/v0.5.0/LICENSE): the FSL-1.1-ALv2 text unchanged, plus a condition that anyone making a copy, port or derivative available outside their organisation credits Ryan Duguid publicly with a link to this repository (#278). Internal use is exempt, and 0.4.0 keeps its FSL-1.1-ALv2 terms.
 - The Lumbridge workbook's status cell moves from `Model!B26` to `Model!B27`, below a fourth check, `check_receivables_open_invoices`, which compares Receivables with the receipts for invoices raised by month end and received after it (#269).
 
 Added:
