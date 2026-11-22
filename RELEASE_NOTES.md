@@ -1,5 +1,8 @@
 # Unreleased
 
+- `individual_trust_tax_due_date` treats a return lodged on the first business day after a lodgment due date that
+  falls on a weekend or public holiday as on time (TAA 1953 Sch 1 s 388-52), so a later notice of assessment still
+  sets the payment date.
 - `pyfpa.au.individual_trust_tax_schedule(income_year, amount, category, lodged_on, notice_given_on=None)` and
   `individual_trust_tax_due_date` date an individual's or trust's income tax payment for the year to 30 June 2026
   from the new `individual_trust_tax.yaml`: 21 days after the lodgment due date of its `IndividualTrustTaxCategory`

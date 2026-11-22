@@ -51,6 +51,24 @@ def test_a_notice_given_after_the_lodgment_due_date_moves_payment_to_21_days_aft
                                          notice_given_on=date(2026, 11, 6)) == date(2026, 11, 27)
 
 
+@pytest.mark.parametrize("lodged_on", [
+    # On the return day itself, Saturday 31 October 2026.
+    date(2026, 10, 31),
+    # On Monday 2 November, the first business day after it (TAA 1953 Sch 1 s 388-52).
+    date(2026, 11, 2),
+])
+def test_a_return_lodged_by_the_rolled_lodgment_due_date_is_on_time(lodged_on):
+    # Notice given Monday 9 November, so due Monday 30 November.
+    assert individual_trust_tax_due_date(2026, Category.SELF_LODGER, lodged_on,
+                                         notice_given_on=date(2026, 11, 9)) == date(2026, 11, 30)
+
+
+def test_a_return_lodged_after_the_rolled_lodgment_due_date_is_late():
+    # Tuesday 3 November 2026 is late, so 21 November, a Saturday, moves to Monday 23 November.
+    assert individual_trust_tax_due_date(2026, Category.SELF_LODGER, date(2026, 11, 3),
+                                         notice_given_on=date(2026, 11, 9)) == date(2026, 11, 23)
+
+
 def test_a_notice_given_before_the_lodgment_due_date_leaves_21_days_after_that_date():
     assert individual_trust_tax_nominal_due_date(2026, Category.SELF_LODGER, date(2026, 8, 1),
                                                  notice_given_on=date(2026, 8, 20)) == date(2026, 11, 21)

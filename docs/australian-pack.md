@@ -227,7 +227,10 @@ notice_given_on=None)` dates the income tax an individual or trust has left to
 pay. Neither is a self-assessment entity, so the tax is due 21 days after the
 return's lodgment due date, or 21 days after the notice of assessment when it is
 given later to a return lodged on time (Income Tax Assessment Act 1997
-s 5-5(5) and (6)); a late return pays 21 days after its lodgment due date. The
+s 5-5(5) and (6)); a late return pays 21 days after its lodgment due date. A
+return lodged on the first business day after a lodgment due date that is not
+one is on time, as Taxation Administration Act 1953 Schedule 1 s 388-52 lets it
+'be given on the first business day after the lodgment day'. The
 caller states its `IndividualTrustTaxCategory`, taking the first row that fits:
 31 October for a return lodged without a registered agent and for an agent's
 client with a prior year return outstanding at 30 June 2026 (or prosecuted and
