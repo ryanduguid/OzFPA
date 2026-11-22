@@ -70,7 +70,7 @@ def _changes(before: pd.DataFrame, after: pd.DataFrame, paid: set[str]) -> pd.Da
         else:
             same = was.amount == now.amount and was.expected_on == now.expected_on
             change = "unchanged" if same else "changed"
-        either = now if now is not None else was
+        either = now if now is not None else old[key]
         rows.append([either.invoice, either.customer,
                      None if was is None else was.amount, None if now is None else now.amount,
                      None if was is None else was.expected_on, None if now is None else now.expected_on, change])

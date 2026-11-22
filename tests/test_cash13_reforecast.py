@@ -13,7 +13,13 @@ from datetime import date, timedelta
 import pandas as pd
 import pytest
 
-from pyfpa import Cash13Config, WeeklyFlow, cash13_forecast, predicted_receipt_flows, predicted_receipts
+from pyfpa import (
+    Cash13Config,
+    WeeklyFlow,
+    cash13_forecast,
+    predicted_receipt_flows,
+    predicted_receipts,
+)
 from pyfpa.cash13.reforecast import reforecast_from_actuals
 
 START, ROLLED = date(2026, 11, 2), date(2026, 11, 30)
@@ -98,8 +104,10 @@ def test_an_invoice_paid_in_the_closed_weeks_leaves_the_forecast_and_the_rest_ar
     changes = result.changes.set_index("invoice")
     assert changes["change"].to_dict() == {"Q-1": "paid", "S-1": "unchanged", "Q-2": "changed", "N-2": "new"}
     assert changes.loc["Q-2", ["expected_before", "expected_after"]].tolist() == [date(2026, 12, 1), None]
-    assert changes.loc["Q-1", ["amount_before", "amount_after"]].tolist() == [1000.0, None]
-    assert changes.loc["N-2", ["amount_before", "expected_after"]].tolist() == [None, date(2026, 12, 13)]
+    assert changes.loc["Q-1", "amount_before"] == 1000.0
+    assert pd.isna(changes.loc["Q-1", "amount_after"])
+    assert pd.isna(changes.loc["N-2", "amount_before"])
+    assert changes.loc["N-2", "expected_after"] == date(2026, 12, 13)
 
 
 @pytest.mark.parametrize("side", ["receipts", "disbursements"])
@@ -107,9 +115,9 @@ def test_scheduled_flows_keep_their_dates(side):
     rolled = _rolled().config
     flows = [flow for flow in getattr(rolled, side) if flow.name[:3] not in {"S-1", "N-2"}]
     # The original flows over 17 weeks, from week 5, are the rolled flows over 13.
-    original = cash13_forecast(Cash13Config(opening_cash=0.0, window_start=START, weeks=17,
-                                            **{side: SCHEDULED[side]}))
-    again = cash13_forecast(Cash13Config(opening_cash=0.0, window_start=ROLLED, **{side: flows}))
+    original = cash13_forecast(Cash13Config.model_validate(
+        {"opening_cash": 0.0, "window_start": START, "weeks": 17, side: SCHEDULED[side]}))
+    again = cash13_forecast(Cash13Config.model_validate({"opening_cash": 0.0, "window_start": ROLLED, side: flows}))
     assert again[side].tolist() == original[side].iloc[4:].tolist()
     # Flows wholly in the closed weeks leave, rather than stay with no week.
     assert {flow.name for flow in flows} == {flow.name for flow in SCHEDULED[side]} - {"Grant", "Fitout"}
