@@ -22,6 +22,11 @@ from pyfpa.au.calendar import (
     fy_summary,
     fy_year,
 )
+from pyfpa.au.company_tax import (
+    CompanyTaxCategory,
+    company_tax_due_date,
+    company_tax_schedule,
+)
 from pyfpa.au.depreciation import (
     DepreciationEvidence,
     DepreciationEvidenceError,
@@ -64,6 +69,7 @@ from pyfpa.au.tax_report import tax_report
 
 __all__ = [
     "BasCycle",
+    "CompanyTaxCategory",
     "DepreciationEvidence",
     "DepreciationEvidenceError",
     "DriverSeries",
@@ -77,6 +83,8 @@ __all__ = [
     "asset_movement",
     "bas_schedule",
     "cash_and_expense",
+    "company_tax_due_date",
+    "company_tax_schedule",
     "fbt_due_date",
     "fbt_schedule",
     "fbt_weekly_flows",

@@ -86,7 +86,10 @@ unchanged:
 Set `opening_balances.fixed_assets` to the book value `da_monthly` depreciates:
 D&A that would take fixed assets below nil is refused. Set
 `opening_balances.income_tax_payable` (negative when refundable) with
-`income_tax`, whose payments settle it. GST combined with `bad_debt_share` is
+`income_tax`, whose payments settle it. For a company, `pyfpa.au.company_tax_schedule`
+dates last year's balance and `payments_by_month(pd.concat([instalments, company_tax]))`
+turns it and `payg_instalment_schedule`'s rows into `income_tax.payments`, so a
+12-month forecast pays each on its due date. GST combined with `bad_debt_share` is
 refused, because GST on bad debts is not modelled. Leave provisions and deferred
 tax are not modelled either.
 

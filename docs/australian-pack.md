@@ -32,9 +32,11 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
 - **PAYG instalments** - quarterly payers' instalments by instalment rate or
   notified amount, due on the activity statement dates, or 21 days after a
   notice given once the quarter has ended (`pyfpa.au.payg_instalments`)
+- **Company income tax** - the payment date for a 30 June balancing company's
+  year by its lodgment program row (`pyfpa.au.company_tax`)
 - **Tax report** - GST, PAYG instalments, PAYG withholding, super guarantee,
-  payroll tax and FBT from the schedules above in one table by due date
-  (`pyfpa.au.tax_report`)
+  payroll tax, FBT and company income tax from the schedules above in one table
+  by due date (`pyfpa.au.tax_report`)
 - **Xero** - report parser with tracking-category and GST-basis
   detection plus the full register/map/reconcile recipe
   (`pyfpa.io.xero_au`, [`docs/recipes/xero-au.md`](../docs/recipes/xero-au.md)),
@@ -197,6 +199,25 @@ generally 25 June when a tax agent lodges electronically and has the employer on
 its FBT client list by 21 May (`LodgmentChannel.AGENT`), moved to the next business
 day. A year after `reviewed_until` in `fbt.yaml` (31 March 2027) raises. FBT
 instalments sit on activity statements, so they take the BAS dates.
+
+`company_tax_schedule(income_year, amount, category)` dates the income tax a
+30 June balancing company has left to pay after its PAYG instalments. The ATO
+sets the date by the company's circumstances, so the caller states its
+`CompanyTaxCategory`, taking the first row that fits: 1 December for a company
+that must lodge by 31 October or was a taxable medium or large taxpayer in the
+prior year (whether or not it uses an agent); 28 February for a medium or large
+taxpayer that was not taxable in the prior year or is newly registered, for a
+subsidiary member that left its consolidated group during the year, and for any
+other company preparing its own return; 31 March for any other agent client
+with total income above $2 million two years earlier; and 15 May for every other
+agent client. A date on a weekend or
+public holiday moves to the next business day, so 28 February 2027 becomes
+2 March. `company_tax.yaml` holds the dates for the year to 30 June 2026 with
+their ATO sources; another year raises. A refund has no due date and is
+refused. Substituted accounting periods, companies that are not full
+self-assessment taxpayers and head companies of consolidated groups are not
+covered. Pass the schedule to `payments_by_month` for `income_tax.payments`, and
+to `tax_report(company_tax=...)`.
 
 `payment_plan_estimate` shows what paying an ATO debt by instalments would cost, and
 `payment_plan_weekly_flows` puts those payments in a 13-week scenario in place of

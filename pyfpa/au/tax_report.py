@@ -5,7 +5,7 @@
 
 Each source keeps its own rules: `bas_schedule` (net GST), `payg_instalment_schedule`,
 `settlement_events` (PAYG withholding, super guarantee and payroll tax, through the
-due-date rules the caller passed) and `fbt_schedule`. This module only lists their
+due-date rules the caller passed), `fbt_schedule` and `company_tax_schedule`. This module only lists their
 rows together; it computes no amount or date. Payroll events that share a component
 and due date are one row, whose period runs from the first source month to the last.
 A schedule that keeps no nominal date leaves `nominal_due_date` empty.
@@ -60,6 +60,7 @@ def tax_report(
     payg_instalments: pd.DataFrame | None = None,
     payroll: Sequence[SettlementEvent] = (),
     fbt: pd.DataFrame | None = None,
+    company_tax: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Every payment the given schedules hold, by due date, then obligation and period.
 
@@ -69,6 +70,7 @@ def tax_report(
     rows = (_schedule_rows(bas, "GST (BAS)", "period_label")
             + _schedule_rows(payg_instalments, "PAYG instalment", "quarter")
             + _payroll_rows(payroll)
-            + _schedule_rows(fbt, "FBT", "period_label"))
+            + _schedule_rows(fbt, "FBT", "period_label")
+            + _schedule_rows(company_tax, "Company income tax", "period_label"))
     report = pd.DataFrame(rows, columns=COLUMNS)
     return report.sort_values(["due_date", "obligation", "period"], kind="stable", ignore_index=True)

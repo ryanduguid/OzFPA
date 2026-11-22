@@ -165,6 +165,11 @@ def load_gst_bas_data() -> dict[str, Any]:
     return _load_yaml("gst_bas.yaml")
 
 
+def load_company_tax_data() -> dict[str, Any]:
+    """Company income tax payment dates by income year and lodgment program row."""
+    return _load_yaml("company_tax.yaml")
+
+
 def load_fbt_data() -> dict[str, Any]:
     """FBT return and payment dates."""
     return _load_yaml("fbt.yaml")

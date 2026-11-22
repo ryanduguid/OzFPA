@@ -1,0 +1,39 @@
+# Company income tax payment dates for 30 June balancing companies, by the
+# income year's end (2026 is the year to 30 June 2026), from the ATO's dates for
+# the 2026-27 lodgment program. Each date applies to a company in that row and
+# no earlier one; the caller states which row fits.
+#
+# The rows apply in the order below: each covers only companies no earlier row
+# covers. required_by_31_october, large_medium_taxable_last_year and
+# self_preparing_other:
+# https://www.ato.gov.au/businesses-and-organisations/preparing-lodging-and-paying/reports-and-returns/due-dates-for-lodging-and-paying/due-dates-by-month/december
+# (1 December: 'Payment due date for companies that were taxable medium to large
+# clients in the immediate prior year' and 'for companies that were required to
+# lodge by 31 October') and .../due-dates-by-month/february (28 February:
+# 'Lodgment and payment due date for self-preparing entities that were not due at
+# an earlier date'), both last updated 2026-07-23, read 2026-11-22.
+#
+# large_medium_not_taxable_last_year and agent_*: the registered agent lodgment
+# program for companies, 30 June balancers
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/due-dates-for-tax-returns-by-client-type/companies-and-super-funds
+# (last updated 2026-07-01, read 2026-11-22): 28 February 2027 for large and
+# medium taxpayers whose 2025 return was non-taxable and for new registrant large
+# and medium taxpayers, which the February page also gives to self-preparing
+# medium to large new registrations, 'taxable and non-taxable', and for a
+# subsidiary member of a consolidated group that exited the group in the year; 31 March 2027 for total income in 2024-25 above
+# $2 million unless required earlier; 15 May 2027 for all remaining tax agent clients.
+#
+# A date on a weekend or public holiday moves to the next business day
+# ('Due dates for lodging and paying', last updated 2023-03-02, read 2026-11-22).
+# Not covered: substituted accounting periods, companies that are not full
+# self-assessment taxpayers (paid as the notice of assessment says) and head
+# companies of consolidated groups.
+payment_due:
+  2026:
+    required_by_31_october: 2026-12-01
+    large_medium_taxable_last_year: 2026-12-01
+    large_medium_not_taxable_last_year: 2027-02-28
+    exited_consolidated_group: 2027-02-28
+    self_preparing_other: 2027-02-28
+    agent_total_income_over_2m: 2027-03-31
+    agent_other: 2027-05-15

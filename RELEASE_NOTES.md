@@ -1,5 +1,10 @@
 # Unreleased
 
+- `pyfpa.au.company_tax_schedule(income_year, amount, category)` and `company_tax_due_date` date a 30 June balancing
+  company's income tax payment by its `CompanyTaxCategory`, the row of the ATO's lodgment program it falls in, from the
+  new `company_tax.yaml` (year to 30 June 2026). `payments_by_month` turns the schedule, with PAYG instalments, into
+  `income_tax.payments`, so a 12-month forecast pays last year's tax on its date; `tax_report(company_tax=...)` lists
+  it. A refund and an unrecorded year are refused.
 - `reforecast_from_actuals(cfg, actuals_by_week, predicted, invoices, receipts, open_invoices)` rolls the 13-week
   forecast past the weeks `weekly_actuals_score` scored. The window starts the week after the last closed week, from
   its actual closing balance; scheduled flows keep their dates; open invoices are placed again by `predicted_receipts`
