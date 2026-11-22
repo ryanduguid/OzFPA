@@ -33,7 +33,8 @@ SCHEDULED = {
     "disbursements": [
         WeeklyFlow(name="Wages", amount=4000.0, start_week=1, recurrence="biweekly"),
         WeeklyFlow(name="Super", amount=500.0, start_week=2, recurrence="biweekly"),
-        WeeklyFlow(name="Rent", amount=3000.0, start_week=1, recurrence="monthly", anchor_date=date(2026, 11, 5)),
+        # Anchored before the window: 31 October, then 30 November, 31 December, 31 January and 28 February.
+        WeeklyFlow(name="Rent", amount=3000.0, start_week=1, recurrence="monthly", anchor_date=date(2026, 10, 31)),
         WeeklyFlow(name="Fitout", amount=800.0, start_week=1, recurrence="weekly", end_week=3),
         WeeklyFlow(name="Loan", amount=600.0, start_week=2, recurrence="weekly", end_week=6),
         WeeklyFlow(name="Costs", amount=1000.0, start_week=1, recurrence="weekly"),
@@ -75,7 +76,8 @@ CONFIG = Cash13Config(opening_cash=20000.0, window_start=START,
 # Q-1 was paid in full on 9 November; Newco's N-2 was issued on 23 November.
 PAID_SINCE = [("Q-1", "Quickpay", "2026-10-26", 1000.0, "2026-11-09")]
 STILL_OPEN = [OPEN[1], OPEN[2], ("N-2", "Newco", "2026-11-23", 3000.0)]
-CLOSED = _actuals([(0.0, 5800.0), (1000.0, 6100.0), (1500.0, 5400.0), (0.0, 1600.0)])
+# Week 1 has no receipts, which the weekly score would refuse as a zero actual; nothing is scored here.
+CLOSED = _actuals([(0.0, 2800.0), (1000.0, 6100.0), (1500.0, 5400.0), (0.0, 1600.0)])
 
 
 def _rolled():
@@ -87,7 +89,7 @@ def test_the_rolled_forecast_opens_at_the_last_actual_balance():
     assert PREDICTED["week"].tolist() == [2, 7, 5]
     config = _rolled().config
     assert config.window_start == ROLLED
-    assert config.opening_cash == 20000.0 + 2500.0 - 18900.0
+    assert config.opening_cash == 20000.0 + 2500.0 - 15900.0
     assert config.weeks == 13
 
 
@@ -127,6 +129,15 @@ def test_flows_that_do_not_come_from_the_predicted_invoices_are_refused():
     moved = PREDICTED.assign(week=PREDICTED["week"].replace({7: 8}))
     with pytest.raises(ValueError, match="the forecast has no receipt 'S-1 Slowpay.*in week 8"):
         reforecast_from_actuals(CONFIG, CLOSED, moved, *_history(PAID_SINCE), _open(STILL_OPEN))
+
+
+def test_a_scheduled_receipt_equal_to_an_invoice_receipt_stays():
+    # A second receipt equal to S-1's: only the one predicted_receipts made is replaced.
+    s1 = predicted_receipt_flows(PREDICTED)[1]
+    config = CONFIG.model_copy(update={"receipts": [*CONFIG.receipts, s1]})
+    rolled = reforecast_from_actuals(config, CLOSED, PREDICTED, *_history(PAID_SINCE), _open(STILL_OPEN)).config
+    assert [(flow.name[:3], flow.start_week) for flow in rolled.receipts if flow.name.startswith("S-1 ")] == [
+        ("S-1", 3), ("S-1", 3)]
 
 
 def test_an_invoice_that_is_neither_open_nor_paid_is_refused():

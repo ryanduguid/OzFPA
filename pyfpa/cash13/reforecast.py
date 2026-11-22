@@ -87,8 +87,10 @@ def reforecast_from_actuals(
 ) -> Reforecast:
     """The forecast rolled past its closed weeks, its open invoices placed again, and what changed.
 
-    `actuals_by_week` is the closed weeks as `weekly_actuals_score` takes them
-    and is refused on the same terms. `predicted` is the `predicted_receipts`
+    `actuals_by_week` is the closed weeks as `weekly_actuals_score` takes them,
+    with the same checks of their weeks, values and balances. Nothing is
+    scored, so a week with no receipts is accepted here although the score
+    refuses a zero actual on a weighted line. `predicted` is the `predicted_receipts`
     result the forecast's invoice receipts came from; those receipts must be in
     `cfg.receipts` as `predicted_receipt_flows` made them, and are replaced.
     `invoices`, `receipts` and `open_invoices` are `predicted_receipts`' inputs

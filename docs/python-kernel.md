@@ -127,8 +127,9 @@ match to the dollar, which hides a 1,000 miss each way in the weeks themselves.
 `tests/test_backtest_weekly.py` asserts these figures.
 
 `reforecast_from_actuals(config, actuals_by_week, predicted, invoices, receipts,
-open_invoices)` is the opt-in next step. It takes the same closed weeks, refused
-on the same terms, and returns `Reforecast(config, receivables, changes)`:
+open_invoices)` is the opt-in next step. It takes the same closed weeks, with the
+same checks of their weeks, values and balances (it scores nothing, so a week with
+no receipts is accepted), and returns `Reforecast(config, receivables, changes)`:
 
 - `config` starts the week after the last closed week, from its actual closing
   balance, and keeps the window's length. Scheduled flows keep their dates: a
