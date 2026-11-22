@@ -181,6 +181,48 @@ def test_a_gst_refund_is_received_on_the_bas_due_date():
     assert flows["gst"][october] == pytest.approx(trade_gst[october] - refund)
 
 
+def _with_opening_gst(gst: GstAssumptions, opening_gst: float, **changes: Any):
+    """The forecast with and without an opening GST balance, which nothing else distinguishes."""
+    balances = {"cash": 10000.0, "ar": 14000.0, "ap": 3500.0, "inventory": 8000.0, "fixed_assets": 6000.0}
+    cfg = _config(opening_balances=OpeningBalances(**balances, gst_payable=opening_gst), **changes)
+    result = three_way_from_config(cfg, gst=gst)
+    _assert_statements_hold(result, cfg)
+    return result, three_way_from_config(_config(opening_balances=OpeningBalances(**balances), **changes), gst=gst)
+
+
+@pytest.mark.parametrize(("start", "cycle", "opening_gst", "settled"), [
+    # The June quarter's BAS is due on 28 July 2026.
+    ("2026-07", BasCycle.QUARTERLY, 3000.0, "2026-07"),
+    # July is part of the September quarter, whose BAS is due on 28 October 2026.
+    ("2026-08", BasCycle.QUARTERLY, 3000.0, "2026-10"),
+    # June's monthly statement is due on 21 July 2026; a negative balance is a refund.
+    ("2026-07", BasCycle.MONTHLY, -500.0, "2026-07"),
+])
+def test_an_opening_gst_balance_is_settled_on_the_prior_periods_bas_date(start, cycle, opening_gst, settled):
+    with_balance, without = _with_opening_gst(GstAssumptions(bas_cycle=cycle), opening_gst, start_month=start)
+    owed = with_balance.balance_sheet["gst_payable"] - without.balance_sheet["gst_payable"]
+    cash = with_balance.balance_sheet["cash"] - without.balance_sheet["cash"]
+    paid = pd.Period(settled, freq="M")
+    assert owed[:paid - 1].tolist() == pytest.approx([opening_gst] * len(owed[:paid - 1]))
+    assert owed[paid:].tolist() == pytest.approx([0.0] * len(owed[paid:]))
+    assert cash[:paid - 1].tolist() == pytest.approx([0.0] * len(cash[:paid - 1]))
+    assert cash[paid:].tolist() == pytest.approx([-opening_gst] * len(cash[paid:]))
+    assert with_balance.cash_flow["gst"][paid] - without.cash_flow["gst"][paid] == pytest.approx(-opening_gst)
+    pd.testing.assert_frame_equal(with_balance.profit_and_loss, without.profit_and_loss)
+
+
+def test_an_opening_gst_balance_due_after_the_forecast_stays_owed():
+    with_balance, without = _with_opening_gst(GstAssumptions(), 3000.0, start_month="2026-08", horizon_months=2)
+    owed = with_balance.balance_sheet["gst_payable"] - without.balance_sheet["gst_payable"]
+    assert owed.tolist() == pytest.approx([3000.0] * 3)
+
+
+def test_an_opening_gst_balance_needs_gst():
+    cfg = _config(opening_balances=OpeningBalances(gst_payable=100.0))
+    with pytest.raises(ValueError, match="gst_payable needs gst"):
+        three_way_from_config(cfg)
+
+
 def test_statement_totals_that_overflow_are_refused():
     cfg = _config(opening_balances=OpeningBalances(cash=1e308, ar=14000.0, ap=3500.0, inventory=8000.0,
                                                    fixed_assets=1e308), horizon_months=1)
