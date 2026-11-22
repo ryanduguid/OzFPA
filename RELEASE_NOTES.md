@@ -6,6 +6,9 @@
   from the paid history as it now stands, so an invoice paid in the closed weeks leaves the forecast. It reports each
   invoice as paid, new, changed or unchanged, and refuses invoice receipts the forecast does not hold and a forecast
   invoice that is now neither open nor paid.
+- `opening_balances.gst_payable` (negative when refundable) opens the three-way forecast's GST liability. It is paid
+  on the `bas_schedule` due date of the BAS period holding the month before the start, so a BAS owed at the start
+  reaches cash. `three_way_from_config` refuses it without `gst`.
 - `pyfpa.au.tax_report(bas=, payg_instalments=, payroll=, fbt=)` lists every payment those schedules hold in one
   table by due date: GST from `bas_schedule`, `payg_instalment_schedule`, PAYG withholding, super guarantee and payroll
   tax from `settlement_events`, and `fbt_schedule`. Paydays that share a component and due date are one row. It adds
