@@ -22,7 +22,7 @@
 [![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
 [![licence: Apache-2.0](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
 
-[Worked example](#worked-example) · [Package](#package) · [Reproduce and inspect](#reproduce-and-inspect) · [Skills](#skills) · [Licence](#licence)
+[Worked example](#worked-example) · [Package](#package) · [Skills](#skills) · [Licence](#licence)
 
 </div>
 
@@ -83,27 +83,15 @@ The briefing, the monthly and cash schedules and the JSON summary from that run 
 
 In desktop Excel, change `Assumptions!B2` from 0 to 45. This delays one $44,000 receipt and creates a $25,160 cash shortfall on 6 November without changing profit. Restore 0 after use. The workbook supports only whole-day receipt delays from 0 to 120; CSVs and briefing text are fixed exports.
 
-Read the [assumptions and limits](examples/lumbridge-services/README.md) before using the example. This synthetic case does not establish client outcomes or forecast accuracy.
+Read the [assumptions and limits](examples/lumbridge-services/README.md) before using the example. This synthetic case does not establish client outcomes or forecast accuracy, and the commands above create files without establishing native Excel recalculation.
 
-[Harbour Light](examples/harbour-light/README.md) provides a separate Victorian wholesale example with FY2027 reporting and quarterly BAS cash timing.
+[Harbour Light](examples/harbour-light/README.md) provides a separate Victorian wholesale example with FY2027 reporting and quarterly BAS cash timing; [other examples](docs/examples.md) use synthetic and public data.
 
 ## Package
 
 **Package lifecycle:** published. The distribution is `au-fpa-pack`, the import is `pyfpa` and the command is `openfpa`. Version 0.7.0 is on PyPI as `au-fpa-pack` and has an immutable GitHub release; a clone stays the way to develop it.
 
 On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install the PyPI distribution named `pyfpa`: it is an unrelated project that also installs a top-level `pyfpa` package.
-
-## Reproduce and inspect
-
-Reproducing an au-fpa-pack example starts from the setup guide and that example's stated inputs, method and limits:
-
-- [Setup](docs/installation.md)
-- [Lumbridge inputs, method and limits](examples/lumbridge-services/README.md)
-- [Harbour Light inputs, method and limits](examples/harbour-light/README.md)
-- [Australian scope and source dates](docs/australian-pack.md)
-- [Other synthetic and public-data examples](docs/examples.md)
-
-The command above creates files; it does not establish native Excel recalculation or forecast accuracy.
 
 ## Skills
 
