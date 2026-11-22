@@ -25,6 +25,7 @@ from pyfpa.cash13.actions import risk_week_actions
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
+from pyfpa.cash13.reforecast import Reforecast, reforecast_from_actuals
 from pyfpa.cash13.runway import runway_summary
 from pyfpa.cash13.scenarios import (
     FlowChange,
@@ -200,6 +201,7 @@ __all__ = [
     "PromotionApproval",
     "PromotionDenied",
     "PromotionRecord",
+    "Reforecast",
     "ResearchEpoch",
     "ResearchObjective",
     "Scenario",
@@ -274,6 +276,7 @@ __all__ = [
     "read_pl_csv",
     "reconcile",
     "reconcile_account_table",
+    "reforecast_from_actuals",
     "record_intake_fact",
     "record_promotion_approval",
     "register_challenger",
