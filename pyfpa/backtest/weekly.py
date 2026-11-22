@@ -4,7 +4,7 @@ The weekly counterpart of `holdout_backtest`: the forecast and the actuals are
 reduced by `extract_lines` and `aggregate_periods` and scored by
 `score_forecast`, so a week is measured, and refused, as a month is. A person
 runs it on their own actuals once weeks have closed; it does not change or
-refresh the forecast.
+refresh the forecast; `reforecast_from_actuals` rolls it forward.
 """
 
 from __future__ import annotations
@@ -71,6 +71,32 @@ def _require_same_basis(cfg: Cash13Config, weeks: Sequence[Mapping[str, float]])
         balance = actual["ending_cash"]
 
 
+def _closed_weeks(
+    cfg: Cash13Config, actuals_by_week: Mapping[str, Mapping[str, float]]
+) -> tuple[date, list[dict[str, float]]]:
+    """The forecast's window_start and the closed weeks' actuals from week 1, once they line up with it."""
+    if cfg.window_start is None:
+        raise ValueError("the forecast needs window_start, the date it was made as at")
+    start = cfg.window_start
+    by_week: dict[int, Mapping[str, float]] = {}
+    for label, values in actuals_by_week.items():
+        offset = (_week_start(label) - start).days
+        if offset < 0 or offset % 7 or offset // 7 >= cfg.weeks:
+            raise ValueError(f"actual week {label!r} does not start one of the forecast's {cfg.weeks} weeks "
+                             f"from {start.isoformat()}")
+        # Labels are unique dates in one form, so no 2 of them name the same week.
+        by_week[offset // 7 + 1] = values
+    if not by_week:
+        raise ValueError("at least one actual week is required")
+    last = max(by_week)
+    missing = [week for week in range(1, last + 1) if week not in by_week]
+    if missing:
+        raise ValueError(f"actuals are missing for weeks {missing}, before week {last}")
+    actuals = [dict(by_week[week]) for week in range(1, last + 1)]
+    _require_same_basis(cfg, actuals)
+    return start, actuals
+
+
 def weekly_actuals_score(
     cfg: Cash13Config,
     actuals_by_week: Mapping[str, Mapping[str, float]],
@@ -95,26 +121,8 @@ def weekly_actuals_score(
     refuses the whole call, naming its week, as `score_forecast` refuses it for
     a month.
     """
-    if cfg.window_start is None:
-        raise ValueError("the forecast needs window_start, the date it was made as at")
-    start = cfg.window_start
-    by_week: dict[int, Mapping[str, float]] = {}
-    for label, values in actuals_by_week.items():
-        offset = (_week_start(label) - start).days
-        if offset < 0 or offset % 7 or offset // 7 >= cfg.weeks:
-            raise ValueError(f"actual week {label!r} does not start one of the forecast's {cfg.weeks} weeks "
-                             f"from {start.isoformat()}")
-        # Labels are unique dates in one form, so no 2 of them name the same week.
-        by_week[offset // 7 + 1] = values
-    if not by_week:
-        raise ValueError("at least one actual week is required")
-    last = max(by_week)
-    missing = [week for week in range(1, last + 1) if week not in by_week]
-    if missing:
-        raise ValueError(f"actuals are missing for weeks {missing}, before week {last}")
-    actuals = [dict(by_week[week]) for week in range(1, last + 1)]
-    _require_same_basis(cfg, actuals)
-
+    start, actuals = _closed_weeks(cfg, actuals_by_week)
+    last = len(actuals)
     selected, scored = scored_lines(score_lines, weights)
     forecast = cash13_forecast(cfg)
     per_week: dict[int, ScoreResult] = {}
