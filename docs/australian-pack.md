@@ -203,10 +203,13 @@ instalments sit on activity statements, so they take the BAS dates.
 `company_tax_schedule(income_year, amount, category)` dates the income tax a
 30 June balancing company has left to pay after its PAYG instalments. The ATO
 sets the date by the company's circumstances, so the caller states its
-`CompanyTaxCategory`: 1 December for a company that was a taxable medium to
-large client in the prior year or must lodge by 31 October, 28 February for a
-company preparing its own return, and 28 February, 31 March or 15 May for a tax
-agent's clients by their row of the lodgment program. A date on a weekend or
+`CompanyTaxCategory`, taking the first row that fits: 1 December for a company
+that must lodge by 31 October or was a taxable medium or large taxpayer in the
+prior year (whether or not it uses an agent); 28 February for a medium or large
+taxpayer that was not taxable in the prior year or is newly registered, and for
+any other company preparing its own return; 31 March for any other agent client
+with total income above $2 million two years earlier; and 15 May for every other
+agent client. A date on a weekend or
 public holiday moves to the next business day, so 28 February 2027 becomes
 2 March. `company_tax.yaml` holds the dates for the year to 30 June 2026 with
 their ATO sources; another year raises. A refund has no due date and is
