@@ -89,7 +89,8 @@ D&A that would take fixed assets below nil is refused. Set
 `income_tax`, whose payments settle it. For a company, `pyfpa.au.company_tax_schedule`
 dates last year's balance and `payments_by_month(pd.concat([instalments, company_tax]))`
 turns it and `payg_instalment_schedule`'s rows into `income_tax.payments`, so a
-12-month forecast pays each on its due date. GST combined with `bad_debt_share` is
+12-month forecast pays each on its due date; `individual_trust_tax_schedule` does
+the same for an individual or trust. GST combined with `bad_debt_share` is
 refused, because GST on bad debts is not modelled. Leave provisions and deferred
 tax are not modelled either.
 

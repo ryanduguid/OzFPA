@@ -52,6 +52,12 @@ from pyfpa.au.gst import (
     gst_weekly_flows,
     monthly_gst,
 )
+from pyfpa.au.individual_trust_tax import (
+    IndividualTrustTaxCategory,
+    individual_trust_lodgment_due_date,
+    individual_trust_tax_due_date,
+    individual_trust_tax_schedule,
+)
 from pyfpa.au.payment_plan import (
     PaymentPlanEstimate,
     PlanFrequency,
@@ -74,6 +80,7 @@ __all__ = [
     "DepreciationEvidenceError",
     "DriverSeries",
     "GstAssumptions",
+    "IndividualTrustTaxCategory",
     "LodgmentChannel",
     "MovementCheck",
     "PaymentPlanEstimate",
@@ -98,6 +105,9 @@ __all__ = [
     "fy_summary",
     "fy_year",
     "gst_weekly_flows",
+    "individual_trust_lodgment_due_date",
+    "individual_trust_tax_due_date",
+    "individual_trust_tax_schedule",
     "load_evidence",
     "load_gst_bas_data",
     "load_payroll_tax_table",

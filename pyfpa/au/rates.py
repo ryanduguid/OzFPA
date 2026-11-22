@@ -170,6 +170,11 @@ def load_company_tax_data() -> dict[str, Any]:
     return _load_yaml("company_tax.yaml")
 
 
+def load_individual_trust_tax_data() -> dict[str, Any]:
+    """Individual and trust lodgment due dates and income tax payment dates by income year."""
+    return _load_yaml("individual_trust_tax.yaml")
+
+
 def load_fbt_data() -> dict[str, Any]:
     """FBT return and payment dates."""
     return _load_yaml("fbt.yaml")

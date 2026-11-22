@@ -80,12 +80,17 @@ def company_tax_schedule(income_year: int, amount: float, category: CompanyTaxCa
     `payments_by_month` turns it, alone or with `payg_instalment_schedule`'s rows,
     into `income_tax.payments`; `tax_report` lists it.
     """
+    return income_tax_payment(income_year, amount, company_tax_nominal_due_date(income_year, category))
+
+
+def income_tax_payment(income_year: int, amount: float, nominal_due_date: date) -> pd.DataFrame:
+    """One payment of the year's tax on `nominal_due_date`, rolled to a business day."""
     if not math.isfinite(amount) or amount < 0:
-        raise ValueError("the company tax amount must be a finite number of at least 0: a refund has no due "
+        raise ValueError("the income tax amount must be a finite number of at least 0: a refund has no due "
                          "date, so enter it in income_tax.payments in the month you expect it")
     return pd.DataFrame([{
         "period_label": f"{income_year - 1}-{income_year % 100:02d}",
-        "nominal_due_date": company_tax_nominal_due_date(income_year, category),
-        "due_date": company_tax_due_date(income_year, category),
+        "nominal_due_date": nominal_due_date,
+        "due_date": _next_business_day(nominal_due_date),
         "amount": float(amount),
     }])
