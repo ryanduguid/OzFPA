@@ -1,5 +1,11 @@
 # Unreleased
 
+- `reforecast_from_actuals(cfg, actuals_by_week, predicted, invoices, receipts, open_invoices)` rolls the 13-week
+  forecast past the weeks `weekly_actuals_score` scored. The window starts the week after the last closed week, from
+  its actual closing balance; scheduled flows keep their dates; open invoices are placed again by `predicted_receipts`
+  from the paid history as it now stands, so an invoice paid in the closed weeks leaves the forecast. It reports each
+  invoice as paid, new, changed or unchanged, and refuses invoice receipts the forecast does not hold and a forecast
+  invoice that is now neither open nor paid.
 - `pyfpa.au.tax_report(bas=, payg_instalments=, payroll=, fbt=)` lists every payment those schedules hold in one
   table by due date: GST from `bas_schedule`, `payg_instalment_schedule`, PAYG withholding, super guarantee and payroll
   tax from `settlement_events`, and `fbt_schedule`. Paydays that share a component and due date are one row. It adds

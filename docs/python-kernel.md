@@ -123,6 +123,25 @@ Each error is (forecast - actual) / |actual|, and fitness weighs ending cash at
 match to the dollar, which hides a 1,000 miss each way in the weeks themselves.
 `tests/test_backtest_weekly.py` asserts these figures.
 
+`reforecast_from_actuals(config, actuals_by_week, predicted, invoices, receipts,
+open_invoices)` is the opt-in next step. It takes the same closed weeks, refused
+on the same terms, and returns `Reforecast(config, receivables, changes)`:
+
+- `config` starts the week after the last closed week, from its actual closing
+  balance, and keeps the window's length. Scheduled flows keep their dates: a
+  flow in a closed week leaves, and one with no `end_week` runs on into the
+  weeks the window gains.
+- `receivables` is `predicted_receipts` as at the new start, from the paid
+  history as it now stands. `predicted` is the result the forecast's invoice
+  receipts came from; those receipts are replaced, so an invoice paid in the
+  closed weeks leaves the forecast.
+- `changes` lists each invoice either placement holds as `paid`, `new`,
+  `changed` (amount or expected date) or `unchanged`.
+
+It refuses invoice receipts the forecast does not hold, and an invoice that was
+forecast but is now neither open nor paid in full in the history.
+`tests/test_cash13_reforecast.py` rolls a forecast past 4 closed weeks.
+
 Actual weeks are keyed by their first day and run from week 1 without a gap; a
 week that does not start on a forecast week, a missing week before the last one
 given, or a missing value or one that is not a number is refused. Each week's
