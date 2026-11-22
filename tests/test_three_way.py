@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from pyfpa import load_config, three_way_from_config
-from pyfpa.au.gst import BasCycle, GstAssumptions, monthly_gst
+from pyfpa.au.gst import BasCycle, GstAssumptions, LodgmentChannel, monthly_gst
 from pyfpa.au.paygw import paygw_due_rule
 from pyfpa.au.payroll_settlement import monthly_settlement, settlement_events
 from pyfpa.au.super_guarantee import super_due_rule
@@ -215,6 +215,15 @@ def test_an_opening_gst_balance_due_after_the_forecast_stays_owed():
     with_balance, without = _with_opening_gst(GstAssumptions(), 3000.0, start_month="2026-08", horizon_months=2)
     owed = with_balance.balance_sheet["gst_payable"] - without.balance_sheet["gst_payable"]
     assert owed.tolist() == pytest.approx([3000.0] * 3)
+
+
+def test_without_an_opening_gst_balance_the_prior_quarter_is_not_looked_up():
+    # No agent program date is recorded for the December 2025 quarter.
+    cfg = _config(start_month="2026-01", horizon_months=3)
+    _assert_statements_hold(three_way_from_config(cfg, gst=GstAssumptions(lodgment_channel=LodgmentChannel.AGENT)), cfg)
+    with pytest.raises(ValueError, match="no agent program date is recorded for the quarter ending 2025-12"):
+        _with_opening_gst(GstAssumptions(lodgment_channel=LodgmentChannel.AGENT), 100.0,
+                          start_month="2026-01", horizon_months=3)
 
 
 def test_an_opening_gst_balance_needs_gst():

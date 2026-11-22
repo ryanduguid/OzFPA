@@ -104,9 +104,12 @@ def _gst_layer(gst: GstAssumptions, forecast: pd.DataFrame, wc: pd.DataFrame, op
     sales_rate, purchases_rate = rate * gst.taxable_sales_pct, rate * gst.creditable_purchases_pct
     stock = wc["purchases"] if "purchases" in wc else forecast["cogs"] + wc["d_inventory"]
     accrued = monthly_gst(forecast["revenue"], stock + forecast["opex"] + forecast["capex"], gst)
-    # The opening balance joins the BAS period of the month before the start.
-    before = pd.Series([opening.gst_payable], index=pd.PeriodIndex([forecast.index[0] - 1], freq="M"))
-    schedule = bas_schedule(pd.concat([before, accrued["net_gst"]]), gst)
+    net = accrued["net_gst"]
+    if opening.gst_payable:
+        # The opening balance joins the BAS period of the month before the start.
+        before = pd.Series([opening.gst_payable], index=pd.PeriodIndex([net.index[0] - 1], freq="M"))
+        net = pd.concat([before, net])
+    schedule = bas_schedule(net, gst)
     due = pd.PeriodIndex([pd.Period(day, freq="M") for day in schedule["due_date"]], freq="M")
     bas_paid = schedule["amount"].astype(float).groupby(due).sum().reindex(forecast.index, fill_value=0.0)
     cash = (accrued["output_gst"] - _movement(wc["ar"] * sales_rate, opening.ar * sales_rate)
