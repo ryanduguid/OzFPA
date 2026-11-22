@@ -32,7 +32,10 @@
 # any tax is payable 21 days after the due date for lodgment', as Income Tax
 # Assessment Act 1997 s 5-5(5) and (6) say (Federal Register, compilation 268 of
 # 1 October 2026, read 2026-11-23). A date on a weekend or public holiday moves
-# to the next business day (public_holidays.yaml).
+# to the next business day (public_holidays.yaml). A return due on a day that is
+# not a business day 'may be given on the first business day after the lodgment
+# day' (Taxation Administration Act 1953 Sch 1 s 388-52, Federal Register,
+# compilation 227 of 1 October 2026, read 2026-11-23), so lodging then is on time.
 lodgment_due:
   2026:
     self_lodger: 2026-10-31

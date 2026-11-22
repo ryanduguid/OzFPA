@@ -91,7 +91,9 @@ def individual_trust_tax_nominal_due_date(income_year: int, category: Individual
                                           lodged_on: date, notice_given_on: date | None = None) -> date:
     """The date the tax is due for the income year ending 30 June `income_year`, before any roll.
 
-    `lodged_on` is the day the return is (or is planned to be) lodged.
+    `lodged_on` is the day the return is (or is planned to be) lodged; a return
+    lodged by the lodgment due date, or the next business day when that is not one,
+    is on time.
     `notice_given_on` is the day the notice of assessment is given, which the
     ATO treats as 7 business days after it issues; leave it out when unknown.
     """
@@ -99,7 +101,9 @@ def individual_trust_tax_nominal_due_date(income_year: int, category: Individual
     if category is IndividualTrustTaxCategory.DUE_15_MAY:
         return _staggered_payment_date(income_year, lodged_on, notice_given_on)
     return_day = individual_trust_lodgment_due_date(income_year, category)
-    if notice_given_on is None or lodged_on > return_day:
+    # A return due on a day that is not a business day may be lodged on the next
+    # one (TAA 1953 Sch 1 s 388-52), so lodging then is on time.
+    if notice_given_on is None or lodged_on > _next_business_day(return_day):
         return return_day + _DAYS_TO_PAY
     return max(return_day, notice_given_on) + _DAYS_TO_PAY
 
