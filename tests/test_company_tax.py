@@ -13,7 +13,12 @@ import pandas as pd
 import pytest
 
 from pyfpa import three_way_from_config
-from pyfpa.au import CompanyTaxCategory, company_tax_due_date, company_tax_schedule, tax_report
+from pyfpa.au import (
+    CompanyTaxCategory,
+    company_tax_due_date,
+    company_tax_schedule,
+    tax_report,
+)
 from pyfpa.au.company_tax import company_tax_nominal_due_date
 from pyfpa.au.payg_instalments import payg_instalment_schedule, payments_by_month
 from pyfpa.config.schemas import (
@@ -67,6 +72,8 @@ def test_a_12_month_forecast_pays_last_years_tax_on_its_date_with_the_instalment
         income_tax=IncomeTaxConfig(forecast_losses_deductible=False))
     income = cashflow_from_config(cfg)["revenue"]
     instalments = payg_instalment_schedule(income, deferred_bas_payer=False, rate=0.02)
+    # The June quarter's instalment falls due in July 2027, after the forecast.
+    instalments = instalments[instalments["due_date"] < date(2027, 7, 1)]
     company_tax = company_tax_schedule(2026, owed, CompanyTaxCategory.SELF_PREPARING)
     payments = payments_by_month(pd.concat([instalments, company_tax]))
     cfg = cfg.model_copy(update={"income_tax": IncomeTaxConfig(forecast_losses_deductible=False, payments=payments)})
