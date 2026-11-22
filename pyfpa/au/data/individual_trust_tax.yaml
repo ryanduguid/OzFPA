@@ -1,0 +1,50 @@
+# Income tax payment dates for individuals and trusts, by the income year's end
+# (2026 is the year to 30 June 2026), from the ATO's 2026-27 lodgment program.
+# Each lodgment due date applies to a taxpayer in that row and no earlier one;
+# the caller states which row fits.
+#
+# self_lodger: https://www.ato.gov.au/businesses-and-organisations/preparing-lodging-and-paying/reports-and-returns/due-dates-for-lodging-and-paying/due-dates-by-month/october
+# (last updated 2026-07-23, read 2026-11-23): 31 October, 'Individual,
+# partnership and trust income tax returns - final date for lodgment unless an
+# approved SAP or a later lodgment date has been granted'.
+#
+# The other rows are a registered agent's clients:
+# https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/due-dates-for-tax-returns-by-client-type/individuals-and-trusts
+# (last updated 2026-07-01, read 2026-11-23). 31 October 2026 where 'one or more
+# prior year tax returns were outstanding as at 30 June 2026', and for clients
+# 'prosecuted for non-lodgment of prior year tax returns and advised of a
+# lodgment due date of 31 October 2026'; 31 January 2027 for 'Large and medium
+# trusts (annual total income more than $10 million in latest year lodged) where
+# the trust was taxable in latest year lodged'; 28 February 2027 where it 'was
+# non-taxable in latest year lodged' and for 'New registrant large and medium
+# trusts'; 31 March 2027 where the 'latest return resulted in a tax liability of
+# $20,000 or more (excluding large and medium trusts)'; 15 May 2027 for 'all
+# remaining individuals and trusts not required earlier'.
+#
+# Payment, from the same page. Returns due 15 May 2027 pay by when they are
+# lodged: 'up to and including 12 February 2027, the payment date is 21 March
+# 2027', 'from 13 February 2027 to 12 March 2027 (inclusive), the payment date
+# is 21 April 2027', 'from 13 March 2027, the payment date is 5 June 2027'. The
+# last row ends on 5 June 2027, the concession date by which such a return may
+# be 'lodged by 5 June without penalty'. Every other return pays 'on the later
+# of 21 days after the relevant lodgment due date [or] notice of assessment is
+# deemed received' when lodged on time, and 'If the tax return is lodged late,
+# any tax is payable 21 days after the due date for lodgment', as Income Tax
+# Assessment Act 1997 s 5-5(5) and (6) say (Federal Register, compilation 268 of
+# 1 October 2026, read 2026-11-23). A date on a weekend or public holiday moves
+# to the next business day (public_holidays.yaml).
+lodgment_due:
+  2026:
+    self_lodger: 2026-10-31
+    prior_return_outstanding: 2026-10-31
+    large_medium_trust_taxable: 2027-01-31
+    large_medium_trust_not_taxable: 2027-02-28
+    new_registrant_large_medium_trust: 2027-02-28
+    liability_20000_or_more: 2027-03-31
+    due_15_may: 2027-05-15
+# Returns due 15 May: lodged on or before lodged_by, the tax is due on pay_on.
+staggered_payment_15_may:
+  2026:
+    - {lodged_by: 2027-02-12, pay_on: 2027-03-21}
+    - {lodged_by: 2027-03-12, pay_on: 2027-04-21}
+    - {lodged_by: 2027-06-05, pay_on: 2027-06-05}

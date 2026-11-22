@@ -1,5 +1,10 @@
 # Unreleased
 
+- `pyfpa.au.individual_trust_tax_schedule(income_year, amount, category, lodged_on, notice_given_on=None)` and
+  `individual_trust_tax_due_date` date an individual's or trust's income tax payment for the year to 30 June 2026
+  from the new `individual_trust_tax.yaml`: 21 days after the lodgment due date of its `IndividualTrustTaxCategory`
+  row, or after a later notice of assessment, and the ATO's staggered 21 March, 21 April or 5 June 2027 for returns
+  due 15 May. A refund, an unrecorded year and a 15 May return lodged after 5 June are refused.
 - `pyfpa.au.company_tax_schedule(income_year, amount, category)` and `company_tax_due_date` date a 30 June balancing
   company's income tax payment by its `CompanyTaxCategory`, the row of the ATO's lodgment program it falls in, from the
   new `company_tax.yaml` (year to 30 June 2026). `payments_by_month` turns the schedule, with PAYG instalments, into

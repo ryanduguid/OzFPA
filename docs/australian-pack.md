@@ -34,6 +34,9 @@ data-access-recipe and industry-pack paths in CONTRIBUTING:
   notice given once the quarter has ended (`pyfpa.au.payg_instalments`)
 - **Company income tax** - the payment date for a 30 June balancing company's
   year by its lodgment program row (`pyfpa.au.company_tax`)
+- **Individual and trust income tax** - the payment date for an individual's or
+  trust's year by its lodgment program row and lodgment date
+  (`pyfpa.au.individual_trust_tax`)
 - **Tax report** - GST, PAYG instalments, PAYG withholding, super guarantee,
   payroll tax, FBT and company income tax from the schedules above in one table
   by due date (`pyfpa.au.tax_report`)
@@ -218,6 +221,31 @@ refused. Substituted accounting periods, companies that are not full
 self-assessment taxpayers and head companies of consolidated groups are not
 covered. Pass the schedule to `payments_by_month` for `income_tax.payments`, and
 to `tax_report(company_tax=...)`.
+
+`individual_trust_tax_schedule(income_year, amount, category, lodged_on,
+notice_given_on=None)` dates the income tax an individual or trust has left to
+pay. Neither is a self-assessment entity, so the tax is due 21 days after the
+return's lodgment due date, or 21 days after the notice of assessment when it is
+given later to a return lodged on time (Income Tax Assessment Act 1997
+s 5-5(5) and (6)); a late return pays 21 days after its lodgment due date. The
+caller states its `IndividualTrustTaxCategory`, taking the first row that fits:
+31 October for a return lodged without a registered agent and for an agent's
+client with a prior year return outstanding at 30 June 2026 (or prosecuted and
+told to lodge by then); 31 January for a large or medium trust taxable in its
+latest year lodged; 28 February for one non-taxable then or newly registered;
+31 March for a latest return with a tax liability of $20,000 or more; and
+15 May for every other agent client. A return due 15 May pays on the ATO's
+staggered date for when it is lodged: 21 March 2027 if lodged by 12 February,
+21 April by 12 March and 5 June by 5 June, the latest dates unless processing
+takes longer. `notice_given_on` is the day the notice is given, which the ATO
+treats as 7 business days after it issues. A return due 15 May lodged after
+5 June, or given with a notice date, is refused: enter the date on its notice
+of assessment in `income_tax.payments`. Dates move to the next business day.
+`individual_trust_tax.yaml` holds the year to 30 June 2026, from the ATO's
+'Individuals and trusts' lodgment program page (last updated 1 July 2026) and
+October due dates page (last updated 23 July 2026), read on 23 November 2026;
+another year raises, as does a refund. Substituted accounting periods, default
+assessments and prosecuted clients given another due date are not covered.
 
 `payment_plan_estimate` shows what paying an ATO debt by instalments would cost, and
 `payment_plan_weekly_flows` puts those payments in a 13-week scenario in place of
