@@ -71,7 +71,7 @@ def test_a_12_month_forecast_pays_last_years_tax_on_its_date_with_the_instalment
         opening_balances=OpeningBalances(cash=50000.0, income_tax_payable=owed),
         income_tax=IncomeTaxConfig(forecast_losses_deductible=False))
     income = cashflow_from_config(cfg)["revenue"]
-    instalments = payg_instalment_schedule(income, deferred_bas_payer=False, rate=0.02)
+    instalments = payg_instalment_schedule(income, deferred_bas_payer=True, rate=0.02)
     # The June quarter's instalment falls due in July 2027, after the forecast.
     instalments = instalments[instalments["due_date"] < date(2027, 7, 1)]
     company_tax = company_tax_schedule(2026, owed, CompanyTaxCategory.SELF_PREPARING)
