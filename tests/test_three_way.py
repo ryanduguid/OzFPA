@@ -218,12 +218,12 @@ def test_an_opening_gst_balance_due_after_the_forecast_stays_owed():
 
 
 def test_without_an_opening_gst_balance_the_prior_quarter_is_not_looked_up():
-    # No agent program date is recorded for the December 2025 quarter.
-    cfg = _config(start_month="2026-01", horizon_months=3)
+    # No agent program date is recorded for the March 2026 quarter.
+    cfg = _config(start_month="2026-04", horizon_months=3)
     _assert_statements_hold(three_way_from_config(cfg, gst=GstAssumptions(lodgment_channel=LodgmentChannel.AGENT)), cfg)
-    with pytest.raises(ValueError, match="no agent program date is recorded for the quarter ending 2025-12"):
+    with pytest.raises(ValueError, match="no agent program date is recorded for the quarter ending 2026-03"):
         _with_opening_gst(GstAssumptions(lodgment_channel=LodgmentChannel.AGENT), 100.0,
-                          start_month="2026-01", horizon_months=3)
+                          start_month="2026-04", horizon_months=3)
 
 
 def test_an_opening_gst_balance_needs_gst():
