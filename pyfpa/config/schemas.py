@@ -149,10 +149,13 @@ class OpeningBalances(_ConfigModel):
     ap: float = 0.0
     inventory: float = 0.0
     nol: float = Field(default=0.0, ge=0)  # net operating loss carryforward
-    # Balance sheet only: net book value that da_monthly depreciates, and income
-    # tax owed at the start (negative when refundable), which income_tax.payments settle.
+    # Balance sheet only: net book value that da_monthly depreciates, income tax
+    # owed at the start (negative when refundable), which income_tax.payments settle,
+    # and net GST owed at the start (negative when refundable), which the three-way
+    # forecast's gst layer settles on the BAS date of the period before the start.
     fixed_assets: float = Field(default=0.0, ge=0)
     income_tax_payable: float = 0.0
+    gst_payable: float = 0.0
 
 
 class IncomeTaxConfig(_ConfigModel):

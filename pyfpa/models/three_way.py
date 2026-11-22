@@ -17,6 +17,8 @@ Two optional layers use the pack's timing code unchanged:
   operating expenses and capex, paid or refunded on `bas_schedule`'s due dates.
   Receivables and payables carry GST on their taxable and creditable shares;
   operating expenses and capex are paid with their GST in the month.
+  `opening_balances.gst_payable` is the net GST owed at the start for the BAS
+  period holding the month before it, settled on that period's due date.
 - `payroll`: events from `settlement_events`, whose due-date rules (such as
   `paygw_due_rule` and `super_due_rule`) set when PAYG withholding, super and
   the other payroll costs are paid. Obligations in a forecast month are its
@@ -24,9 +26,9 @@ Two optional layers use the pack's timing code unchanged:
   before the first month is an opening liability.
 
 Opening receivables and payables are stated excluding GST, as in the
-configuration; their GST is added on the balance sheet and opening GST payable
-is nil. Opening equity is the opening net assets. Leave provisions, GST on bad
-debts and deferred tax are not modelled.
+configuration; their GST is added on the balance sheet. Opening equity is the
+opening net assets. Leave provisions, GST on bad debts and deferred tax are not
+modelled.
 """
 
 from __future__ import annotations
@@ -102,13 +104,18 @@ def _gst_layer(gst: GstAssumptions, forecast: pd.DataFrame, wc: pd.DataFrame, op
     sales_rate, purchases_rate = rate * gst.taxable_sales_pct, rate * gst.creditable_purchases_pct
     stock = wc["purchases"] if "purchases" in wc else forecast["cogs"] + wc["d_inventory"]
     accrued = monthly_gst(forecast["revenue"], stock + forecast["opex"] + forecast["capex"], gst)
-    schedule = bas_schedule(accrued["net_gst"], gst)
+    net = accrued["net_gst"]
+    if opening.gst_payable:
+        # The opening balance joins the BAS period of the month before the start.
+        before = pd.Series([opening.gst_payable], index=pd.PeriodIndex([net.index[0] - 1], freq="M"))
+        net = pd.concat([before, net])
+    schedule = bas_schedule(net, gst)
     due = pd.PeriodIndex([pd.Period(day, freq="M") for day in schedule["due_date"]], freq="M")
     bas_paid = schedule["amount"].astype(float).groupby(due).sum().reindex(forecast.index, fill_value=0.0)
     cash = (accrued["output_gst"] - _movement(wc["ar"] * sales_rate, opening.ar * sales_rate)
             - accrued["input_gst"] + _movement(wc["ap"] * purchases_rate, opening.ap * purchases_rate)
             - bas_paid)
-    return _GstLayer(sales_rate, purchases_rate, cash, (accrued["net_gst"] - bas_paid).cumsum())
+    return _GstLayer(sales_rate, purchases_rate, cash, opening.gst_payable + (accrued["net_gst"] - bas_paid).cumsum())
 
 
 def _balance_sheet(
@@ -156,13 +163,15 @@ def three_way_from_config(
 ) -> ThreeWayForecast:
     """Profit and loss, balance sheet and cash flow by month from one configuration.
 
-    Raises ValueError when GST is combined with bad debts, when D&A would take
-    fixed assets below nil, when a statement total is not finite, or for any
-    error `cashflow_from_config` raises.
+    Raises ValueError when GST is combined with bad debts, when an opening GST
+    balance has no `gst`, when D&A would take fixed assets below nil, when a
+    statement total is not finite, or for any error `cashflow_from_config` raises.
     """
     cfg = _validated_snapshot(cfg)
     if gst is not None and cfg.working_capital.bad_debt_share:
         raise ValueError("GST on bad debts is not modelled: give gst or bad_debt_share, not both")
+    if gst is None and cfg.opening_balances.gst_payable:
+        raise ValueError("opening_balances.gst_payable needs gst: without it no BAS settles the balance")
     months = month_index(cfg.start_month, cfg.horizon_months)
     zero = pd.Series(0.0, index=months)
     opening = cfg.opening_balances
@@ -187,7 +196,7 @@ def three_way_from_config(
     }
     liabilities = {
         "payables": (opening.ap * (1 + gst_part.purchases_rate), wc["ap"] * (1 + gst_part.purchases_rate)),
-        "gst_payable": (0.0, gst_part.payable),
+        "gst_payable": (opening.gst_payable, gst_part.payable),
         **payroll_balances,
         "income_tax_payable": (opening.income_tax_payable, opening.income_tax_payable + tax_unpaid.cumsum()),
         "debt": (sum(item.opening_balance for item in cfg.debt), debt["ending_debt"]),
