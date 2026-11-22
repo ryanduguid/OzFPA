@@ -72,9 +72,12 @@ unchanged:
   stock purchases, operating expenses and capex, and pays it on `bas_schedule`'s
   due dates; a BAS due after the last month stays in `gst_payable`. Receivables
   and payables carry GST on their taxable and creditable shares. Opening
-  receivables and payables are stated excluding GST, and opening GST payable is nil:
-  start the forecast when the GST owed or refundable has been settled, as a balanced
-  forecast cannot show that an earlier BAS was paid.
+  receivables and payables are stated excluding GST. Set
+  `opening_balances.gst_payable` (negative when refundable) to the net GST owed at
+  the start for the BAS period holding the month before it: it is paid on that
+  period's `bas_schedule` due date, so a quarter that ends before the start is
+  paid on its own date and one still open joins the forecast months' BAS. GST
+  overdue from an earlier period is not modelled.
 - `payroll=settlement_events(...)` adds the payroll expense (gross wages, super,
   payroll tax and workers compensation) and the liabilities left by each
   component's due-date rule, such as `paygw_due_rule` and `super_due_rule`. An
