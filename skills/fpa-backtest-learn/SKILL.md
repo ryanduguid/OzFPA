@@ -39,8 +39,8 @@ the champion. Everything learned lives as plain files in `.fpa/`.
    weeks together with the same measure and weights as `holdout_backtest`, and refuses
    weeks that do not line up, a missing week, and balances the flows do not carry from
    the forecast's opening cash (a different basis). It is a check you run on closed
-   weeks; it does not change the forecast. The worked example is in
-   `docs/python-kernel.md`.
+   weeks; it does not change the forecast. `pyfpa.reforecast_from_actuals` is the
+   opt-in step that rolls it past the closed weeks. Both are in `docs/python-kernel.md`.
 3. **Attribute** each material per-line miss to a driver (volume / price / cost ratio
    / working-capital timing). **Run the fpa-cfo-judgment one-time-item screen first** -
    never blame the model for a one-off.

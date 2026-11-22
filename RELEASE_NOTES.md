@@ -5,6 +5,12 @@
   new `company_tax.yaml` (year to 30 June 2026). `payments_by_month` turns the schedule, with PAYG instalments, into
   `income_tax.payments`, so a 12-month forecast pays last year's tax on its date; `tax_report(company_tax=...)` lists
   it. A refund and an unrecorded year are refused.
+- `reforecast_from_actuals(cfg, actuals_by_week, predicted, invoices, receipts, open_invoices)` rolls the 13-week
+  forecast past the weeks `weekly_actuals_score` scored. The window starts the week after the last closed week, from
+  its actual closing balance; scheduled flows keep their dates; open invoices are placed again by `predicted_receipts`
+  from the paid history as it now stands, so an invoice paid in the closed weeks leaves the forecast. It reports each
+  invoice as paid, new, changed or unchanged, and refuses invoice receipts the forecast does not hold and a forecast
+  invoice that is now neither open nor paid.
 - `opening_balances.gst_payable` (negative when refundable) opens the three-way forecast's GST liability. It is paid
   on the `bas_schedule` due date of the BAS period holding the month before the start, so a BAS owed at the start
   reaches cash. `three_way_from_config` refuses it without `gst`.
