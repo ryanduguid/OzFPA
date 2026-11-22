@@ -32,7 +32,6 @@ from pyfpa.models.periods import month_index
 
 class _SeasonRef(NamedTuple):
     name: str           # defined-name "seasonality_ch{i}"
-    col_letters: list[str]   # 12 Assumptions column letters (B onward)
     row: int
 
 
@@ -73,11 +72,7 @@ def _build_assumptions(
         nonlocal row
         ws.cell(row=row, column=1, value=name)
         add_named_row(wb, ws, name=name, row=row, start_col=_SEASON_COL, values=vals)
-        ref = _SeasonRef(
-            name=name,
-            col_letters=[get_column_letter(_SEASON_COL + j) for j in range(12)],
-            row=row,
-        )
+        ref = _SeasonRef(name=name, row=row)
         row += 1
         return ref
 
@@ -181,10 +176,7 @@ class _RowAlloc:
         """Write per-month cells directly (used when formula depends on own row)."""
         r = self.alloc()
         self._ws.cell(row=r, column=1, value=label)
-        eff_fmt = fmt if fmt is not None else self._fmt
-        for m_idx, formula in enumerate(formulas):
-            self._ws.cell(row=r, column=_MODEL_START_COL + m_idx,
-                          value=formula).number_format = eff_fmt
+        self.write_cells(r, formulas, fmt if fmt is not None else self._fmt)
         return r
 
     def write_cells(self, row: int, formulas: list[str], fmt: str) -> None:
@@ -196,7 +188,7 @@ class _RowAlloc:
 
 def _season_cell(sr: _SeasonRef, cal_month_0: int) -> str:
     """Absolute cell reference for a 0-based calendar month's seasonality weight."""
-    return f"Assumptions!${sr.col_letters[cal_month_0]}${sr.row}"
+    return f"Assumptions!${get_column_letter(_SEASON_COL + cal_month_0)}${sr.row}"
 
 
 def _emit_header(ws: Worksheet, idx: pd.PeriodIndex) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, get_args
@@ -126,9 +127,7 @@ def command_status(args: Any) -> int:
         connectors = load_connector_manifests(root)
     except Exception as exc:
         return _failure("status", root, "invalid_workspace", str(exc))
-    facts_by_status: dict[str, int] = {}
-    for fact in intake.facts:
-        facts_by_status[fact.status] = facts_by_status.get(fact.status, 0) + 1
+    facts_by_status = Counter(fact.status for fact in intake.facts)
     questions = next_intake_questions(intake)
     return _success(
         "status",

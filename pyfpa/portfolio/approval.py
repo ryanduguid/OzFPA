@@ -25,8 +25,16 @@ import secrets
 import stat
 from datetime import date
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from pyfpa.io.loaders import create_yaml, read_yaml, write_yaml
 from pyfpa.memory.workspace import Workspace
@@ -41,10 +49,8 @@ APPROVAL_STATEMENT = (
 
 WORKSPACE_ID_LENGTH = 16
 
-# Per-process key behind the validation attestation. It is a structural barrier,
-# not a security control: it stops a ValidationResult built by hand or carried in
-# from somewhere else, and any caller that can import this module can also call
-# `attest_validation`. See promote_prior for the trust boundary this sits inside.
+# Per-process key behind `attest_validation`, whose docstring says what it does
+# not protect. See promote_prior for the trust boundary this sits inside.
 _ATTESTATION_KEY = secrets.token_bytes(32)
 
 _FILE_ATTRIBUTE_REPARSE_POINT = 0x400
@@ -125,6 +131,13 @@ def business_name(workspace: str | Path) -> str | None:
     return None
 
 
+def _non_blank(value: str, info: ValidationInfo) -> str:
+    return _require_text(value, str(info.field_name))
+
+
+_NonBlank = Annotated[str, AfterValidator(_non_blank)]
+
+
 class ConfidentialityReview(BaseModel):
     """The human confidentiality review behind one promotion approval.
 
@@ -133,15 +146,10 @@ class ConfidentialityReview(BaseModel):
     successful promotion rewrites the list with the findings actually observed.
     """
 
-    reviewer: str
+    reviewer: _NonBlank
     reviewed_on: str
     notes: str = ""
     automated_checks: list[str] = Field(default_factory=list)
-
-    @field_validator("reviewer")
-    @classmethod
-    def _non_blank(cls, value: str, info: ValidationInfo) -> str:
-        return _require_text(value, str(info.field_name))
 
     @field_validator("reviewed_on")
     @classmethod
@@ -156,14 +164,9 @@ class ConfidentialityReview(BaseModel):
 class ApprovalScope(BaseModel):
     """What one approval covers: a business type and a single named artefact."""
 
-    business_type: str
+    business_type: _NonBlank
     driver: str | None = None
     skill: str | None = None
-
-    @field_validator("business_type")
-    @classmethod
-    def _non_blank(cls, value: str, info: ValidationInfo) -> str:
-        return _require_text(value, str(info.field_name))
 
     @model_validator(mode="after")
     def _one_target(self) -> ApprovalScope:
@@ -186,14 +189,14 @@ class PromotionApproval(BaseModel):
     the library's own `provenance/workspaces.yaml`.
     """
 
-    purpose: str
+    purpose: _NonBlank
     scope: ApprovalScope
     contributing_workspaces: list[str]
-    authorisation_reference: str
+    authorisation_reference: _NonBlank
     candidate_digest: str
     confidentiality_review: ConfidentialityReview
-    approved_by: str
-    approved_at: str
+    approved_by: _NonBlank
+    approved_at: _NonBlank
     # Every file promote_skill may copy. A file in the candidate tree that is
     # not listed refuses the promotion, so a workpaper cannot ride along.
     allowed_files: list[str] = Field(default_factory=list)
@@ -201,11 +204,6 @@ class PromotionApproval(BaseModel):
     # business names match. Without them, matching names count as one client.
     aliases_acknowledged: list[str] = Field(default_factory=list)
     statement: str = APPROVAL_STATEMENT
-
-    @field_validator("purpose", "authorisation_reference", "approved_by", "approved_at")
-    @classmethod
-    def _non_blank(cls, value: str, info: ValidationInfo) -> str:
-        return _require_text(value, str(info.field_name))
 
     @field_validator("candidate_digest")
     @classmethod
