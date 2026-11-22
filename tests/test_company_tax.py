@@ -39,6 +39,7 @@ from pyfpa.models.cashflow import cashflow_from_config
     # Sunday 28 February 2027, then Monday 1 March, Labour Day in WA: Tuesday 2 March.
     ("self_preparing_other", date(2027, 2, 28), date(2027, 3, 2)),
     ("large_medium_not_taxable_last_year", date(2027, 2, 28), date(2027, 3, 2)),
+    ("exited_consolidated_group", date(2027, 2, 28), date(2027, 3, 2)),
     # Wednesday 31 March 2027.
     ("agent_total_income_over_2m", date(2027, 3, 31), date(2027, 3, 31)),
     # Saturday 15 May 2027 moves to Monday 17 May.

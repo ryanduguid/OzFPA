@@ -48,6 +48,8 @@ class CompanyTaxCategory(str, Enum):
     # A medium or large taxpayer whose prior year return was non-taxable or not
     # necessary, or a new registrant medium or large taxpayer, taxable or not: 28 February.
     LARGE_MEDIUM_NOT_TAXABLE_LAST_YEAR = "large_medium_not_taxable_last_year"
+    # A subsidiary member that left its consolidated group during the income year: 28 February.
+    EXITED_CONSOLIDATED_GROUP = "exited_consolidated_group"
     # Lodging its own return and in none of the rows above: 28 February.
     SELF_PREPARING_OTHER = "self_preparing_other"
     # A tax agent's client with total income above $2 million in the year before

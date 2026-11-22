@@ -19,7 +19,8 @@
 # (last updated 2026-07-01, read 2026-11-22): 28 February 2027 for large and
 # medium taxpayers whose 2025 return was non-taxable and for new registrant large
 # and medium taxpayers, which the February page also gives to self-preparing
-# medium to large new registrations, 'taxable and non-taxable'; 31 March 2027 for total income in 2024-25 above
+# medium to large new registrations, 'taxable and non-taxable', and for a
+# subsidiary member of a consolidated group that exited the group in the year; 31 March 2027 for total income in 2024-25 above
 # $2 million unless required earlier; 15 May 2027 for all remaining tax agent clients.
 #
 # A date on a weekend or public holiday moves to the next business day
@@ -32,6 +33,7 @@ payment_due:
     required_by_31_october: 2026-12-01
     large_medium_taxable_last_year: 2026-12-01
     large_medium_not_taxable_last_year: 2027-02-28
+    exited_consolidated_group: 2027-02-28
     self_preparing_other: 2027-02-28
     agent_total_income_over_2m: 2027-03-31
     agent_other: 2027-05-15
