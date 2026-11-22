@@ -1,5 +1,10 @@
 # Unreleased
 
+- `pyfpa.au.company_tax_schedule(income_year, amount, category)` and `company_tax_due_date` date a 30 June balancing
+  company's income tax payment by its `CompanyTaxCategory`, the row of the ATO's lodgment program it falls in, from the
+  new `company_tax.yaml` (year to 30 June 2026). `payments_by_month` turns the schedule, with PAYG instalments, into
+  `income_tax.payments`, so a 12-month forecast pays last year's tax on its date; `tax_report(company_tax=...)` lists
+  it. A refund and an unrecorded year are refused.
 - `opening_balances.gst_payable` (negative when refundable) opens the three-way forecast's GST liability. It is paid
   on the `bas_schedule` due date of the BAS period holding the month before the start, so a BAS owed at the start
   reaches cash. `three_way_from_config` refuses it without `gst`.
