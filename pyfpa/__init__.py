@@ -22,6 +22,7 @@ from pyfpa.backtest import (
     weekly_actuals_score,
 )
 from pyfpa.cash13.actions import risk_week_actions
+from pyfpa.cash13.bands import CashFloorBands, DelayRange, cash_floor_bands
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
@@ -167,6 +168,7 @@ __all__ = [
     "ArchitectureProposal",
     "Carveout",
     "Cash13Config",
+    "CashFloorBands",
     "Channel",
     "CompanyEntrypoint",
     "ConfidentialityReview",
@@ -174,6 +176,7 @@ __all__ = [
     "ConnectorManifest",
     "Correction",
     "DebtInstrument",
+    "DelayRange",
     "FlowChange",
     "EntityConfig",
     "EntrypointKind",
@@ -224,6 +227,7 @@ __all__ = [
     "build_memory_index",
     "candidate_digest",
     "cash13_forecast",
+    "cash_floor_bands",
     "cashflow_from_config",
     "cogs_from_config",
     "collection_profile_from_history",

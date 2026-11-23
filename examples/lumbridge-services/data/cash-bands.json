@@ -1,0 +1,18 @@
+{
+  "seed": 20261002,
+  "runs": 1000,
+  "delays": [
+    {
+      "ids": ["OPEN-V"],
+      "low_days": 0,
+      "high_days": 60,
+      "basis": "Stated assumption: the opening Varrock invoice is on a fabricated payment plan that receipt-assumptions.csv expects 45 days late."
+    },
+    {
+      "ids": ["OPEN-F", "OCT-V", "OCT-F", "NOV-V", "NOV-F", "DEC-V", "DEC-F"],
+      "low_days": 0,
+      "high_days": 30,
+      "basis": "Stated assumption: up to 30 days late. There is no payment history to fit a range to."
+    }
+  ]
+}

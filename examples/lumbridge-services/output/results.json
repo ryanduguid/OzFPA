@@ -5,5 +5,49 @@
   "december_cash": 67320.0,
   "minimum_daily_cash": 16800.0,
   "minimum_cash_date": "2026-10-07",
-  "maximum_cash_reconciliation_difference": 0.0
+  "maximum_cash_reconciliation_difference": 0.0,
+  "cash_floor_bands": {
+    "label": "Scenario range under the stated delay ranges, not a forecast and not a probability that cash will fall this low.",
+    "seed": 20261002,
+    "runs": 1000,
+    "window_start": "2026-10-02",
+    "window_end": "2026-12-31",
+    "delays": [
+      {
+        "ids": [
+          "OPEN-V"
+        ],
+        "low_days": 0,
+        "high_days": 60,
+        "basis": "Stated assumption: the opening Varrock invoice is on a fabricated payment plan that receipt-assumptions.csv expects 45 days late."
+      },
+      {
+        "ids": [
+          "OPEN-F",
+          "OCT-V",
+          "OCT-F",
+          "NOV-V",
+          "NOV-F",
+          "DEC-V",
+          "DEC-F"
+        ],
+        "low_days": 0,
+        "high_days": 30,
+        "basis": "Stated assumption: up to 30 days late. There is no payment history to fit a range to."
+      }
+    ],
+    "floor": {
+      "p10": -60320.0,
+      "p50": -33960.0,
+      "p90": -3160.0
+    },
+    "representative_runs": {
+      "p10": 7,
+      "p50": 1,
+      "p90": 36
+    },
+    "buffer": 15000,
+    "runs_below_zero": 918,
+    "runs_below_buffer": 996
+  }
 }

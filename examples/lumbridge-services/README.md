@@ -25,6 +25,10 @@ uv run --locked --extra dev python examples/lumbridge-services/models/generated/
 
 Open `examples/lumbridge-services/output/briefing.md` and `lumbridge.xlsx`.
 The same folder holds monthly, weekly and daily CSVs and a JSON summary.
+`cash-bands.csv` and the briefing's scenario range come from 1,000 seeded runs
+in which customer receipts arrive late by the stated ranges in
+[cash-bands.json](data/cash-bands.json). The ranges are assumptions, not fitted
+to payment history, so the result is a range of scenarios, not a forecast.
 The runner verifies all 21 monthly workbook lines against the Python model
 before replacing the workbook. It also requires 4 `check_*` rows below them to be
 zero in every month. `Model!B27` reads 'All checks pass' in Excel or names the
@@ -156,4 +160,4 @@ Technical verification does not establish client suitability, forecast
 accuracy or time saved.
 
 OSRS references are naming and narrative only. No game assets or game prices
-are used, and no affiliation with Jagex is claimed.
+are used.

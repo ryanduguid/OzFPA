@@ -42,6 +42,24 @@ trough (`min_cash`), its week, the first negative week, every week below zero
 list of weeks headroom is below the buffer. It compares declared assumptions; it
 does not say which scenario is likely.
 
+### Cash-floor bands
+
+`cash_floor_bands` shows how low daily cash could go if named flows are late.
+Give it dated events (`id`, `date`, `receipts`, `payments`), the window, a
+`DelayRange` for each group of flows (whole days from `low_days` to
+`high_days`, each equally likely, with a `basis` for the range), a seed and a
+run count. Each run draws one delay per named flow from `random.Random(seed)`;
+other flows keep their dates. The floor of a run is its lowest end-of-day cash.
+
+The summary gives the P10, P50 and P90 floors (nearest rank, so each is a
+floor some run reached), the runs below zero and below a buffer, the seed and
+the ranges. `paths` follows the first run at each percentile week by week.
+Amounts are whole cents, so the same inputs and seed give the same bytes.
+The result is a scenario range under stated assumptions, not a forecast or a
+probability: ranges are not fitted to payment history, draws are independent,
+amounts never change and nothing moves earlier. The Lumbridge example writes
+one as `cash-bands.csv`.
+
 ### Three-way forecast
 
 `three_way_from_config` turns the same configuration into a monthly profit and
