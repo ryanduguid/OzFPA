@@ -30,7 +30,14 @@ At 31 December, $12,600 GST, $5,000 PAYG withholding and $13,200 supplier invoic
 
 - Confirm the $44,000 OPEN-V receipt date. In this synthetic case, with every other date as forecast, lowest daily cash stays at or above zero if OPEN-V is up to 14 days late and stays at or above the assumed $15,000 buffer if OPEN-V is up to 6 days late. The 45-day delay needs $25,160 of additional cash at the trough, or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged.
 - Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. The forecast currently includes no capital expenditure.
+- In the 45-day late case, 1 of 8 invoices is past due. In a date-only what-if, if OPEN-V were received sooner, lowest daily cash would move from ($25,160.00): 14 days sooner to ($25,160.00), 28 days sooner to ($11,960.00), 45 days sooner to $16,800.00. This is arithmetic on dates, not an expected collection. Each lever stops at the due date. The data names no customer, so each invoice is its own debtor; `debtor-lateness.csv` and `pull-forward.csv` list them all.
 - Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.
+
+## Scenario range, not a forecast
+
+In 1,000 seeded runs (seed 20261002), customer receipts arrive late by whole days drawn independently, each day in its range equally likely: OPEN-V 0 to 60 days late; OPEN-F, OCT-V, OCT-F, NOV-V, NOV-F, DEC-V and DEC-F 0 to 30 days late. Payments keep their dates. Lowest daily cash is ($60,320.00) at P10, ($33,960.00) at P50 and ($3,160.00) at P90. 918 runs go below zero and 996 below the $15,000.00 buffer.
+
+The ranges are stated assumptions, not fitted to payment history, so this is a range of scenarios, not a forecast or a probability. `cash-bands.csv` gives the 3 paths week by week; `results.json` gives the seed, the ranges and their basis.
 
 ## Evidence and limits
 

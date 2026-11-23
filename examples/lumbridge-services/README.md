@@ -25,6 +25,15 @@ uv run --locked --extra dev python examples/lumbridge-services/models/generated/
 
 Open `examples/lumbridge-services/output/briefing.md` and `lumbridge.xlsx`.
 The same folder holds monthly, weekly and daily CSVs and a JSON summary.
+`cash-bands.csv` and the briefing's scenario range come from 1,000 seeded runs
+in which customer receipts arrive late by the stated ranges in
+[cash-bands.json](data/cash-bands.json). The ranges are assumptions, not fitted
+to payment history, so the result is a range of scenarios, not a forecast.
+`debtor-lateness.csv` and `pull-forward.csv` rank invoices by days past their
+due date in [receipt-assumptions.csv](data/receipt-assumptions.csv) in the
+45-day late case, and show what collecting each 14, 28 or 45 days sooner, never
+before its due date, does to lowest daily cash. The data names no customer, so
+each invoice is its own debtor.
 The runner verifies all 21 monthly workbook lines against the Python model
 before replacing the workbook. It also requires 4 `check_*` rows below them to be
 zero in every month. `Model!B27` reads 'All checks pass' in Excel or names the
@@ -156,4 +165,4 @@ Technical verification does not establish client suitability, forecast
 accuracy or time saved.
 
 OSRS references are naming and narrative only. No game assets or game prices
-are used, and no affiliation with Jagex is claimed.
+are used.

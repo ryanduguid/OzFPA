@@ -5,5 +5,285 @@
   "december_cash": 67320.0,
   "minimum_daily_cash": 16800.0,
   "minimum_cash_date": "2026-10-07",
-  "maximum_cash_reconciliation_difference": 0.0
+  "maximum_cash_reconciliation_difference": 0.0,
+  "cash_floor_bands": {
+    "label": "Scenario range under the stated delay ranges, not a forecast and not a probability that cash will fall this low.",
+    "seed": 20261002,
+    "runs": 1000,
+    "window_start": "2026-10-02",
+    "window_end": "2026-12-31",
+    "delays": [
+      {
+        "ids": [
+          "OPEN-V"
+        ],
+        "low_days": 0,
+        "high_days": 60,
+        "basis": "Stated assumption: the opening Varrock invoice is on a fabricated payment plan that receipt-assumptions.csv expects 45 days late."
+      },
+      {
+        "ids": [
+          "OPEN-F",
+          "OCT-V",
+          "OCT-F",
+          "NOV-V",
+          "NOV-F",
+          "DEC-V",
+          "DEC-F"
+        ],
+        "low_days": 0,
+        "high_days": 30,
+        "basis": "Stated assumption: up to 30 days late. There is no payment history to fit a range to."
+      }
+    ],
+    "floor": {
+      "p10": -60320.0,
+      "p50": -33960.0,
+      "p90": -3160.0
+    },
+    "representative_runs": {
+      "p10": 7,
+      "p50": 1,
+      "p90": 36
+    },
+    "buffer": 15000,
+    "runs_below_zero": 918,
+    "runs_below_buffer": 996
+  },
+  "debtor_lateness": [
+    {
+      "debtor": "OPEN-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 44000.0,
+      "max_days_late": 45,
+      "weighted_days_late": 45.0
+    },
+    {
+      "debtor": "DEC-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    }
+  ],
+  "pull_forward": [
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -11960.0,
+      "gain": 13200.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": 16800.0,
+      "gain": 41960.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    }
+  ]
 }

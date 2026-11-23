@@ -42,6 +42,35 @@ trough (`min_cash`), its week, the first negative week, every week below zero
 list of weeks headroom is below the buffer. It compares declared assumptions; it
 does not say which scenario is likely.
 
+### Cash-floor bands
+
+`cash_floor_bands` shows how low daily cash could go if named flows are late.
+Give it dated events (`id`, `date`, `receipts`, `payments`), the window, a
+`DelayRange` for each group of flows (whole days from `low_days` to
+`high_days`, each equally likely, with a `basis` for the range), a seed and a
+run count. Each run draws one delay per named flow from `random.Random(seed)`;
+other flows keep their dates. The floor of a run is its lowest end-of-day cash.
+
+The summary gives the P10, P50 and P90 floors (nearest rank, so each is a
+floor some run reached), the runs below zero and below a buffer, the seed and
+the ranges. `paths` follows the first run at each percentile week by week.
+Amounts are whole cents, so the same inputs and seed give the same bytes.
+The result is a scenario range under stated assumptions, not a forecast or a
+probability: ranges are not fitted to payment history, draws are independent,
+amounts never change and nothing moves earlier. The Lumbridge example writes
+one as `cash-bands.csv`.
+
+`debtor_lateness(events, receivables)` takes the same events, with each receipt
+on its expected date, and a table of `debtor`, `id` and `due_date`. It gives one
+row per debtor: invoices, amount, the amount past due, the most days late and
+days late weighted by amount, ranked by amount times days late.
+`pull_forward_levers(opening_cash, events, window_start, window_end,
+receivables, days_sooner)` collects each debtor's receipts the stated days
+sooner, never before their due date, and reports the floor before and after
+and the gain. A lever is arithmetic on stated dates, not a prediction that the
+debtor will pay sooner. The Lumbridge example writes `debtor-lateness.csv` and
+`pull-forward.csv` for its 45-day late case.
+
 ### Three-way forecast
 
 `three_way_from_config` turns the same configuration into a monthly profit and
