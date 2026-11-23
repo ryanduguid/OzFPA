@@ -60,6 +60,17 @@ probability: ranges are not fitted to payment history, draws are independent,
 amounts never change and nothing moves earlier. The Lumbridge example writes
 one as `cash-bands.csv`.
 
+`debtor_lateness(events, receivables)` takes the same events, with each receipt
+on its expected date, and a table of `debtor`, `id` and `due_date`. It gives one
+row per debtor: invoices, amount, the amount past due, the most days late and
+days late weighted by amount, ranked by amount times days late.
+`pull_forward_levers(opening_cash, events, window_start, window_end,
+receivables, days_sooner)` collects each debtor's receipts the stated days
+sooner, never before their due date, and reports the floor before and after
+and the gain. A lever is arithmetic on stated dates, not a prediction that the
+debtor will pay sooner. The Lumbridge example writes `debtor-lateness.csv` and
+`pull-forward.csv` for its 45-day late case.
+
 ### Three-way forecast
 
 `three_way_from_config` turns the same configuration into a monthly profit and

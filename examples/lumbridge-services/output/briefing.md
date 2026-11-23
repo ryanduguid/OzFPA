@@ -30,6 +30,7 @@ At 31 December, $12,600 GST, $5,000 PAYG withholding and $13,200 supplier invoic
 
 - Confirm the $44,000 OPEN-V receipt date. In this synthetic case, with every other date as forecast, lowest daily cash stays at or above zero if OPEN-V is up to 14 days late and stays at or above the assumed $15,000 buffer if OPEN-V is up to 6 days late. The 45-day delay needs $25,160 of additional cash at the trough, or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged.
 - Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. The forecast currently includes no capital expenditure.
+- In the 45-day late case, 1 of 8 invoices is past due. Collecting OPEN-V sooner moves lowest daily cash from ($25,160.00): 14 days sooner to ($25,160.00), 28 days sooner to ($11,960.00), 45 days sooner to $16,800.00. Each lever stops at the due date. The data names no customer, so each invoice is its own debtor; `debtor-lateness.csv` and `pull-forward.csv` list them all.
 - Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.
 
 ## Scenario range, not a forecast
