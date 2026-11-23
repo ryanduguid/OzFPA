@@ -94,8 +94,10 @@ def individual_trust_tax_nominal_due_date(income_year: int, category: Individual
     `lodged_on` is the day the return is (or is planned to be) lodged; a return
     lodged by the lodgment due date, or the next business day when that is not one,
     is on time.
-    `notice_given_on` is the day the notice of assessment is given, which the
-    ATO treats as 7 business days after it issues; leave it out when unknown.
+    For a timely self-lodger, pass the assessment issue date as `notice_given_on`.
+    For a timely registered-agent lodgment outside the 15 May schedule, the
+    ATO program uses deemed receipt 7 business days after issue. Leave the
+    date out when unknown and use the due date on the actual notice if available.
     """
     category = IndividualTrustTaxCategory(category)
     if category is IndividualTrustTaxCategory.DUE_15_MAY:
