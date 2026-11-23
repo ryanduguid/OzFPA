@@ -26,12 +26,13 @@
 # 2027', 'from 13 February 2027 to 12 March 2027 (inclusive), the payment date
 # is 21 April 2027', 'from 13 March 2027, the payment date is 5 June 2027'. The
 # last row ends on 5 June 2027, the concession date by which such a return may
-# be 'lodged by 5 June without penalty'. Every other return pays 'on the later
-# of 21 days after the relevant lodgment due date [or] notice of assessment is
-# deemed received' when lodged on time, and 'If the tax return is lodged late,
-# any tax is payable 21 days after the due date for lodgment', as Income Tax
-# Assessment Act 1997 s 5-5(5) and (6) say (Federal Register, compilation 268 of
-# 1 October 2026, read 2026-11-23). A date on a weekend or public holiday moves
+# be 'lodged by 5 June without penalty'. The registered-agent program uses
+# 7 business days after issue as deemed receipt for timely lodgment outside
+# that schedule. The ATO's 'Preparing your tax return' page uses the assessment
+# issue date for a timely self-lodger (read 2026-11-23).
+# Income Tax Assessment Act 1997 s 5-5(5) and (6) set the 21-day rules (Federal
+# Register, compilation 268 of 1 October 2026, read 2026-11-23).
+# A date on a weekend or public holiday moves
 # to the next business day (public_holidays.yaml). A return due on a day that is
 # not a business day 'may be given on the first business day after the lodgment
 # day' (Taxation Administration Act 1953 Sch 1 s 388-52, Federal Register,

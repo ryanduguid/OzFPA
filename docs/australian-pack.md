@@ -240,10 +240,18 @@ latest year lodged; 28 February for one non-taxable then or newly registered;
 15 May for every other agent client. A return due 15 May pays on the ATO's
 staggered date for when it is lodged: 21 March 2027 if lodged by 12 February,
 21 April by 12 March and 5 June by 5 June, the latest dates unless processing
-takes longer. `notice_given_on` is the day the notice is given, which the ATO
-treats as 7 business days after it issues. A return due 15 May lodged after
-5 June, or given with a notice date, is refused: enter the date on its notice
-of assessment in `income_tax.payments`. Dates move to the next business day.
+takes longer. For a timely self-lodger, pass the assessment issue date as
+`notice_given_on`. The ATO generally gives 21 November as the payment date for
+these returns. If the assessment issues after 31 October, it gives 21 days
+from issue.
+[ATO self-lodger guidance](https://www.ato.gov.au/individuals-and-families/your-tax-return/before-you-prepare-your-tax-return/preparing-your-tax-return).
+
+For a timely registered-agent lodgment outside the 15 May schedule, the ATO
+program uses deemed receipt 7 business days after issue. A return due 15 May
+lodged after 5 June, or supplied with a notice date, is refused. When the
+actual payment due date is available, use the date on the notice in
+`income_tax.payments`. Modelled dates move to the next business day.
+[ATO registered-agent program](https://www.ato.gov.au/tax-and-super-professionals/for-tax-professionals/prepare-and-lodge/registered-agent-lodgment-program/due-dates-for-tax-returns-by-client-type/individuals-and-trusts).
 `individual_trust_tax.yaml` holds the year to 30 June 2026, from the ATO's
 'Individuals and trusts' lodgment program page (last updated 1 July 2026) and
 October due dates page (last updated 23 July 2026), read on 23 November 2026;
