@@ -16,6 +16,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from pyfpa.au.payroll import PayrollAssumptions, Role, payroll_forecast
+from pyfpa.cash13.bands import DelayRange, cash_floor_bands
 from pyfpa.cash13.forecast import cash13_forecast
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.excel.toolkit import add_named_cell
@@ -167,6 +168,38 @@ def flip_points(data: Path = ROOT / "data") -> dict[str, int | None]:
         if lowest >= result["assumptions"]["minimum_cash_buffer"]:
             points["buffer"] = delay
     return points
+
+
+def floor_bands(data: Path = ROOT / "data"):
+    """Seeded cash-floor bands around the on-time forecast, from data/cash-bands.json."""
+    settings = json.loads((data / "cash-bands.json").read_text(encoding="utf-8"))
+    base = forecast(data)
+    a = base["assumptions"]
+    return cash_floor_bands(
+        base["bs"]["Business Bank Account"], base["ledger"], pd.Timestamp(a["weekly_start"]).date(),
+        pd.Timestamp(a["forecast_end"]).date(), [DelayRange(**rule) for rule in settings["delays"]],
+        seed=settings["seed"], runs=settings["runs"], buffer=a["minimum_cash_buffer"])
+
+
+def _money(value: float) -> str:
+    return f"(${-value:,.2f})" if value < 0 else f"${value:,.2f}"
+
+
+def _band_lines(s: dict) -> list[str]:
+    """The briefing's scenario-range section, every figure read from the bands summary."""
+    ranges = "; ".join(f"{', '.join(r['ids'][:-1]) + ' and ' + r['ids'][-1] if len(r['ids']) > 1 else r['ids'][0]} "
+                       f"{r['low_days']} to {r['high_days']} days late" for r in s["delays"])
+    floor = s["floor"]
+    return [
+        "## Scenario range, not a forecast", "",
+        (f"In {s['runs']:,} seeded runs (seed {s['seed']}), customer receipts arrive late by whole days drawn "
+         f"independently, each day in its range equally likely: {ranges}. Payments keep their dates. "
+         f"Lowest daily cash is {_money(floor['p10'])} at P10, {_money(floor['p50'])} at P50 and {_money(floor['p90'])} at P90. "
+         f"{s['runs_below_zero']:,} runs go below zero and {s['runs_below_buffer']:,} below the {_money(s['buffer'])} buffer."), "",
+        ("The ranges are stated assumptions, not fitted to payment history, so this is a range of scenarios, "
+         "not a forecast or a probability. `cash-bands.csv` gives the 3 paths week by week; "
+         "`results.json` gives the seed, the ranges and their basis."), "",
+    ]
 
 
 def _limit_clause(days: int | None, threshold: str) -> str:
@@ -402,6 +435,9 @@ def run(output: Path, delay_days: int = 0) -> dict:
                "minimum_daily_cash": float(result["daily"]["ending_cash"].min()),
                "minimum_cash_date": str(result["daily"]["ending_cash"].idxmin().date()),
                "maximum_cash_reconciliation_difference": float(result["monthly"]["Cash reconciliation difference"].abs().max())}
+    bands = floor_bands()
+    bands.paths.to_csv(output / "cash-bands.csv", float_format="%.2f")
+    summary["cash_floor_bands"] = bands.summary
     (output / "results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     base, late = forecast(), forecast(delay_days=45)
     points = flip_points()
@@ -440,6 +476,7 @@ def run(output: Path, delay_days: int = 0) -> dict:
               ("- Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. "
                "The forecast currently includes no capital expenditure."),
               "- Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.", "",
+              *_band_lines(bands.summary),
               "## Evidence and limits", "",
               ("Revenue is held at September's fabricated $60,000 monthly run rate; monthly pre-tax profit remains $11,985.85. "
               "There are no October to December actuals, measured forecast errors, client outcomes or claimed time savings. "

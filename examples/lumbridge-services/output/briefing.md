@@ -32,6 +32,12 @@ At 31 December, $12,600 GST, $5,000 PAYG withholding and $13,200 supplier invoic
 - Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. The forecast currently includes no capital expenditure.
 - Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.
 
+## Scenario range, not a forecast
+
+In 1,000 seeded runs (seed 20261002), customer receipts arrive late by whole days drawn independently, each day in its range equally likely: OPEN-V 0 to 60 days late; OPEN-F, OCT-V, OCT-F, NOV-V, NOV-F, DEC-V and DEC-F 0 to 30 days late. Payments keep their dates. Lowest daily cash is ($60,320.00) at P10, ($33,960.00) at P50 and ($3,160.00) at P90. 918 runs go below zero and 996 below the $15,000.00 buffer.
+
+The ranges are stated assumptions, not fitted to payment history, so this is a range of scenarios, not a forecast or a probability. `cash-bands.csv` gives the 3 paths week by week; `results.json` gives the seed, the ranges and their basis.
+
 ## Evidence and limits
 
 Revenue is held at September's fabricated $60,000 monthly run rate; monthly pre-tax profit remains $11,985.85. There are no October to December actuals, measured forecast errors, client outcomes or claimed time savings. Income tax expense, contract enforceability, debt covenants and a full statutory balance sheet are outside this case. PAYG withholding, workers compensation, loan terms and tax instalments are supplied scenario assumptions. Read the example README before applying the workflow to another business.

@@ -84,6 +84,7 @@ def prose_figures() -> list[tuple[str, str, Callable[[], tuple]]]:
     s = sources()
     m, a, late_daily = s["monthly"], s["assumptions"], s["late_daily"]
     trough = -late_daily.min()
+    bands = s["results"]["cash_floor_bands"]
     return [
         ("late case heading", r"\| OPEN-V paid (\d+) days late \|", lambda: (LATE_DAYS,)),
         ("base-case profit", rf"The base case earns ({MONEY}) before income tax",
@@ -117,6 +118,12 @@ def prose_figures() -> list[tuple[str, str, Callable[[], tuple]]]:
          lambda: (s["september_revenue"],)),
         ("run-rate profit", rf"monthly pre-tax profit remains ({MONEY})",
          lambda: (m["Profit before tax"].iloc[0],)),
+        ("band runs and seed", r"In ([\d,]+) seeded runs \(seed (\d+)\)",
+         lambda: (str(f"{bands['runs']:,}"), str(bands["seed"]))),
+        ("band floors", rf"Lowest daily cash is ({MONEY}) at P10, ({MONEY}) at P50 and ({MONEY}) at P90",
+         lambda: tuple(bands["floor"][p] for p in ("p10", "p50", "p90"))),
+        ("band breaches", rf"([\d,]+) runs go below zero and ([\d,]+) below the ({MONEY}) buffer",
+         lambda: (str(bands["runs_below_zero"]), str(bands["runs_below_buffer"]), a["minimum_cash_buffer"])),
     ]
 
 
@@ -204,7 +211,7 @@ def test_the_committed_outputs_regenerate_unchanged(tmp_path):
     # Line endings are normalised, because a Windows checkout may store CRLF;
     # every other byte must match.
     runpy.run_path(str(GENERATOR))["run"](tmp_path)
-    for name in ("briefing.md", "monthly.csv", "cash13.csv", "daily-cash.csv", "results.json"):
+    for name in ("briefing.md", "monthly.csv", "cash13.csv", "daily-cash.csv", "results.json", "cash-bands.csv"):
         committed = (OUTPUT / name).read_bytes().replace(b"\r\n", b"\n")
         regenerated = (tmp_path / name).read_bytes().replace(b"\r\n", b"\n")
         assert regenerated == committed, name
@@ -254,3 +261,22 @@ def test_a_threshold_missed_on_time_is_not_stated_as_met(tmp_path):
 def test_a_delay_safe_to_the_search_limit_is_not_stated_as_the_largest():
     clause = runpy.run_path(str(GENERATOR))["_limit_clause"](120, "zero")
     assert clause == "stays at or above zero for any delay to the model's 120-day limit"
+
+
+def test_the_cash_bands_start_from_the_on_time_forecast_and_follow_their_stated_inputs():
+    module = runpy.run_path(str(GENERATOR))
+    settings = json.loads((DATA / "cash-bands.json").read_text(encoding="utf-8"))
+    bands = sources()["results"]["cash_floor_bands"]
+    assert (bands["seed"], bands["runs"], bands["delays"]) == (settings["seed"], settings["runs"], settings["delays"])
+    assert bands["floor"]["p10"] <= bands["floor"]["p50"] <= bands["floor"]["p90"] <= sources()["results"]["minimum_daily_cash"]
+    paths = pd.read_csv(OUTPUT / "cash-bands.csv", index_col="week")
+    assert {p: paths[p].min() for p in ("p10", "p50", "p90")} == bands["floor"]
+    # With every range set to 0 days, each run is the on-time forecast, week by week.
+    on_time = module["forecast"]()["daily"]["ending_cash"]
+    zero = [rule | {"low_days": 0, "high_days": 0} for rule in settings["delays"]]
+    flat = module["cash_floor_bands"](
+        float(sources()["opening"]["Business Bank Account"]), module["forecast"]()["ledger"], on_time.index[0].date(), on_time.index[-1].date(),
+        [module["DelayRange"](**rule) for rule in zero], seed=1, runs=3)
+    weekly_lows = on_time.groupby((on_time.index - on_time.index[0]).days // 7).min().tolist()
+    assert flat.paths["p50"].tolist() == weekly_lows
+    assert flat.summary["floor"]["p50"] == sources()["results"]["minimum_daily_cash"]
