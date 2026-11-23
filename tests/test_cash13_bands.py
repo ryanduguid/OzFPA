@@ -59,7 +59,8 @@ def test_the_same_seed_gives_the_same_bytes_and_another_seed_can_differ():
     def csv(seed: int) -> str:
         return cash_floor_bands(100.0, EVENTS, START, END, LATE, seed=seed, runs=300).paths.to_csv(float_format="%.2f")
 
-    assert csv(3) == csv(3)
+    first, again = csv(3), csv(3)
+    assert first == again
     assert {csv(seed) for seed in range(10)} != {csv(3)}
 
 

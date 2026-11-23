@@ -107,6 +107,38 @@ def _week_lows(opening: int, base: list[int], moving: list[tuple[int, int]], shi
     return lows
 
 
+def _schedule(events: pd.DataFrame, delays: list[DelayRange], window_start: date,
+              days: int) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]]]:
+    """Net cents per day for flows that stay put; (day, cents) and (low, width) for each that moves."""
+    if not {"id", "date", "receipts", "payments"} <= set(events.columns):
+        raise ValueError("events need columns id, date, receipts and payments")
+    ids = events["id"].tolist()
+    if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
+        raise ValueError("event ids must be unique, non-empty text")
+    rule_of: dict[str, DelayRange] = {}
+    for rule in delays:
+        for i in rule.ids:
+            if i in rule_of:
+                raise ValueError(f"{i} is in more than one delay range")
+            rule_of[i] = rule
+    if unknown := sorted(set(rule_of) - set(ids)):
+        raise ValueError(f"delay ranges name unknown ids: {', '.join(unknown)}")
+    base, moving, ranges = [0] * days, [], []
+    for i, when, received, paid in zip(ids, events["date"], events["receipts"], events["payments"], strict=True):
+        if pd.isna(when):
+            raise ValueError(f"every event needs a date; {i} has none")
+        day = (pd.Timestamp(when).date() - window_start).days
+        if day < 0:
+            raise ValueError(f"{i} falls before window_start")
+        amount = _cents(received) - _cents(paid)
+        if i in rule_of:
+            moving.append((day, amount))
+            ranges.append((rule_of[i].low_days, rule_of[i].high_days - rule_of[i].low_days + 1))
+        elif day < days:
+            base[day] += amount
+    return base, moving, ranges
+
+
 def cash_floor_bands(
     opening_cash: float,
     events: pd.DataFrame,
@@ -133,36 +165,10 @@ def cash_floor_bands(
         raise ValueError("buffer must be finite and non-negative")
     if window_end < window_start:
         raise ValueError("window_end must not be before window_start")
-    if not {"id", "date", "receipts", "payments"} <= set(events.columns):
-        raise ValueError("events need columns id, date, receipts and payments")
-    ids = events["id"].tolist()
-    if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
-        raise ValueError("event ids must be unique, non-empty text")
-    rule_of: dict[str, DelayRange] = {}
-    for rule in delays:
-        for i in rule.ids:
-            if i in rule_of:
-                raise ValueError(f"{i} is in more than one delay range")
-            rule_of[i] = rule
-    if unknown := sorted(set(rule_of) - set(ids)):
-        raise ValueError(f"delay ranges name unknown ids: {', '.join(unknown)}")
-
     days = (window_end - window_start).days + 1
-    base, moving, ranges = [0] * days, [], []
-    for i, when, received, paid in zip(ids, events["date"], events["receipts"], events["payments"], strict=True):
-        if pd.isna(when):
-            raise ValueError(f"every event needs a date; {i} has none")
-        day = (pd.Timestamp(when).date() - window_start).days
-        if day < 0:
-            raise ValueError(f"{i} falls before window_start")
-        amount = _cents(received) - _cents(paid)
-        if i in rule_of:
-            moving.append((day, amount))
-            ranges.append((rule_of[i].low_days, rule_of[i].high_days - rule_of[i].low_days + 1))
-        elif day < days:
-            base[day] += amount
-
-    rng = random.Random(seed)
+    base, moving, ranges = _schedule(events, delays, window_start, days)
+    # Not for security: a seeded, documented stream is the point, so results reproduce.
+    rng = random.Random(seed)  # nosec B311  # NOSONAR
     opening = _to_cents(opening_cash)
     lows = [_week_lows(opening, base, moving, [low + int(rng.random() * width) for low, width in ranges])
             for _ in range(runs)]
