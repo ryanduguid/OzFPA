@@ -42,8 +42,8 @@ Clone the repository and install the locked development environment with
 [uv](https://docs.astral.sh/uv/), on Python 3.14 or newer:
 
 ```bash
-git clone https://github.com/ryanduguid/au-fpa-pack
-cd au-fpa-pack
+git clone https://github.com/ryanduguid/OzFPA
+cd OzFPA
 uv sync --locked --extra dev
 ```
 
