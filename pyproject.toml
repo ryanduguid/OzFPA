@@ -50,8 +50,8 @@ dev = [
 openfpa = "pyfpa.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ryanduguid/au-fpa-pack"
-Repository = "https://github.com/ryanduguid/au-fpa-pack"
+Homepage = "https://github.com/ryanduguid/OzFPA"
+Repository = "https://github.com/ryanduguid/OzFPA"
 Upstream = "https://github.com/JeffBrines/openfpa"
 
 [build-system]

@@ -82,7 +82,7 @@ ABS_FREQUENCIES = {
 # updated: treat retail_trade as history, and assess the Monthly Household Spending
 # Indicator separately, since it measures a different concept.
 
-_UA = "au-fpa-pack (github.com/ryanduguid/au-fpa-pack)"
+_UA = "au-fpa-pack (github.com/ryanduguid/OzFPA)"
 
 
 class SkippedObservation(BaseModel):
