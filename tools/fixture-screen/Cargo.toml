@@ -12,3 +12,8 @@ publish = false
 # tests/fixture_screen.rs copies (accounting-review-pipeline#492).
 [dev-dependencies]
 evatt = { git = "https://github.com/ryanduguid/accounting-review-pipeline", rev = "40aac54df997491c9ae4c0475118cb36b908b36b" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
