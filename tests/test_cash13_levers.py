@@ -49,6 +49,10 @@ def test_lateness_weights_days_by_amount_within_a_debtor():
     acme = debtor_lateness(events, receivables).iloc[0]
     # (100 x 9 + 300 x 2) / 400 = 3.75, shown to 2 places.
     assert (acme["invoices"], acme["amount"], acme["max_days_late"], acme["weighted_days_late"]) == (2, 400.0, 9, 3.75)
+    # Both Acme receipts move: INV-C to its 1 October due date, INV-A to 3 October.
+    # Cash is 350 from 1 October and 330 after the bill, against 50 before.
+    lever = pull_forward_levers(50.0, events, START, END, receivables, [7]).iloc[0]
+    assert (lever["debtor"], lever["floor_before"], lever["floor_after"], lever["gain"]) == ("Acme", 50.0, 330.0, 280.0)
 
 
 def test_each_lever_moves_one_debtor_sooner_but_never_before_its_due_date():
@@ -63,9 +67,9 @@ def test_each_lever_moves_one_debtor_sooner_but_never_before_its_due_date():
 
 def test_a_receipt_after_the_window_can_be_pulled_into_it():
     events = EVENTS.assign(date=pd.to_datetime(["2026-10-20", "2026-10-05", "2026-10-03"]))
-    table = pull_forward_levers(50.0, events, START, END, RECEIVABLES, [7])
-    # 20 October less 7 days is 13 October: inside the window, after the trough.
-    assert table.iloc[0][["floor_before", "floor_after"]].tolist() == [-70.0, -70.0]
+    table = pull_forward_levers(50.0, events, START, END, RECEIVABLES, [19])
+    # Outside the window it never arrives; 19 days sooner is its 1 October due date.
+    assert table.iloc[0][["debtor", "floor_before", "floor_after", "gain"]].tolist() == ["Acme", -70.0, 30.0, 100.0]
     assert debtor_lateness(events, RECEIVABLES).iloc[0]["max_days_late"] == 19
 
 

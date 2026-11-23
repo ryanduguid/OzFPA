@@ -195,8 +195,9 @@ def _lever_line(lateness: pd.DataFrame, levers: pd.DataFrame) -> str:
     late = lateness[lateness["late_amount"] > 0]
     best = [levers[levers["days_sooner"] == days].iloc[0] for days in LEVER_DAYS]
     moves = ", ".join(f"{row['days_sooner']} days sooner to {_money(row['floor_after'])}" for row in best)
-    return (f"- In the {LATE_CASE_DAYS}-day late case, {len(late)} of {len(lateness)} invoices {"is" if len(late) == 1 else "are"} past due. Collecting "
-            f"{best[0]['debtor']} sooner moves lowest daily cash from {_money(best[0]['floor_before'])}: {moves}. "
+    return (f"- In the {LATE_CASE_DAYS}-day late case, {len(late)} of {len(lateness)} invoices {"is" if len(late) == 1 else "are"} past due. In a date-only what-if, "
+            f"if {best[0]['debtor']} were received sooner, lowest daily cash would move from "
+            f"{_money(best[0]['floor_before'])}: {moves}. This is arithmetic on dates, not an expected collection. "
             "Each lever stops at the due date. The data names no customer, so each invoice is its own debtor; "
             "`debtor-lateness.csv` and `pull-forward.csv` list them all.")
 

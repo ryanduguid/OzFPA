@@ -122,7 +122,7 @@ def prose_figures() -> list[tuple[str, str, Callable[[], tuple]]]:
         ("run-rate profit", rf"monthly pre-tax profit remains ({MONEY})",
          lambda: (m["Profit before tax"].iloc[0],)),
         ("pull-forward levers",
-         rf"Collecting (OPEN-V) sooner moves lowest daily cash from ({MONEY}): 14 days sooner to ({MONEY}), "
+         rf"if (OPEN-V) were received sooner, lowest daily cash would move from ({MONEY}): 14 days sooner to ({MONEY}), "
          rf"28 days sooner to ({MONEY}), 45 days sooner to ({MONEY})",
          lambda: ("OPEN-V", late_daily.min(), *[lever(days)["floor_after"] for days in (14, 28, 45)])),
         ("band runs and seed", r"In ([\d,]+) seeded runs \(seed (\d+)\)",
