@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.99"
 description = "Fails CI on a checksum-valid Australian identifier in any tracked file"
 license = "Apache-2.0"
-repository = "https://github.com/ryanduguid/au-fpa-pack"
+repository = "https://github.com/ryanduguid/OzFPA"
 publish = false
 
 # evatt's detectors and check digits, pinned to the commit whose fixture screen

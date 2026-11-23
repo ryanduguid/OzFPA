@@ -8,8 +8,8 @@ kind; this is a side-of-the-desk project.
 ## Getting set up
 
 ```bash
-git clone https://github.com/ryanduguid/au-fpa-pack
-cd au-fpa-pack
+git clone https://github.com/ryanduguid/OzFPA
+cd OzFPA
 pip install -e ".[dev]"
 ruff check .       # lint and import order, part of the merge gate
 mypy               # strict type check of pyfpa, part of the merge gate
@@ -59,7 +59,7 @@ check name and Windows adds `public-fixtures (Windows)`; branch protection requi
    Python 3.14 and 3.15. A green suite is required to merge, as are clean
    `ruff check .` and `mypy` runs.
 3. Open a PR describing what you changed and why. For anything non-trivial, describe the
-   approach in an [issue](https://github.com/ryanduguid/au-fpa-pack/issues) or a draft PR before
+   approach in an [issue](https://github.com/ryanduguid/OzFPA/issues) or a draft PR before
    you build. Changes to the shared openfpa core belong in [openfpa's issues](https://github.com/JeffBrines/openfpa/issues).
 
 ## What's most useful to contribute
@@ -96,7 +96,7 @@ real businesses. The contributions that help most:
 - By contributing, you agree to offer your work under the [Apache License, Version 2.0](LICENSE). Retained Guiderail code remains under the MIT licence reproduced in [NOTICE](NOTICE).
 
 Questions or ideas about the shared core go to [openfpa's issues](https://github.com/JeffBrines/openfpa/issues);
-for the Australian layer, use [this repository's issues](https://github.com/ryanduguid/au-fpa-pack/issues).
+for the Australian layer, use [this repository's issues](https://github.com/ryanduguid/OzFPA/issues).
 
 ## Release checks
 

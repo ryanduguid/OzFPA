@@ -18,7 +18,7 @@ You do not need a Xero login, client data, macros or an AI agent.
 | --- | --- |
 | Artefact | `lumbridge.xlsx`, 23,506 bytes |
 | SHA-256 | `b150de6281fccb6dcb1d221c034b047eb610ad4064972c5d9ac9fca8916b8463` |
-| Source commit | [`386c7ff31f7989b86445ef37d83a912fcb02bb47`](https://github.com/ryanduguid/au-fpa-pack/tree/386c7ff31f7989b86445ef37d83a912fcb02bb47/examples/lumbridge-services) |
+| Source commit | [`386c7ff31f7989b86445ef37d83a912fcb02bb47`](https://github.com/ryanduguid/OzFPA/tree/386c7ff31f7989b86445ef37d83a912fcb02bb47/examples/lumbridge-services) |
 | Distributed at | <https://duguid.com.au/assets/examples/lumbridge/lumbridge-sample-pack.zip> |
 | Explained at | <https://duguid.com.au/examples/profit-vs-cash-flow/> |
 | Prerequisites | Desktop Excel with automatic calculation. To rebuild instead, Python 3.11 and uv |

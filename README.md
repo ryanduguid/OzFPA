@@ -1,26 +1,26 @@
 <p align="center">
   <picture>
-    <source media="(max-width: 600px) and (prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-phone-light.svg">
-    <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-phone.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner-light.svg">
-    <img src="https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/banner.svg" width="100%" alt="AU FP&amp;A. Cash, budgets and variance on Australian 30 June years. Pixel art of a bar chart with a rising arrow beside the AU FP&amp;A wordmark in slab-serif block letters.">
+    <source media="(max-width: 600px) and (prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/banner-phone-light.svg">
+    <source media="(max-width: 600px)" srcset="https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/banner-phone.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/banner-light.svg">
+    <img src="https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/banner.svg" width="100%" alt="AU FP&amp;A. Cash, budgets and variance on Australian 30 June years. Pixel art of a bar chart with a rising arrow beside the AU FP&amp;A wordmark in slab-serif block letters.">
   </picture>
 </p>
 
 <div align="center">
 
-[![tests](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/ci.yml)
-[![Codecov](https://codecov.io/gh/ryanduguid/au-fpa-pack/graph/badge.svg)](https://codecov.io/gh/ryanduguid/au-fpa-pack)
-[![CodeQL](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ryanduguid/au-fpa-pack/actions/workflows/codeql.yml)
+[![tests](https://github.com/ryanduguid/OzFPA/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanduguid/OzFPA/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/ryanduguid/OzFPA/graph/badge.svg)](https://codecov.io/gh/ryanduguid/OzFPA)
+[![CodeQL](https://github.com/ryanduguid/OzFPA/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ryanduguid/OzFPA/actions/workflows/codeql.yml)
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=ryanduguid_au-fpa-pack&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
-[![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/au-fpa-pack/dashboard)<br>
-[![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/ryanduguid/au-fpa-pack.svg)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/au-fpa-pack)
+[![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/OzFPA/dashboard)<br>
+[![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/ryanduguid/au-fpa-pack.svg)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/OzFPA)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
-[![SLSA provenance](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/au-fpa-pack/attestations)
-[![VirusTotal](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/au-fpa-pack/releases/latest)<br>
+[![SLSA provenance](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/OzFPA/attestations)
+[![VirusTotal](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/OzFPA/releases/latest)<br>
 [![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
-[![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/python.svg)](https://www.python.org/)
-[![licence: Apache-2.0](https://raw.githubusercontent.com/ryanduguid/au-fpa-pack/main/.github/assets/badges/licence.svg)](LICENSE)
+[![python: 3.14+](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/python.svg)](https://www.python.org/)
+[![licence: Apache-2.0](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/licence.svg)](LICENSE)
 
 [Worked example](#worked-example) · [Package](#package) · [Skills](#skills) · [Licence](#licence)
 
@@ -112,7 +112,7 @@ repository as the `au-fpa-pack` plugin, at the package's version, licensed `Apac
 also its own marketplace, so Claude Code installs the skills with:
 
 ```text
-/plugin marketplace add ryanduguid/au-fpa-pack
+/plugin marketplace add ryanduguid/OzFPA
 /plugin install au-fpa-pack@au-fpa-pack
 ```
 
@@ -242,4 +242,4 @@ The licence does not cover the scripture quotation in the footer. Scripture quot
 
 ---
 
-<p align="center"><sub><i>'The plans of the diligent lead only to plenty.'</i> Proverbs 21:5 (<a href="https://netbible.org/">NET</a>)<br>Reusing this code? See <a href="NOTICE">NOTICE</a> for attribution. AI agents: see <a href="https://github.com/ryanduguid/au-fpa-pack/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
+<p align="center"><sub><i>'The plans of the diligent lead only to plenty.'</i> Proverbs 21:5 (<a href="https://netbible.org/">NET</a>)<br>Reusing this code? See <a href="NOTICE">NOTICE</a> for attribution. AI agents: see <a href="https://github.com/ryanduguid/OzFPA/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
