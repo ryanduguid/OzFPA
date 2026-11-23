@@ -151,10 +151,23 @@ def test_price_volume_bridge_retains_unexplained_ledger_residual():
     result = function([{"service": "Maintenance", "prior_units": "200", "current_units": "220",
                         "prior_price": "100", "current_price": "110", "evidence": "Fabricated job register"}],
                       "20000", "24150")
-    assert result["volume"] == "2000"
-    assert result["price"] == "2200"
-    assert result["residual"] == "-50"
-    assert sum(Decimal(result[key]) for key in ("price", "volume", "residual")) == Decimal(result["observed"])
+    assert result["volume"] == "2000.00"
+    assert result["mix"] == "0.00"
+    assert result["price"] == "2200.00"
+    assert result["residual"] == "-50.00"
+    assert sum(Decimal(result[key]) for key in ("price", "volume", "mix", "residual")) == Decimal(result["observed"])
+
+
+def test_operating_bridge_splits_a_shift_between_services_into_mix():
+    function = runpy.run_path(str(GENERATED / "operating_variance.py"))["revenue_bridge"]
+    rows = [{"service": "Maintenance", "prior_units": "100", "current_units": "120", "prior_price": "10",
+             "current_price": "11", "evidence": "Fabricated job register"},
+            {"service": "Repairs", "prior_units": "100", "current_units": "60", "prior_price": "20",
+             "current_price": "20", "evidence": "Fabricated job register"}]
+    result = function(rows, "3000", "2500")
+    assert (result["volume"], result["mix"], result["price"]) == ("-300.00", "-300.00", "120.00")
+    assert result["residual"] == "-20.00"
+    assert sum(Decimal(result[key]) for key in ("price", "volume", "mix", "residual")) == Decimal(result["observed"])
 
 
 @pytest.mark.parametrize("amount", ["1e100", "1.001", "100000000000000000000000000000000000000000000000000000000000001", 1.0])

@@ -71,6 +71,32 @@ and the gain. A lever is arithmetic on stated dates, not a prediction that the
 debtor will pay sooner. The Lumbridge example writes `debtor-lateness.csv` and
 `pull-forward.csv` for its 45-day late case.
 
+### Price, volume and mix
+
+`price_volume_mix(lines)` splits a change in revenue between two periods. Each
+line gives `line`, `prior_units`, `current_units`, `prior_price` and
+`current_price` as decimal strings, integers or `Decimal`; a float is refused.
+Volume is the change in total units at prior prices and prior mix. Mix is the
+change in each line's share of units, at prior prices and current total units.
+Price is the change in price at current units. Each line's revenue is rounded
+half up to cents from the exact product at each of those stages, so volume,
+mix and price sum exactly to the change in revenue, line by line and in total.
+Mix assumes the lines' units are comparable, such as jobs or hours. Prior
+units totalling zero are refused, because volume and mix are then undefined.
+The Lumbridge `operating_variance.py` adds an unexplained residual against
+ledger revenue.
+
+### Tying a briefing's figures
+
+`figure_problems(text, ties)` checks generated prose against its sources. A
+`FigureTie` names one statement: a regular expression with one group per
+figure and each figure's source in group order. Each pattern must match once.
+A `$` figure is compared in cents, half up from the source as written; text
+sources must match exactly; other figures must equal the source as numbers.
+Any number in the text that no tie covers is reported as untied, so a new
+figure fails until it has a source. The Lumbridge example's
+`verify_briefing.py` runs it over `briefing.md` and exits 1 on any problem.
+
 ### Three-way forecast
 
 `three_way_from_config` turns the same configuration into a monthly profit and
