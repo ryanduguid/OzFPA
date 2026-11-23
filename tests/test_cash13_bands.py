@@ -138,3 +138,11 @@ def test_bad_settings_are_refused(kwargs, message):
 def test_a_bad_delay_range_is_refused(fields):
     with pytest.raises(ValidationError):
         DelayRange(**fields)
+
+
+def test_amounts_round_to_cents_as_written_not_as_binary_floats():
+    # 1.005 is 1.00499999... as a binary float; as written it rounds half up to 101 cents.
+    events = _events(("INV-1", "2026-10-01", 1.005, 0.0), ("BILL-1", "2026-10-02", 0.0, 2.015))
+    bands = cash_floor_bands(1.005, events, START, END, [], seed=0, runs=1, buffer=0.015)
+    assert bands.summary["floor"]["p50"] == 0.0
+    assert bands.summary["runs_below_buffer"] == 1

@@ -16,7 +16,8 @@ one simulated path, the first run whose floor is that percentile, reported as
 its lowest end-of-day cash in each week, so the lowest week of a band is its
 floor. The bands are not separate per-week percentiles.
 
-Reproducible byte for byte: amounts are whole cents, and only
+Reproducible byte for byte: amounts are whole cents, rounded half up from
+the amount as written, and only
 `random.Random.random()` is used, whose sequence for an integer seed Python
 documents as stable across versions.
 
@@ -34,6 +35,7 @@ import numbers
 import random
 from dataclasses import dataclass
 from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 import pandas as pd
@@ -76,7 +78,12 @@ class CashFloorBands:
 def _cents(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, numbers.Real) or not math.isfinite(value) or value < 0:
         raise ValueError("receipts and payments must be finite, non-negative numbers")
-    return round(float(value) * 100)
+    return _to_cents(value)
+
+
+def _to_cents(value: object) -> int:
+    """Whole cents from the amount as written (1.005 is 101), half a cent rounding up."""
+    return int((Decimal(str(value)) * 100).quantize(Decimal(1), rounding=ROUND_HALF_UP))
 
 
 def _whole(value: object, name: str, low: int, high: int) -> int:
@@ -156,7 +163,7 @@ def cash_floor_bands(
             base[day] += amount
 
     rng = random.Random(seed)
-    opening = round(opening_cash * 100)
+    opening = _to_cents(opening_cash)
     lows = [_week_lows(opening, base, moving, [low + int(rng.random() * width) for low, width in ranges])
             for _ in range(runs)]
     floors = [min(week) for week in lows]
@@ -176,6 +183,6 @@ def cash_floor_bands(
         "representative_runs": chosen,
         "buffer": buffer,
         "runs_below_zero": sum(floor < 0 for floor in floors),
-        "runs_below_buffer": sum(floor < round(buffer * 100) for floor in floors),
+        "runs_below_buffer": sum(floor < _to_cents(buffer) for floor in floors),
     }
     return CashFloorBands(summary=summary, paths=paths)
