@@ -18,6 +18,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from pyfpa.au.payroll import PayrollAssumptions, Role, payroll_forecast
 from pyfpa.cash13.bands import DelayRange, cash_floor_bands
 from pyfpa.cash13.forecast import cash13_forecast
+from pyfpa.cash13.levers import debtor_lateness, pull_forward_levers
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.excel.toolkit import add_named_cell
 from pyfpa.excel.verify import verify_workbook
@@ -168,6 +169,37 @@ def flip_points(data: Path = ROOT / "data") -> dict[str, int | None]:
         if lowest >= result["assumptions"]["minimum_cash_buffer"]:
             points["buffer"] = delay
     return points
+
+
+LEVER_DAYS = [14, 28, 45]
+LATE_CASE_DAYS = 45
+
+
+def debtor_levers(data: Path = ROOT / "data", delay_days: int = LATE_CASE_DAYS) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Lateness and pull-forward levers in the late case, against the due dates in
+    receipt-assumptions.csv. The data names no customer, so each invoice is its own debtor."""
+    late = forecast(data, delay_days)
+    a, ledger = late["assumptions"], late["ledger"]
+    due = pd.read_csv(data / "receipt-assumptions.csv", parse_dates=["due_date"])
+    receipts = ledger.loc[ledger["receipts"] > 0, "id"]
+    if sorted(due["invoice_id"]) != sorted(receipts):
+        raise ValueError("Receipt assumptions must list every invoice once")
+    receivables = pd.DataFrame({"debtor": due["invoice_id"], "id": due["invoice_id"], "due_date": due["due_date"]})
+    start, end = pd.Timestamp(a["weekly_start"]).date(), pd.Timestamp(a["forecast_end"]).date()
+    return (debtor_lateness(ledger, receivables),
+            pull_forward_levers(late["bs"]["Business Bank Account"], ledger, start, end, receivables, LEVER_DAYS))
+
+
+def _lever_line(lateness: pd.DataFrame, levers: pd.DataFrame) -> str:
+    """The briefing's pull-forward decision, every figure read from the two tables."""
+    late = lateness[lateness["late_amount"] > 0]
+    best = [levers[levers["days_sooner"] == days].iloc[0] for days in LEVER_DAYS]
+    moves = ", ".join(f"{row['days_sooner']} days sooner to {_money(row['floor_after'])}" for row in best)
+    return (f"- In the {LATE_CASE_DAYS}-day late case, {len(late)} of {len(lateness)} invoices {"is" if len(late) == 1 else "are"} past due. In a date-only what-if, "
+            f"if {best[0]['debtor']} were received sooner, lowest daily cash would move from "
+            f"{_money(best[0]['floor_before'])}: {moves}. This is arithmetic on dates, not an expected collection. "
+            "Each lever stops at the due date. The data names no customer, so each invoice is its own debtor; "
+            "`debtor-lateness.csv` and `pull-forward.csv` list them all.")
 
 
 def floor_bands(data: Path = ROOT / "data"):
@@ -438,6 +470,11 @@ def run(output: Path, delay_days: int = 0) -> dict:
     bands = floor_bands()
     bands.paths.to_csv(output / "cash-bands.csv", float_format="%.2f")
     summary["cash_floor_bands"] = bands.summary
+    lateness, levers = debtor_levers()
+    lateness.to_csv(output / "debtor-lateness.csv", index=False, float_format="%.2f")
+    levers.to_csv(output / "pull-forward.csv", index=False, float_format="%.2f")
+    summary["debtor_lateness"] = lateness.to_dict("records")
+    summary["pull_forward"] = levers.to_dict("records")
     (output / "results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     base, late = forecast(), forecast(delay_days=45)
     points = flip_points()
@@ -475,6 +512,7 @@ def run(output: Path, delay_days: int = 0) -> dict:
                "or $40,160 to preserve the assumed $15,000 buffer. No overdraft is assumed or arranged."),
               ("- Hold any dragon pickaxe upgrade, meaning discretionary equipment spending, until collection timing and funding are resolved. "
                "The forecast currently includes no capital expenditure."),
+              _lever_line(lateness, levers),
               "- Reforecast from actual receipts and payments each week. Investigate changes instead of treating the repeated September margin as earned growth.", "",
               *_band_lines(bands.summary),
               "## Evidence and limits", "",

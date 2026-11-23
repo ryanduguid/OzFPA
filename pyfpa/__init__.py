@@ -25,6 +25,7 @@ from pyfpa.cash13.actions import risk_week_actions
 from pyfpa.cash13.bands import CashFloorBands, DelayRange, cash_floor_bands
 from pyfpa.cash13.flows import expand_flow
 from pyfpa.cash13.forecast import cash13_forecast
+from pyfpa.cash13.levers import debtor_lateness, pull_forward_levers
 from pyfpa.cash13.receivables import predicted_receipt_flows, predicted_receipts
 from pyfpa.cash13.reforecast import Reforecast, reforecast_from_actuals
 from pyfpa.cash13.runway import runway_summary
@@ -233,6 +234,7 @@ __all__ = [
     "collection_profile_from_history",
     "compare_scenarios",
     "connector_bundle_path",
+    "debtor_lateness",
     "connector_generated_root",
     "debt_from_config",
     "divest",
@@ -277,6 +279,7 @@ __all__ = [
     "promote_challenger",
     "promote_prior",
     "promote_skill",
+    "pull_forward_levers",
     "read_pl_csv",
     "reconcile",
     "reconcile_account_table",

@@ -49,5 +49,241 @@
     "buffer": 15000,
     "runs_below_zero": 918,
     "runs_below_buffer": 996
-  }
+  },
+  "debtor_lateness": [
+    {
+      "debtor": "OPEN-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 44000.0,
+      "max_days_late": 45,
+      "weighted_days_late": 45.0
+    },
+    {
+      "debtor": "DEC-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "invoices": 1,
+      "amount": 44000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "invoices": 1,
+      "amount": 22000.0,
+      "late_amount": 0.0,
+      "max_days_late": 0,
+      "weighted_days_late": 0.0
+    }
+  ],
+  "pull_forward": [
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 14,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -11960.0,
+      "gain": 13200.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 28,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": 16800.0,
+      "gain": 41960.0
+    },
+    {
+      "debtor": "DEC-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "DEC-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "NOV-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OCT-V",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    },
+    {
+      "debtor": "OPEN-F",
+      "days_sooner": 45,
+      "floor_before": -25160.0,
+      "floor_after": -25160.0,
+      "gain": 0.0
+    }
+  ]
 }
