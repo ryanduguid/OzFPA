@@ -1,0 +1,19 @@
+# cargo-deny checks the external dependency graph of the locked Rust crate.
+[graph]
+all-features = true
+
+[licenses]
+confidence-threshold = 0.9
+allow = [
+    "Apache-2.0",
+    "MIT",
+]
+
+[licenses.private]
+ignore = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# The fixture scanner pins evatt to an immutable commit in this repository.
+allow-git = ["https://github.com/ryanduguid/accounting-review-pipeline"]
