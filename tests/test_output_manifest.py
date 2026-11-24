@@ -47,6 +47,13 @@ def test_line_endings_alone_do_not_fail_but_any_other_byte_does(folder):
     assert verify_manifest(folder) == ["changed: briefing.md"]
 
 
+def test_a_binary_file_is_hashed_as_raw_bytes(tmp_path):
+    (tmp_path / "chart.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+    write_manifest(tmp_path)
+    (tmp_path / "chart.png").write_bytes(b"\x89PNG\n\x1a\n")
+    assert verify_manifest(tmp_path) == ["changed: chart.png"]
+
+
 def test_an_unhashed_output_may_be_present_or_absent(folder):
     (folder / "book.xlsx").unlink()
     assert verify_manifest(folder) == []

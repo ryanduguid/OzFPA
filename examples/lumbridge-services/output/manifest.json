@@ -1,6 +1,6 @@
 {
   "format": "ozfpa-output-manifest/1",
-  "line_endings": "CRLF is read as LF before hashing",
+  "line_endings": "CRLF is read as LF in .csv, .json, .md, .txt, .yaml, .yml files; other files are raw bytes",
   "unhashed": [
     "lumbridge.xlsx"
   ],

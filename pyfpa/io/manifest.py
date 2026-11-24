@@ -6,8 +6,9 @@
 `write_manifest(folder, unhashed)` hashes every file under the folder except
 `manifest.json` itself and the relative paths in `unhashed`, which are outputs
 rebuilt locally that are not byte for byte reproducible, such as a workbook.
-CRLF is read as LF before hashing, because Git may check text out with CRLF on
-Windows; any other changed byte changes the hash.
+In text files (.csv, .json, .md, .txt, .yaml, .yml) CRLF is read as LF before
+hashing, because Git may check text out with CRLF on Windows; every other file
+is hashed as raw bytes, and any other changed byte changes the hash.
 
 `verify_manifest(folder)` lists each listed file that is missing, each whose
 hash changed and each file present but not listed. Only files found inside the
@@ -28,10 +29,12 @@ from pathlib import Path
 
 NAME = "manifest.json"
 FORMAT = "ozfpa-output-manifest/1"
+TEXT_SUFFIXES = (".csv", ".json", ".md", ".txt", ".yaml", ".yml")
 
 
 def _digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    data = path.read_bytes()
+    return hashlib.sha256(data.replace(b"\r\n", b"\n") if path.suffix.lower() in TEXT_SUFFIXES else data).hexdigest()
 
 
 def _files(folder: Path, unhashed: Iterable[str]) -> list[str]:
@@ -46,7 +49,7 @@ def write_manifest(folder: str | Path, unhashed: Iterable[str] = ()) -> dict[str
     skip = sorted(set(unhashed))
     manifest: dict[str, object] = {
         "format": FORMAT,
-        "line_endings": "CRLF is read as LF before hashing",
+        "line_endings": f"CRLF is read as LF in {', '.join(TEXT_SUFFIXES)} files; other files are raw bytes",
         "unhashed": skip,
         "files": {name: _digest(root / name) for name in _files(root, skip)},
     }

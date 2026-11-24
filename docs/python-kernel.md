@@ -103,7 +103,8 @@ group whose source is that text. The Lumbridge example's
 `pyfpa.io.manifest.write_manifest(folder, unhashed)` writes `manifest.json`
 with the SHA-256 of every file under the folder, except the manifest and the
 listed outputs that are rebuilt locally and not byte for byte reproducible.
-CRLF is read as LF before hashing; any other changed byte changes the hash.
+In text files (.csv, .json, .md, .txt, .yaml, .yml) CRLF is read as LF before
+hashing; other files are raw bytes, and any other changed byte changes the hash.
 `verify_manifest(folder)` lists each changed, missing or extra file, and
 `python -m pyfpa.io.manifest <folder>` prints them and exits 1 if there is
 one. The Lumbridge example writes a manifest on every run.
