@@ -1,5 +1,10 @@
 # Unreleased
 
+- `pyfpa.hardcode_report(path, sheet="Model", allowed=KERNEL_LITERALS)` lists every hardcoded number in a model
+  sheet's formula range without evaluating it: a number typed over a cell, and each number inside a formula that is
+  not in `allowed`, nor its negative (by default the kernel's 0, 1, 12, 30 and its rounding factor; whole-number
+  powers and whole-row ranges are skipped). Each entry gives the cell, its line label and the value with any unary sign
+  and percent applied. `formula_literals` returns the numbers in one formula.
 - `model_to_excel` adds a Checks sheet. It takes the largest absolute monthly value of every `check_` row on the Model
   sheet, marks each OK or FAIL against its tolerance and rolls them up to one status in Checks!B1, shown at the top of
   the Model and Assumptions tabs: it names the first failing check or says all pass. New `check_revenue_parts`,

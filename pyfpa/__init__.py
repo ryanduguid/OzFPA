@@ -49,7 +49,7 @@ from pyfpa.config.schemas import (
 )
 from pyfpa.excel.model_workbook import model_to_excel
 from pyfpa.excel.structure import verify_structure
-from pyfpa.excel.verify import verify_workbook
+from pyfpa.excel.verify import hardcode_report, verify_workbook
 from pyfpa.io.loaders import load_cash13_config, load_cash13_scenarios, load_skus
 from pyfpa.io.pl_csv import read_pl_csv
 from pyfpa.io.reporting import forecast_to_excel, to_briefing_md
@@ -247,6 +247,7 @@ __all__ = [
     "figure_problems",
     "find_recurring_skills",
     "forecast_to_excel",
+    "hardcode_report",
     "holdout_backtest",
     "initialize_workspace",
     "intake_ready",
