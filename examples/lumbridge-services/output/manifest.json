@@ -1,0 +1,17 @@
+{
+  "format": "ozfpa-output-manifest/1",
+  "line_endings": "CRLF is read as LF in .csv, .json, .md, .txt, .yaml, .yml files; other files are raw bytes",
+  "unhashed": [
+    "lumbridge.xlsx"
+  ],
+  "files": {
+    "briefing.md": "f8ca122accfe87aa268585b31b110814a866c51ef19bbc56a22c6ed092024f78",
+    "cash-bands.csv": "20e8642085599d0e4d022dba33d624d796cb9fba40f6d27dc877a8c0d0ca536e",
+    "cash13.csv": "6aa0e33195bc708f0ebf3805352d1c8371ac578a21a8cbf5f3cbcef4053e8476",
+    "daily-cash.csv": "2b69e3ad22da6f0f40b79e651b4a9f3c19c37634d23570c1ed427b0873832ab7",
+    "debtor-lateness.csv": "199d48b6f8bad0ec0cd17cd879b44541b77c0966d49364e552ea5d0b36c8fb94",
+    "monthly.csv": "2739160285e7eeead8db9595320785e354393968103c1a02f613e0c9bebed2bc",
+    "pull-forward.csv": "097cd330337f50000f98625b2c8fa7530f826ad5c91cba2ee1d7086301542ff8",
+    "results.json": "93d43096fd5ee056d097fed5981081e11e8c359a45de43c191f032516d4591e1"
+  }
+}

@@ -27,6 +27,8 @@ import pandas as pd
 import pytest
 from openpyxl import load_workbook
 
+from pyfpa.io.manifest import verify_manifest
+
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "lumbridge-services"
 OUTPUT = EXAMPLE / "output"
 DATA = EXAMPLE / "data"
@@ -129,11 +131,24 @@ def test_the_committed_outputs_regenerate_unchanged(tmp_path):
     # Line endings are normalised, because a Windows checkout may store CRLF;
     # every other byte must match.
     runpy.run_path(str(GENERATOR))["run"](tmp_path)
-    for name in ("briefing.md", "monthly.csv", "cash13.csv", "daily-cash.csv", "results.json", "cash-bands.csv",
-                 "debtor-lateness.csv", "pull-forward.csv"):
+    names = ("briefing.md", "monthly.csv", "cash13.csv", "daily-cash.csv", "results.json", "cash-bands.csv",
+             "debtor-lateness.csv", "pull-forward.csv", "manifest.json")
+    for name in names:
         committed = (OUTPUT / name).read_bytes().replace(b"\r\n", b"\n")
         regenerated = (tmp_path / name).read_bytes().replace(b"\r\n", b"\n")
         assert regenerated == committed, name
+    # The manifest hashes every committed output, and only those.
+    assert sorted(json.loads((OUTPUT / "manifest.json").read_text(encoding="utf-8"))["files"]) == sorted(names[:-1])
+    assert verify_manifest(tmp_path) == []
+
+
+def test_the_committed_outputs_match_their_manifest_and_a_changed_one_fails(tmp_path):
+    assert verify_manifest(OUTPUT) == []
+    copy = tmp_path / "output"
+    shutil.copytree(OUTPUT, copy, ignore=shutil.ignore_patterns("*.xlsx"))
+    (copy / "results.json").write_text((copy / "results.json").read_text(encoding="utf-8").replace("20261002", "20261003"),
+                                       encoding="utf-8")
+    assert verify_manifest(copy) == ["changed: results.json"]
 
 
 def test_the_flip_points_are_where_the_funding_conclusion_changes():

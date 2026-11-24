@@ -22,6 +22,7 @@ from pyfpa.cash13.levers import debtor_lateness, pull_forward_levers
 from pyfpa.cash13.schemas import Cash13Config, WeeklyFlow
 from pyfpa.excel.toolkit import add_named_cell
 from pyfpa.excel.verify import verify_workbook
+from pyfpa.io.manifest import write_manifest
 from pyfpa.io.xero_au import read_xero_report
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -522,6 +523,8 @@ def run(output: Path, delay_days: int = 0) -> dict:
               "PAYG withholding, workers compensation, loan terms and tax instalments are supplied scenario assumptions. "
               "Read the example README before applying the workflow to another business."), ""]
     (output / "briefing.md").write_text("\n".join(lines), encoding="utf-8")
+    # Last, so it hashes every output above; the workbook is rebuilt locally and not byte-reproducible.
+    write_manifest(output, unhashed=["lumbridge.xlsx"])
     return summary
 
 
