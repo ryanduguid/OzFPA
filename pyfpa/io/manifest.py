@@ -33,7 +33,8 @@ TEXT_SUFFIXES = (".csv", ".json", ".md", ".txt", ".yaml", ".yml")
 
 
 def _digest(path: Path) -> str:
-    data = path.read_bytes()
+    # Library API and CLI; the folder is the operator's own, and only files found by walking it are read.
+    data = path.read_bytes()  # NOSONAR
     return hashlib.sha256(data.replace(b"\r\n", b"\n") if path.suffix.lower() in TEXT_SUFFIXES else data).hexdigest()
 
 
@@ -53,14 +54,16 @@ def write_manifest(folder: str | Path, unhashed: Iterable[str] = ()) -> dict[str
         "unhashed": skip,
         "files": {name: _digest(root / name) for name in _files(root, skip)},
     }
-    (root / NAME).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    # Library API; the caller chooses its own output folder.
+    (root / NAME).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")  # NOSONAR
     return manifest
 
 
 def _read(root: Path) -> tuple[dict[str, object], list[object]] | str:
     """The manifest's files and unhashed paths, or the problem that stops the check."""
     try:
-        manifest = json.loads((root / NAME).read_text(encoding="utf-8"))
+        # Library API and CLI; the folder is the operator's own.
+        manifest = json.loads((root / NAME).read_text(encoding="utf-8"))  # NOSONAR
     except FileNotFoundError:
         return f"missing: {NAME}"
     except json.JSONDecodeError:
