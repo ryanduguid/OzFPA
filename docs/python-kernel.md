@@ -254,3 +254,10 @@ function evaluates the workbook with a Python formula engine and compares every 
 and month to `cashflow_from_config`, so the workbook is verified against the engine
 before it is used. For cadences or layouts the kernel does not cover, compose
 `pyfpa.excel.toolkit` in a company-specific exporter and verify it the same way.
+
+After a model is edited, `hardcode_report` lists every hardcoded number in the
+Model sheet's formula range: a number typed over a formula cell, and each number
+written inside a formula (`=B12*1.1+500`) other than the allowed constants. The
+default allows the kernel's own 0, 1, 12, 30 and rounding factor, so a freshly
+built kernel workbook reports none; pass `allowed` for a company exporter's own
+constants.
