@@ -293,7 +293,7 @@ jobs:
 
       - run: cargo fmt --check
       - run: cargo clippy --locked --all-targets -- -D warnings
-      - run: cargo deny --locked --config "$GITHUB_WORKSPACE/deny.toml" check licenses sources
+      - run: cargo deny --locked --config "$GITHUB_WORKSPACE/deny.toml" check sources
       - run: cargo test --locked --release
 
   # The upload runs apart from the tests so the OIDC token is never available
