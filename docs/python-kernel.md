@@ -247,9 +247,16 @@ The base kernel includes:
 with cohorts, projects, contracts, fleets, stores, or complex inventory may need
 a different generated model.
 
-The `model_to_excel` function compiles an `EntityConfig` into a 2-sheet workbook:
-an Assumptions sheet of named, editable driver cells and a Model sheet where every
-P&L and cash-flow line is a real formula referencing those names. The `verify_workbook`
+The `model_to_excel` function compiles an `EntityConfig` into a workbook of 3
+sheets: an Assumptions sheet of named, editable driver cells, a Model sheet where
+every P&L and cash-flow line is a real formula referencing those names, and a
+Checks sheet. The Checks sheet takes the largest absolute monthly value of every
+`check_` row and rolls them up to one status, which Model!A1 and Assumptions!B1
+show: it names the first failing check or says all pass. Each schedule total
+(revenue, operating expenses, interest and principal) has a `check_*_parts` row
+that sums its lines in the other form, so an overtyped total or an edited range
+fails on whichever tab is open. `pyfpa.excel.toolkit.add_checks_sheet` builds the
+same roll-up for a company exporter. The `verify_workbook`
 function evaluates the workbook with a Python formula engine and compares every line
 and month to `cashflow_from_config`, so the workbook is verified against the engine
 before it is used. For cadences or layouts the kernel does not cover, compose

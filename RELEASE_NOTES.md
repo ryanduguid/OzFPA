@@ -5,6 +5,12 @@
   balances. Every account goes through the registered mapping rules and each target's total is reported for every month
   in order. A repeated account and month, an unmapped account (unless `--allow-unmapped`) or a month missing between
   the first and last fails; a period that is not a month is refused. `reconcile_account_table` shares its CSV checks.
+- `model_to_excel` adds a Checks sheet. It takes the largest absolute monthly value of every `check_` row on the Model
+  sheet, marks each OK or FAIL against its tolerance and rolls them up to one status in Checks!B1, shown at the top of
+  the Model and Assumptions tabs: it names the first failing check or says all pass. New `check_revenue_parts`,
+  `check_opex_parts`, `check_interest_parts` and `check_principal_parts` rows sum each schedule total's lines in the
+  other form, so an overtyped total or a line dropped from its range fails. `add_checks_sheet` in `pyfpa.excel` builds
+  the same roll-up for a company exporter. `openfpa model-export` lists the new sheet.
 - `individual_trust_tax_due_date` treats a return lodged on the first business day after a lodgment due date that
   falls on a weekend or public holiday as on time (TAA 1953 Sch 1 s 388-52), so a later notice of assessment still
   sets the payment date.
