@@ -33,7 +33,7 @@ def test_workbook_has_named_assumptions_and_formula_cells(tmp_path):
     path = tmp_path / "model.xlsx"
     model_to_excel(_cfg(), path)
     wb = load_workbook(path)
-    assert set(wb.sheetnames) == {"Assumptions", "Model"}
+    assert set(wb.sheetnames) == {"Assumptions", "Model", "Checks"}
     for name in ["rev_annual_ch1", "growth_ch1", "cogs_pct_ch1", "seasonality_ch1",
                  "rev_annual_ch2", "dso_days", "dio_days", "dpo_days", "tax_rate",
                  "da_monthly", "capex_monthly", "open_cash", "open_nol",

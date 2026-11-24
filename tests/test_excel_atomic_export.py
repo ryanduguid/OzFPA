@@ -56,7 +56,7 @@ def test_success_replaces_existing_workbook_and_cleans_staging(tmp_path, export)
     export(destination)
     workbook = load_workbook(destination)
     try:
-        assert workbook.sheetnames in (["Assumptions", "Model"], ["Forecast"])
+        assert workbook.sheetnames in (["Assumptions", "Model", "Checks"], ["Forecast"])
     finally:
         workbook.close()
     assert list(tmp_path.iterdir()) == [destination]

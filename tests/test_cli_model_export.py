@@ -48,10 +48,10 @@ def test_model_export_writes_xlsx_with_both_sheets(tmp_path, run_cli, existing, 
     assert payload["ok"] is True
     assert payload["command"] == "model-export"
     data = payload["data"]
-    assert set(data["sheets"]) == {"Assumptions", "Model"}
+    assert set(data["sheets"]) == {"Assumptions", "Model", "Checks"}
     assert out_path.exists()
     wb = load_workbook(out_path)
-    assert set(wb.sheetnames) == {"Assumptions", "Model"}
+    assert set(wb.sheetnames) == {"Assumptions", "Model", "Checks"}
     wb.close()
     assert config_path.read_bytes() == before
 

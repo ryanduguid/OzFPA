@@ -56,7 +56,7 @@ def command_model_export(args: argparse.Namespace) -> int:
         root,
         {
             "workbook_path": str(out_path),
-            "sheets": ["Assumptions", "Model"],
+            "sheets": ["Assumptions", "Model", "Checks"],
             "config": str(args.config),
             "entity": cfg.name,
         },

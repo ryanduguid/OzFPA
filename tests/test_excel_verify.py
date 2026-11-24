@@ -196,7 +196,8 @@ def test_verify_reports_a_blank_header_and_unevaluated_cells(tmp_path):
     assert not report.passed  # nosec B101: pytest outcome assertion
     assert "month 6: workbook header '' vs expected '2026-06'" in report.failures  # nosec B101: pytest outcome assertion
     assert any(f.startswith("extra_line month 1: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
-    assert any(f.startswith("check_cash_roll month 2: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
+    # The Checks sheet reads the blank cell, so it evaluates as empty rather than going missing.
+    assert "check_cash_roll month 2: check returned empty, expected 0" in report.failures  # nosec B101: pytest outcome assertion
 
 
 @pytest.mark.parametrize("raw", [None, float("nan")])
