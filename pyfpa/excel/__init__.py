@@ -8,10 +8,19 @@ from pyfpa.excel.toolkit import (
     add_named_row,
     fill_formula_row,
 )
-from pyfpa.excel.verify import VerifyReport, verify_workbook
+from pyfpa.excel.verify import (
+    Hardcode,
+    HardcodeReport,
+    VerifyReport,
+    formula_literals,
+    hardcode_report,
+    verify_workbook,
+)
 
 __all__ = [
     "DAYS_FORMAT",
+    "Hardcode",
+    "HardcodeReport",
     "MONEY_FORMAT",
     "PERCENT_FORMAT",
     "StructureReport",
@@ -19,6 +28,8 @@ __all__ = [
     "add_named_cell",
     "add_named_row",
     "fill_formula_row",
+    "formula_literals",
+    "hardcode_report",
     "model_to_excel",
     "verify_structure",
     "verify_workbook",
