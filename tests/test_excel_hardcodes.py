@@ -52,6 +52,16 @@ def test_a_typed_number_and_plugs_inside_formulas_are_each_listed(tmp_path):
                      (f"E{o}", "opex", 1.1, True), (f"E{o}", "opex", 500.0, True)]
 
 
+def test_an_allowed_constant_is_allowed_with_either_sign(tmp_path):
+    path = _model(tmp_path)
+    wb = load_workbook(path)
+    model = wb["Model"]
+    rows = _rows(model)
+    model.cell(row=rows["opex"], column=2, value=f"=-1*B{rows['opex_1']}-B{rows['opex_2']}")
+    wb.save(path)
+    assert hardcode_report(path).passed
+
+
 def test_allowed_literals_can_be_narrowed(tmp_path):
     report = hardcode_report(_model(tmp_path), allowed=frozenset({0.0, 1.0}))
     assert {h.value for h in report.hardcodes} == {12.0, 30.0, 4e-15}
@@ -66,6 +76,15 @@ def test_allowed_literals_can_be_narrowed(tmp_path):
     ("=$B$12+AB12+.5", [0.5]),
     ("=4E-15*MAX(B2,-B2)", [4e-15]),
     ("=LOG10(B2)", []),
+    ("=-5", [-5.0]),
+    ("=B2*-5", [-5.0]),
+    ("=B2-5", [5.0]),
+    ("=B2*5%", [0.05]),
+    ("=B2*-5 %", [-0.05]),
+    ("=--5+(-2)", [5.0, -2.0]),
+    ("=B2^-2", []),
+    ("=SUM(1:10)+SUM($2:$20)", []),
+    ("=SUM(Sheet2!3:4)", []),
 ])
 def test_formula_literals(formula, numbers):
     assert formula_literals(formula) == numbers

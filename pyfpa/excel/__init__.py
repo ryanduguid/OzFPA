@@ -9,6 +9,7 @@ from pyfpa.excel.toolkit import (
     fill_formula_row,
 )
 from pyfpa.excel.verify import (
+    KERNEL_LITERALS,
     Hardcode,
     HardcodeReport,
     VerifyReport,
@@ -21,6 +22,7 @@ __all__ = [
     "DAYS_FORMAT",
     "Hardcode",
     "HardcodeReport",
+    "KERNEL_LITERALS",
     "MONEY_FORMAT",
     "PERCENT_FORMAT",
     "StructureReport",

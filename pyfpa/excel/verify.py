@@ -37,24 +37,39 @@ KERNEL_LITERALS = frozenset({0.0, 1.0, 12.0, 30.0, 4e-15})
 _STRING = re.compile(r'"(?:[^"]|"")*"')
 _SHEET_PREFIX = re.compile(r"(?:'(?:[^']|'')*'|[A-Za-z_][A-Za-z0-9_.]*)!")
 _TOKEN = re.compile(
-    r"(?P<ref>\$?[A-Za-z]{1,3}\$?\d+(?![A-Za-z0-9_.(]))"
+    r"(?P<rows>\$?\d+\s*:\s*\$?\d+)"
+    r"|(?P<ref>\$?[A-Za-z]{1,3}\$?\d+(?![A-Za-z0-9_.(]))"
     r"|(?P<name>[A-Za-z_\\][A-Za-z0-9_.]*)"
     r"|(?P<num>(?:\d+\.?\d*|\.\d+)(?:[Ee][+-]?\d+)?)"
 )
 
 
+_OPERAND_START = "(,=<>+-*/^&"
+
+
 def formula_literals(formula: str) -> list[float]:
-    """Numbers typed into a formula, ignoring cell references, names, text and
-    whole-number powers (the kernel's growth exponent is the year index)."""
+    """Numbers typed into a formula, with any unary sign and percent applied.
+
+    Cell references, whole-row ranges, names, text and whole-number powers
+    (the kernel's growth exponent is the year index) are not numbers.
+    """
     body = _SHEET_PREFIX.sub("", _STRING.sub('""', formula.lstrip("=")))
     found: list[float] = []
     for token in _TOKEN.finditer(body):
         number = token.group("num")
         if number is None:
             continue
-        if body[:token.start()].rstrip().endswith("^") and number.isdigit():
+        value = float(number)
+        before = body[:token.start()].rstrip()
+        # A sign is unary at the start or after an operator or open bracket.
+        while before[-1:] in ("+", "-") and before[:-1].rstrip()[-1:] in ("", *_OPERAND_START):
+            value = -value if before[-1] == "-" else value
+            before = before[:-1].rstrip()
+        if before.endswith("^") and number.isdigit():
             continue
-        found.append(float(number))
+        if body[token.end():].lstrip().startswith("%"):
+            value /= 100
+        found.append(value)
     return found
 
 
@@ -68,8 +83,9 @@ def hardcode_report(
 
     The range is every labelled row from row 2 and every month column the
     header row names. A number typed over a cell is reported with
-    ``in_formula`` false; a number inside a formula that is not in ``allowed``
-    is reported with ``in_formula`` true, once per occurrence. No formula is
+    ``in_formula`` false; a number inside a formula that is not in ``allowed``,
+    nor the negative of one, is reported with ``in_formula`` true, once per
+    occurrence. No formula is
     evaluated, so ``formulas`` is not needed.
     """
     wb = load_workbook(Path(path))
@@ -97,7 +113,7 @@ def hardcode_report(
                 found.extend(
                     Hardcode(cell=cell.coordinate, line=str(label), value=number, in_formula=True)
                     for number in formula_literals(value)
-                    if number not in allowed
+                    if abs(number) not in allowed
                 )
     return HardcodeReport(passed=not found, hardcodes=found, cells_checked=checked)
 
