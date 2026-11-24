@@ -14,7 +14,7 @@ jobs:
       attestations: write
       contents: write
       id-token: write
-    uses: ryanduguid/release-policy/.github/workflows/release-python.yml@d7039efe6d8c441f1f213c674902909e80535599 # v0.5.0
+    uses: ryanduguid/release-policy/.github/workflows/release-python.yml@d7039efe6d8c441f1f213c674902909e80535599
     with:
       required-checks: |
         .github/workflows/no-ai-attribution.yml: Attribution policy / Attribution policy runner
