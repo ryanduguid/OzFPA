@@ -1,6 +1,6 @@
 # Contributing to OzFPA
 
-openfpa is an open source experiment from [Guiderail](https://www.guiderail.io). It's
+OzFPA builds on [openfpa](https://github.com/JeffBrines/openfpa), an open source experiment from [Guiderail](https://www.guiderail.io). It's
 early, and help is genuinely welcome, whether that's a bug report, a sharper piece of
 CFO judgement, or a whole new industry pack. No promises on response time, and please be
 kind; this is a side-of-the-desk project.
