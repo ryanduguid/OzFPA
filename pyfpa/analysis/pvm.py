@@ -86,8 +86,8 @@ def _money(cents: int) -> Decimal:
     return Decimal(f"{cents}E-2")
 
 
-def price_volume_mix(lines: Sequence[Mapping[str, object]]) -> PriceVolumeMix:
-    """Split the change in revenue into volume, mix and price; see the module docstring."""
+def _parse(lines: Sequence[Mapping[str, object]]) -> list[tuple[str, Fraction, Fraction, Fraction, Fraction]]:
+    """Each line's name and exact prior units, current units, prior price and current price."""
     parsed: list[tuple[str, Fraction, Fraction, Fraction, Fraction]] = []
     for row in lines:
         name = row.get("line")
@@ -97,6 +97,12 @@ def price_volume_mix(lines: Sequence[Mapping[str, object]]) -> PriceVolumeMix:
             raise ValueError(f"{name} needs {', '.join(FIELDS)}")
         q0, q1, p0, p1 = (_exact(row[key], f"{name} {key}") for key in FIELDS)
         parsed.append((name, q0, q1, p0, p1))
+    return parsed
+
+
+def price_volume_mix(lines: Sequence[Mapping[str, object]]) -> PriceVolumeMix:
+    """Split the change in revenue into volume, mix and price; see the module docstring."""
+    parsed = _parse(lines)
     if not parsed:
         raise ValueError("At least one line is required")
     prior_units = sum((line[1] for line in parsed), Fraction(0))

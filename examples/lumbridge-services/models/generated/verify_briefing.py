@@ -68,15 +68,10 @@ def _ranges(delays: list[dict]) -> str:
     return "; ".join(f"{ids(rule['ids'])} {rule['low_days']} to {rule['high_days']} days late" for rule in delays)
 
 
-def briefing_ties(output: Path = ROOT / "output", data: Path = ROOT / "data") -> list[FigureTie]:
-    s = sources(output, data)
-    m, lm, r, a = s["monthly"], s["late_monthly"], s["results"], s["assumptions"]
-    late_daily, late_days, bands = s["late_daily"], s["late_days"], r["cash_floor_bands"]
-    months = pd.PeriodIndex(m.index, freq="M")
-    trough = -late_daily.min()
-    lateness = s["lateness"]
-    open_v = s["levers"][s["levers"]["debtor"] == a["delay_invoice"]].sort_values("days_sooner")
-    om = s["on_time_monthly"]
+def _table_ties(s: dict) -> list[FigureTie]:
+    """The opening line and both tables: on-time and late cases side by side, then the run's months."""
+    m, lm, late_daily, om = s["monthly"], s["late_monthly"], s["late_daily"], s["on_time_monthly"]
+    months, late_days = pd.PeriodIndex(m.index, freq="M"), s["late_days"]
     comparison = {
         "Quarter revenue": (om["Revenue"].sum(), lm["Revenue"].sum()),
         "Quarter profit before tax": (om["Profit before tax"].sum(), lm["Profit before tax"].sum()),
@@ -92,6 +87,17 @@ def briefing_ties(output: Path = ROOT / "output", data: Path = ROOT / "data") ->
           for label, pair in comparison.items()],
         *[FigureTie(f"monthly review row {month}", rf"^\| ({month}) \| ({MONEY}) \| ({MONEY}) \| ({MONEY}) \|$",
                     (month, row["Revenue"], row["Profit before tax"], row["Closing cash"])) for month, row in m.iterrows()],
+    ]
+
+
+def _cash_ties(s: dict) -> list[FigureTie]:
+    """The cash, payables and decision sentences."""
+    m, r, a, late_daily, late_days = s["monthly"], s["results"], s["assumptions"], s["late_daily"], s["late_days"]
+    months, om = pd.PeriodIndex(m.index, freq="M"), s["on_time_monthly"]
+    trough = -late_daily.min()
+    lateness = s["lateness"]
+    open_v = s["levers"][s["levers"]["debtor"] == a["delay_invoice"]].sort_values("days_sooner")
+    return [
         FigureTie("base-case profit", rf"The base case earns ({MONEY}) before income tax", (om["Profit before tax"].sum(),)),
         FigureTie("table delay", r"This monthly table uses a (\d+)-day receipt delay", (r["delay_days"],)),
         FigureTie("opening GST", rf"October includes ({MONEY}) of opening GST", (-s["opening"]["GST"],)),
@@ -122,6 +128,13 @@ def briefing_ties(output: Path = ROOT / "output", data: Path = ROOT / "data") ->
                   rf"(\d+) days sooner to ({MONEY}), (\d+) days sooner to ({MONEY}), (\d+) days sooner to ({MONEY})\.",
                   (a["delay_invoice"], late_daily.min(),
                    *[value for row in open_v.itertuples() for value in (row.days_sooner, row.floor_after)])),
+    ]
+
+
+def _band_ties(s: dict) -> list[FigureTie]:
+    """The scenario-range section and the evidence paragraph."""
+    m, a, bands = s["monthly"], s["assumptions"], s["results"]["cash_floor_bands"]
+    return [
         FigureTie("band runs and seed", r"In ([\d,]+) seeded runs \(seed (\d+)\)", (bands["runs"], bands["seed"])),
         FigureTie("band ranges", r"each day in its range equally likely: ([^.]+)\. Payments keep their dates",
                   (_ranges(s["bands_settings"]["delays"]),)),
@@ -134,6 +147,11 @@ def briefing_ties(output: Path = ROOT / "output", data: Path = ROOT / "data") ->
         FigureTie("run-rate revenue", rf"held at September's fabricated ({MONEY}) monthly run rate", (s["september_revenue"],)),
         FigureTie("run-rate profit", rf"monthly pre-tax profit remains ({MONEY})", (m["Profit before tax"].iloc[0],)),
     ]
+
+
+def briefing_ties(output: Path = ROOT / "output", data: Path = ROOT / "data") -> list[FigureTie]:
+    s = sources(output, data)
+    return [*_table_ties(s), *_cash_ties(s), *_band_ties(s)]
 
 
 def briefing_problems(text: str, output: Path = ROOT / "output", data: Path = ROOT / "data") -> list[str]:
