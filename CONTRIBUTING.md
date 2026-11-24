@@ -1,4 +1,4 @@
-# Contributing to openfpa
+# Contributing to OzFPA
 
 openfpa is an open source experiment from [Guiderail](https://www.guiderail.io). It's
 early, and help is genuinely welcome, whether that's a bug report, a sharper piece of
