@@ -1,6 +1,6 @@
-# Contributing to openfpa
+# Contributing to OzFPA
 
-openfpa is an open source experiment from [Guiderail](https://www.guiderail.io). It's
+OzFPA builds on [openfpa](https://github.com/JeffBrines/openfpa), an open source experiment from [Guiderail](https://www.guiderail.io). It's
 early, and help is genuinely welcome, whether that's a bug report, a sharper piece of
 CFO judgement, or a whole new industry pack. No promises on response time, and please be
 kind; this is a side-of-the-desk project.
@@ -40,7 +40,7 @@ and Windows.
 ## The workflow
 
 `joined-fixtures.yml` runs the fabricated close-to-forecast, quarter,
-job-to-cash and grant-to-cash examples on this repository's pull requests, pushes to `main` and manual
+job-to-cash and grant-to-cash examples on weekly scheduled runs, pull requests, pushes to `main` and manual
 runs. Linux and Windows jobs use the proposed FPA checkout with full commit pins for
 Accounting Review Pipeline and Australian Accounting. Update those pins deliberately
 when adopting compatible changes. Each owner runs in a separate process and fresh

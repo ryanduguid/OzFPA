@@ -51,7 +51,3 @@ updates:
       python-dependencies:
         patterns:
           - "*"
-    ignore:
-      # Lockfile-only pydantic-core bumps cannot resolve against pydantic's
-      # exact pin. pydantic updates bring the matching core with them.
-      - dependency-name: "pydantic-core"
