@@ -10,10 +10,10 @@ is a number. A figure written with `$` is compared in cents, rounded half up
 from the source as written, and is negative when bracketed or signed. Every
 other figure must equal the source as a number.
 
-After the ties, every number in the text that no tie's match covers is
-reported as untied, so a new sentence with a figure fails until it has a tie.
-A tie with no groups vouches for a fixed phrase that holds digits, such as a
-label.
+After the ties, every number in the text that is not inside a tie's group
+is reported as untied, so a new sentence with a figure fails until it has a
+tie. Digits a pattern matches outside its groups count as untied too, so a
+label that holds digits, such as P10, is a group whose source is that text.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def _same(found: str, source: object) -> bool:
 
 
 def figure_problems(text: str, ties: Sequence[FigureTie]) -> list[str]:
-    """Each tie that is missing, repeated or different from its source, then each untied number."""
+    """Each tie that is missing, repeated or different from its source, then each number outside every tie's groups."""
     problems: list[str] = []
     covered: list[tuple[int, int]] = []
     for tie in ties:
@@ -63,8 +63,8 @@ def figure_problems(text: str, ties: Sequence[FigureTie]) -> list[str]:
             problems.append(f"{tie.name}: pattern matched {len(matches)} times")
             continue
         match = matches[0]
-        covered.append(match.span())
         found = match.groups()
+        covered += [match.span(group) for group in range(1, len(found) + 1) if match.start(group) >= 0]
         if len(found) != len(tie.sources):
             problems.append(f"{tie.name}: {len(found)} figures, {len(tie.sources)} sources")
             continue

@@ -76,9 +76,14 @@ def _exact(value: object, name: str) -> Fraction:
     return Fraction(number)
 
 
-def _cents(value: Fraction) -> Decimal:
-    """Half a cent rounds up; the value is never negative here."""
-    return Decimal(math.floor(value * 100 + Fraction(1, 2))).scaleb(-2)
+def _cents(value: Fraction) -> int:
+    """Whole cents, half a cent rounding up; the value is never negative here."""
+    return math.floor(value * 100 + Fraction(1, 2))
+
+
+def _money(cents: int) -> Decimal:
+    """Exact at any size: a Decimal built from text ignores the context's precision."""
+    return Decimal(f"{cents}E-2")
 
 
 def price_volume_mix(lines: Sequence[Mapping[str, object]]) -> PriceVolumeMix:
@@ -99,13 +104,16 @@ def price_volume_mix(lines: Sequence[Mapping[str, object]]) -> PriceVolumeMix:
     if prior_units == 0:
         raise ValueError("Prior units total zero, so volume and mix are undefined")
     out: list[PvmLine] = []
+    sums = [0, 0, 0, 0]
     for name, q0, q1, p0, p1 in parsed:
         prior = _cents(p0 * q0)
         at_volume = _cents(p0 * q0 * current_units / prior_units)
         at_units = _cents(p0 * q1)
         current = _cents(p1 * q1)
-        out.append(PvmLine(line=name, prior=prior, current=current, volume=at_volume - prior,
-                           mix=at_units - at_volume, price=current - at_units, total=current - prior))
-    zero = Decimal("0.00")
-    return PriceVolumeMix(sum((row["total"] for row in out), zero), sum((row["volume"] for row in out), zero),
-                          sum((row["mix"] for row in out), zero), sum((row["price"] for row in out), zero), out)
+        effects = (current - prior, at_volume - prior, at_units - at_volume, current - at_units)
+        sums = [total + effect for total, effect in zip(sums, effects, strict=True)]
+        total, volume, mix, price = (_money(cents) for cents in effects)
+        out.append(PvmLine(line=name, prior=_money(prior), current=_money(current), volume=volume,
+                           mix=mix, price=price, total=total))
+    total, volume, mix, price = (_money(cents) for cents in sums)
+    return PriceVolumeMix(total, volume, mix, price, out)

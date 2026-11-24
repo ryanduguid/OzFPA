@@ -93,8 +93,9 @@ ledger revenue.
 figure and each figure's source in group order. Each pattern must match once.
 A `$` figure is compared in cents, half up from the source as written; text
 sources must match exactly; other figures must equal the source as numbers.
-Any number in the text that no tie covers is reported as untied, so a new
-figure fails until it has a source. The Lumbridge example's
+Any number in the text outside every tie's groups is reported as untied, so a
+new figure fails until it has a source; a label with digits, such as P10, is a
+group whose source is that text. The Lumbridge example's
 `verify_briefing.py` runs it over `briefing.md` and exits 1 on any problem.
 
 ### Three-way forecast

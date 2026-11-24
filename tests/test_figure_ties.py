@@ -16,7 +16,7 @@ def ties() -> list[FigureTie]:
     return [
         FigureTie("trough", r"Cash is (\(?\$[\d,.]+\)?) on (\d+ \w+)", (-1250.5, "6 November")),
         FigureTie("revenue", r"Revenue is (\$[\d,]+) from (\d+) jobs", (Decimal("60000"), 12)),
-        FigureTie("label", r"See P10\.", ()),
+        FigureTie("label", r"See (P10)\.", ("P10",)),
     ]
 
 
@@ -41,6 +41,17 @@ def test_money_ties_to_the_cent_from_the_source_as_written():
 def test_a_figure_no_tie_covers_is_reported_with_its_line():
     text = TEXT + "Margin rose to $9,999.\n"
     assert figure_problems(text, ties()) == ["untied figure '9,999' on line 3"]
+
+
+def test_digits_a_pattern_matches_outside_its_groups_are_untied():
+    tie = [FigureTie("revenue", r"FY\d+ revenue (\$[\d,]+)", (60000,))]
+    assert figure_problems("FY2027 revenue $60,000", tie) == ["untied figure '2027' on line 1"]
+    literal = [FigureTie("revenue", r"FY2026 revenue (\$[\d,]+)", (60000,))]
+    assert figure_problems("FY2026 revenue $60,000", literal) == ["untied figure '2026' on line 1"]
+
+
+def test_an_optional_group_that_did_not_match_is_reported():
+    assert figure_problems("jobs", [FigureTie("jobs", r"jobs(?: (\d+))?", (12,))]) == ["jobs: text None, source 12"]
 
 
 def test_a_missing_or_repeated_tie_is_reported():

@@ -13,7 +13,7 @@ prices on current units add 120: price is +120. -300 - 300 + 120 = -480.
 from __future__ import annotations
 
 import random
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -58,6 +58,17 @@ def test_the_three_effects_sum_exactly_to_the_change_in_every_line():
             assert row["volume"] + row["mix"] + row["price"] == row["total"] == row["current"] - row["prior"]
         assert sum((row["total"] for row in bridge.lines), Decimal(0)) == bridge.total
         assert all(value == value.quantize(Decimal("0.01")) for value in (bridge.volume, bridge.mix, bridge.price))
+
+
+def test_amounts_beyond_the_decimal_context_precision_stay_exact():
+    # 40-digit revenue: the default 28-digit Decimal context would round it.
+    big = "9" * 20
+    bridge = price_volume_mix([line("A", big, big + "1", "1" * 20 + ".01", "3"), line("B", "1", "2", "0.03", "0.05")])
+    a, b = bridge.lines
+    assert a["prior"] == Decimal(f"{int(big) * int('1' * 20 + '01')}E-2")
+    assert len(a["prior"].as_tuple().digits) > 28
+    with localcontext(prec=100):
+        assert bridge.volume + bridge.mix + bridge.price == bridge.total == (a["current"] - a["prior"]) + (b["current"] - b["prior"])
 
 
 def test_a_new_line_counts_as_mix_at_its_stated_prior_price():
