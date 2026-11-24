@@ -1,4 +1,11 @@
-# Unreleased
+# v0.8.0
+
+Includes PRs #349-#356 and #362-#369 (#370 updates `.github/workflows/release.yml`
+to `release-policy` v0.5.0 with `pypi-readback`), repository links updated to
+`ryanduguid/OzFPA` (#361), and Ryan Duguid's original work relicensed under
+Apache-2.0 (#348). Earlier releases keep their original terms.
+
+Added:
 
 - `flat_actuals_table(path, source_id=, mappings=)` and `openfpa reconcile-source --period-column` read an unpivoted
   actuals table, one row per account id, month (YYYY-MM) and amount, for income statement flows or balance sheet
@@ -16,6 +23,14 @@
   `check_opex_parts`, `check_interest_parts` and `check_principal_parts` rows sum each schedule total's lines in the
   other form, so an overtyped total or a line dropped from its range fails. `add_checks_sheet` in `pyfpa.excel` builds
   the same roll-up for a company exporter. `openfpa model-export` lists the new sheet.
+- `write_manifest` and `verify_manifest` (`python -m pyfpa.io.manifest`) write a `manifest.json` SHA-256 index of
+  every reproducible output file in a folder (treating CRLF as LF for text files) and report changed, missing or extra
+  files; the Lumbridge example writes a manifest on each run (#366).
+- `price_volume_mix` decomposes revenue change into volume, mix and price effects summing exactly from half-up rounded
+  cents, and `figure_problems` / Lumbridge's `verify_briefing.py` ties every figure in generated prose to its source
+  and exits 1 on any untied number (#364).
+- `cash13` gains per-debtor lateness ranked by amount times days past due plus pull-forward lever tables (#363) and
+  deterministic seeded P10/P50/P90 cash-floor scenario bands written to Lumbridge's `cash-bands.csv` (#362).
 - `individual_trust_tax_due_date` treats a return lodged on the first business day after a lodgment due date that
   falls on a weekend or public holiday as on time (TAA 1953 Sch 1 s 388-52), so a later notice of assessment still
   sets the payment date.
@@ -48,7 +63,6 @@
   `settlement_events`, so PAYG withholding and super are owed until their due-date rules pay them. New
   `opening_balances.fixed_assets` and `opening_balances.income_tax_payable` open the balance sheet. It refuses D&A
   that would take fixed assets below nil, GST with bad debts and an opening income tax balance without `income_tax`.
-- Relicensed Ryan Duguid's original work under Apache-2.0. Earlier releases keep their original terms.
 
 # v0.7.0
 
