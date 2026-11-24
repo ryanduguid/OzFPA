@@ -26,11 +26,11 @@
 
 </div>
 
-au-fpa-pack is an Australian extension of [openfpa](https://github.com/JeffBrines/openfpa),
+OzFPA is an Australian extension of [openfpa](https://github.com/JeffBrines/openfpa),
 by Guiderail, for accountants and analysts doing forecasting and month-end work: 30 June
 financial years, Xero AU account mapping, GST and BAS cash timing and payroll on-costs.
 
-au-fpa-pack builds monthly, weekly and daily cash forecasts, a three-way monthly forecast
+OzFPA builds monthly, weekly and daily cash forecasts, a three-way monthly forecast
 (profit and loss, balance sheet and cash flow, with GST and payroll liabilities paid on
 their due dates) and a management briefing from a company's own records. Every assumption is declared in a file you can read, and
 the funding decision stays with a person.
@@ -95,7 +95,7 @@ On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install 
 
 ## Skills
 
-The au-fpa-pack [`skills/`](skills/) folder holds 17 skills. Sixteen are the pack's own, grouped by what
+The OzFPA [`skills/`](skills/) folder holds 17 skills. Sixteen are the pack's own, grouped by what
 they are for:
 
 - **Australian rules:** `fpa-au-drivers`, `fpa-au-gst-bas`, `fpa-au-payroll`, `fpa-au-xero`
@@ -118,22 +118,21 @@ also its own marketplace, so Claude Code installs the skills with:
 
 ## Alternatives
 
-au-fpa-pack is built for Australian cash, GST and BAS timing. As read on 5 November 2026, these
+OzFPA is built for Australian cash, GST and BAS timing. As read on 5 November 2026, these
 tools cover nearby ground:
 
 - [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
-- A comparable plugin collection offered variance analysis and a 30/60/90-day cash flow forecast at
-  commit d900840. Its listing showed no 13-week forecast.
+- A comparable plugin collection offered variance analysis and a 30/60/90-day cash flow forecast.
+  Its listing showed no 13-week forecast.
 - A skills collection for US practice offered budget-versus-actual analysis, narratives explaining
   variances and board packs, with scripts.
 - Commercial cash flow forecasting products also cover this work.
 
 Read on 12 November 2026:
 
-- [CFI's free Claude skills](https://corporatefinanceinstitute.com/resources/financial-modeling/free-claude-skills-financial-modeling/)
-  (11 November): one builds a three-statement, DCF, LBO, budget or forecast model to CFI's guidelines and one reviews a
-  model against them, in the Claude app and Claude in Excel, after a name and email form. The page states no Australian
-  rules.
+- A financial modelling training provider's free Claude skills (11 November): one builds a three-statement, DCF,
+  LBO, budget or forecast model to the provider's guidelines and one reviews a model against them, in the Claude app
+  and Claude in Excel, after a name and email form. Its page states no Australian rules.
 - [Xero New Budgets](https://blog.xero.com/product-updates/new-budgets/) (11 November): scenario budgets inside Xero,
   from zeros or last month's or the last 12 months' actuals, per tracking category, with an adjustment history. The
   post does not mention GST, BAS or tax due dates. This pack adds the Australian cash timing a budget leaves out: BAS,
@@ -142,14 +141,12 @@ Read on 12 November 2026:
 
 Read on 15 November 2026:
 
-- [XBert 13-Week Cashflow](https://github.com/XBertIntelligence/XBert-Plugins/tree/main/plugins/xbert-cashflow-13week)
-  (MIT in its plugin manifest, though the repository has no licence file; at commit e8f489f5, and the plugin last
-  changed on 23 July 2026): a Claude plugin for
-  accountants that pulls the bank balance, receivables, payables, payroll and tax obligations from a client's live
-  Xero, MYOB or QuickBooks Online ledger and bank feed through XBert's service. Its instructions put each open invoice
-  in the week of its due date plus that debtor's average delay past due (the median when skewed), name each week below
-  a chosen cash threshold with its drivers, and suggest 3 actions for each: chase debtors, delay suppliers or draw on a
-  facility. It needs an XBert account and at least 90 days of bank feed history. This pack needs no account and works
+- A 13-week cash flow plugin for accountants (the plugin last changed on 23 July 2026): it pulls the bank balance,
+  receivables, payables, payroll and tax obligations from a client's live Xero, MYOB or QuickBooks Online ledger and
+  bank feed through its vendor's service. Its instructions put each open invoice in the week of its due date plus that
+  debtor's average delay past due (the median when skewed), name each week below a chosen cash threshold with its
+  drivers, and suggest 3 actions for each: chase debtors, delay suppliers or draw on a facility. It needs an account
+  with the vendor and at least 90 days of bank feed history. This pack needs no account and works
   from the records the firm supplies. From those records, `predicted_receipts` places each open invoice on the median
   days to pay of its customer's paid invoices that took at least as long as the open one is old (every customer's
   below 6 of those, and no date below 6 again), and `risk_week_actions` ranks up to 3 actions for each risk week:
@@ -162,38 +159,36 @@ Read on 15 November 2026:
   on 11 March 2026 that its forecasts use predicted payment dates based on observed payment behaviour; the Xero Central
   articles do not say how. The articles, the report and Xero's [Australian cash flow page](https://www.xero.com/au/accounting-software/analytics/cash-flow/)
   do not mention GST, BAS or PAYG due dates.
-- [Float](https://floatapp.com/pricing): cash flow forecasting connected to Xero or QuickBooks, with a 13-week view
-  and 8 scenarios, after a 14-day trial. Its [Small Business](https://floatapp.com/pricing-for-small-businesses) plan,
-  for companies below £2m in revenue, forecasts 12 months for A$155 a month billed annually or A$189 monthly; Growth,
-  for companies over £2m, forecasts 36 months for A$300 a month billed annually or A$379 monthly. Prices exclude VAT.
-- [Luca AI](https://ask-luca.com/product-docs/forecasting/cash-flow-forecast): 13-week and 12-month forecasts for
-  online brands from Xero or QuickBooks beside Shopify, refreshed overnight and checked against actuals every night.
+- A cash flow forecasting subscription connected to Xero or QuickBooks, with a 13-week view and 8 scenarios, after a
+  14-day trial. Its small business plan, for companies below £2m in revenue, forecasts 12 months for A$155 a month
+  billed annually or A$189 monthly; its growth plan, for companies over £2m, forecasts 36 months for A$300 a month
+  billed annually or A$379 monthly. Prices exclude VAT.
+- A forecasting service for online brands: 13-week and 12-month forecasts from Xero or QuickBooks beside Shopify,
+  refreshed overnight and checked against actuals every night.
   This pack's `weekly_actuals_score` is a check a person runs on their own closed weeks: it scores the 13-week
   forecast against actual receipts, payments and bank balances, week by week and together, and refuses actuals that
   do not line up. It does not fetch actuals or run nightly. `reforecast_from_actuals` then rolls the forecast past
   the closed weeks from their actual closing balance and places open invoices again from the latest payments.
-- [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business/skills/cash-flow-snapshot)
-  `cash-flow-snapshot` (at commit e91a1345): a 30/60/90-day forecast that times each customer's receipts by its mean
-  days from invoice to receipt, using every customer's mean below 3 payments. It is written instructions without
-  scripts.
-- [OneWave-AI/claude-skills](https://github.com/OneWave-AI/claude-skills/tree/main/cash-flow-forecaster)
-  `cash-flow-forecaster` (MIT): a 13-week method that places open invoices at their due date plus the customer's
-  historical lateness and lists levers for each crunch week. It is a single instruction file and names no Australian
-  tax dates.
+- A small-business plugin collection's cash flow snapshot skill: a 30/60/90-day forecast that times each customer's
+  receipts by its mean days from invoice to receipt, using every customer's mean below 3 payments. It is written
+  instructions without scripts.
+- An MIT-licensed skills collection's cash flow forecaster: a 13-week method that places open invoices at their due
+  date plus the customer's historical lateness and lists levers for each crunch week. It is a single instruction file
+  and names no Australian tax dates.
 
 Read on 15 November 2026: Xero Central's [Export a budget](https://central.xero.com/s/article/Export-a-budget) article
 says New Budgets, in early access, cannot export a budget; Budget Manager exports CSV, Excel or Google Sheets files.
 This pack reads a Budget Manager budget from Xero's Accounting API (`pyfpa.io.xero_budget`, see the
 [Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries it through the BAS timing above. The
-reader is built to Xero's published API documentation and has not been run against a live Xero organisation. XBert's
-13-week plugin README and skill (commit e8f489f5) do not mention a budget as an input.
+reader is built to Xero's published API documentation and has not been run against a live Xero organisation. The
+13-week plugin above does not mention a budget as an input in its README or skill.
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>
 
 ## Kernel packages and how each is reached
 
-The CLI and the skills reach 3 au-fpa-pack kernel packages:
+The CLI and the skills reach 3 OzFPA kernel packages:
 
 | Package | What it is for | How it is reached |
 | --- | --- | --- |
@@ -210,7 +205,7 @@ itself make that reuse permissible, so read [SECURITY.md](SECURITY.md) and the
 
 ## Guides
 
-The au-fpa-pack guides are grouped as how-to and reference pages.
+The OzFPA guides are grouped as how-to and reference pages.
 
 **How-to**
 
