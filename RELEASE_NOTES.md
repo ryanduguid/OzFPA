@@ -1,5 +1,10 @@
 # Unreleased
 
+- `flat_actuals_table(path, source_id=, mappings=)` and `openfpa reconcile-source --period-column` read an unpivoted
+  actuals table, one row per account id, month (YYYY-MM) and amount, for income statement flows or balance sheet
+  balances. Every account goes through the registered mapping rules and each target's total is reported for every month
+  in order. A repeated account and month, an unmapped account (unless `--allow-unmapped`) or a month missing between
+  the first and last fails; a period that is not a month is refused. `reconcile_account_table` shares its CSV checks.
 - `individual_trust_tax_due_date` treats a return lodged on the first business day after a lodgment due date that
   falls on a weekend or public holiday as on time (TAA 1953 Sch 1 s 388-52), so a later notice of assessment still
   sets the payment date.

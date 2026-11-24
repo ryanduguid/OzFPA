@@ -35,8 +35,11 @@ Connect the model to the available data and normalise it to one shape (`{account
    ignored` and a rationale. Review with `openfpa mapping-list`.
 6. **Reconcile** compatible account-amount CSV files with
    `openfpa reconcile-source`. Flag duplicate and unmapped accounts; never
-   silently drop or overwrite them. For richer tables, build a tested
-   company-specific reconciliation that provides equivalent evidence.
+   silently drop or overwrite them. For an unpivoted table with one row per
+   account id and month, add `--period-column`: it maps every month through
+   the same rules and fails on a repeated account and month or a missing
+   month. For richer tables, build a tested company-specific reconciliation
+   that provides equivalent evidence.
 7. **Register recurring access.** If you built a repeatable connector command,
    first run `openfpa connector-list`. Scaffold a bundle with
    `openfpa connector-scaffold` from an explicitly redacted CSV fixture. Edit

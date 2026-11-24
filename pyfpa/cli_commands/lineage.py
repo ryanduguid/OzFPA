@@ -16,6 +16,7 @@ from pyfpa.memory.connectors import (
 from pyfpa.memory.lineage import (
     MappingRule,
     SourceRecord,
+    flat_actuals_table,
     load_mapping_registry,
     load_source_registry,
     profile_table,
@@ -199,6 +200,30 @@ def command_mapping_list(args: argparse.Namespace) -> int:
     )
 
 
+def _reconcile_flat(args: argparse.Namespace, root: Path, file_path: Path, workspace: Workspace) -> int:
+    if args.expected_json:
+        raise ValueError("--period-column takes no --expected-json; reconcile one month's table against its totals")
+    result = flat_actuals_table(
+        file_path,
+        source_id=args.source_id,
+        mappings=load_mapping_registry(workspace.mapping_registry_path),
+        account_column=args.account_column,
+        period_column=args.period_column,
+        amount_column=args.amount_column,
+    )
+    if args.allow_unmapped:
+        result["passed"] = not result["duplicates"] and not result["missing_periods"]
+    if not result["passed"]:
+        return _failure(
+            "reconcile-source",
+            root,
+            "reconciliation_failed",
+            "flat table contains duplicate account months, unmapped accounts or missing months",
+            data=result,
+        )
+    return _success("reconcile-source", root, result)
+
+
 def command_reconcile_source(args: argparse.Namespace) -> int:
     workspace = Workspace.open(args.path)
     root = workspace.root
@@ -213,6 +238,8 @@ def command_reconcile_source(args: argparse.Namespace) -> int:
         file_path = Path(args.file or source.location).expanduser()
         if not file_path.is_absolute():
             file_path = root / file_path
+        if args.period_column:
+            return _reconcile_flat(args, root, file_path.resolve(), workspace)
         result = reconcile_account_table(
             file_path.resolve(),
             source_id=args.source_id,

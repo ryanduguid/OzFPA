@@ -474,6 +474,7 @@ def build_parser() -> JsonArgumentParser:
     reconcile_parser.add_argument("--tolerance", type=float, default=0.0, help="Relative variance tolerance as a fraction, off by default; 0.01 means 1 percent")
     reconcile_parser.add_argument("--abs-tolerance", type=float, default=0.005, help="Absolute variance tolerance in currency units; the default 0.005 accepts only sub-cent differences; use 0.5 for whole-dollar controls")
     reconcile_parser.add_argument("--allow-unmapped", action="store_true")
+    reconcile_parser.add_argument("--period-column", help="Read an unpivoted table, one row per account and month (YYYY-MM) in this column, and report each target's total by month; takes no --expected-json")
     reconcile_parser.set_defaults(handler=command_reconcile_source)
 
     connector_scaffold_parser = subparsers.add_parser(
