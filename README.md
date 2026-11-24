@@ -9,13 +9,13 @@
 
 <div align="center">
 
-[![tests](https://github.com/ryanduguid/OzFPA/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanduguid/OzFPA/actions/workflows/ci.yml)
-[![Codecov](https://codecov.io/gh/ryanduguid/OzFPA/graph/badge.svg)](https://codecov.io/gh/ryanduguid/OzFPA)
-[![CodeQL](https://github.com/ryanduguid/OzFPA/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/ryanduguid/OzFPA/actions/workflows/codeql.yml)
-[![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=ryanduguid_au-fpa-pack&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
-[![Codacy code quality](https://app.codacy.com/project/badge/Grade/04c98b58f66e4339b598720a05aa6bc7)](https://app.codacy.com/gh/ryanduguid/OzFPA/dashboard)<br>
+[![tests](https://img.shields.io/github/actions/workflow/status/ryanduguid/OzFPA/ci.yml?branch=main&label=tests&labelColor=000000&style=flat)](https://github.com/ryanduguid/OzFPA/actions/workflows/ci.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/ryanduguid/OzFPA?label=Codecov&labelColor=000000&style=flat)](https://codecov.io/gh/ryanduguid/OzFPA)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/ryanduguid/OzFPA/codeql.yml?branch=main&label=CodeQL&labelColor=000000&style=flat)](https://github.com/ryanduguid/OzFPA/actions/workflows/codeql.yml)
+[![SonarCloud](https://img.shields.io/sonar/quality_gate/ryanduguid_au-fpa-pack?server=https%3A%2F%2Fsonarcloud.io&label=SonarCloud&labelColor=000000&style=flat)](https://sonarcloud.io/summary/new_code?id=ryanduguid_au-fpa-pack)
+[![Codacy code quality](https://img.shields.io/codacy/grade/04c98b58f66e4339b598720a05aa6bc7?label=Codacy&labelColor=000000&style=flat)](https://app.codacy.com/gh/ryanduguid/OzFPA/dashboard)<br>
 [![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/ryanduguid/au-fpa-pack.svg)](https://scorecard.dev/viewer/?uri=github.com/ryanduguid/OzFPA)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15426/badge)](https://www.bestpractices.dev/projects/15426)
+[![OpenSSF Best Practices](https://img.shields.io/cii/level/15426?label=Best%20Practices&labelColor=000000&style=flat)](https://www.bestpractices.dev/projects/15426)
 [![SLSA provenance](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/slsa.svg)](https://github.com/ryanduguid/OzFPA/attestations)
 [![VirusTotal](https://raw.githubusercontent.com/ryanduguid/OzFPA/main/.github/assets/badges/virustotal.svg)](https://github.com/ryanduguid/OzFPA/releases/latest)<br>
 [![PyPI](https://badgen.net/pypi/v/au-fpa-pack?label=pypi&color=66023C&labelColor=000000)](https://pypi.org/project/au-fpa-pack/)
