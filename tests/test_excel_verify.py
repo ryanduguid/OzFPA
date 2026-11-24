@@ -190,6 +190,8 @@ def test_verify_reports_a_blank_header_and_unevaluated_cells(tmp_path):
     model.cell(row=1, column=7).value = None
     model.cell(row=labels["check_cash_roll"], column=3).value = None
     model.cell(row=model.max_row + 1, column=1, value="extra_line")
+    # A check row the Checks sheet does not read is never evaluated.
+    model.cell(row=model.max_row + 1, column=1, value="check_unlisted")
     wb.save(path)
     expected["extra_line"] = 0.0
     report = verify_workbook(path, expected)
@@ -198,6 +200,7 @@ def test_verify_reports_a_blank_header_and_unevaluated_cells(tmp_path):
     assert any(f.startswith("extra_line month 1: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
     # The Checks sheet reads the blank cell, so it evaluates as empty rather than going missing.
     assert "check_cash_roll month 2: check returned empty, expected 0" in report.failures  # nosec B101: pytest outcome assertion
+    assert any(f.startswith("check_unlisted month 1: cell not evaluated") for f in report.failures)  # nosec B101: pytest outcome assertion
 
 
 @pytest.mark.parametrize("raw", [None, float("nan")])
