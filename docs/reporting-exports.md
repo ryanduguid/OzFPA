@@ -23,7 +23,7 @@ staging files; text labels remain supported. These checks preserve the existing
 report when the proposed values are invalid. Excel's numeric precision limits
 still apply to finite values written to the workbook.
 
-The model exporter retains its Assumptions and Model sheets and their formulas.
+The model exporter retains its Assumptions, Model and Checks sheets and their formulas.
 The forecast exporter retains its Forecast sheet. Run the usual structure and
 formula verification before relying on a workbook; a completed file write does
 not establish accounting correctness.
