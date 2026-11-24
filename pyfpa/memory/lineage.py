@@ -260,7 +260,7 @@ def _account_rows(
             yield reader.line_num, account, row
 
 
-_MONTH = re.compile(r"\d{4}-(?:0[1-9]|1[0-2])")
+_MONTH = re.compile(r"[0-9]{4}-(?:0[1-9]|1[0-2])")
 
 
 def _flat_rows(

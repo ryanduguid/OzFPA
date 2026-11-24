@@ -53,7 +53,10 @@ def test_duplicates_unmapped_accounts_and_missing_months_each_fail(tmp_path):
     assert result["actuals"]["revenue"] == {"2026-07": 105.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 1.0}
 
 
-@pytest.mark.parametrize("period", ["2026-7", "2026-13", "July 2026", "2026-07-31", ""])
+# The last case is 2026-08 with its year in Arabic-Indic digits, which a Unicode \d accepts.
+@pytest.mark.parametrize("period", [
+    "2026-7", "2026-13", "July 2026", "2026-07-31", "", "٢٠٢٦-08",
+])
 def test_a_period_that_is_not_a_month_is_refused(tmp_path, period):
     with pytest.raises(ValueError, match="row 2 must be a month written YYYY-MM"):
         _read(_table(tmp_path, f"4000,{period},1\n"))
