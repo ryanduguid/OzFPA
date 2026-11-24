@@ -201,7 +201,7 @@ def command_mapping_list(args: argparse.Namespace) -> int:
 
 
 def _reconcile_flat(args: argparse.Namespace, root: Path, file_path: Path, workspace: Workspace) -> int:
-    if args.expected_json:
+    if args.expected_json is not None:
         raise ValueError("--period-column takes no --expected-json; reconcile one month's table against its totals")
     result = flat_actuals_table(
         file_path,

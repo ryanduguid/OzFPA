@@ -1,3 +1,4 @@
+import itertools
 import json
 
 import pytest
@@ -51,6 +52,18 @@ def test_duplicates_unmapped_accounts_and_missing_months_each_fail(tmp_path):
     assert result["unmapped"] == ["7000"]
     assert result["missing_periods"] == ["2026-08", "2026-09"]
     assert result["actuals"]["revenue"] == {"2026-07": 105.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 1.0}
+
+
+@pytest.mark.parametrize("order", list(itertools.permutations(["4000", "4010", "6100"])))
+def test_a_month_total_is_exact_in_any_row_order(tmp_path, order):
+    rules = MappingRegistry(mappings=[
+        MappingRule(source_id="gl", source_value=account, target="revenue") for account in order
+    ])
+    amounts = {"4000": "9007199254740992", "4010": "1", "6100": "-9007199254740992"}
+    path = _table(tmp_path, "".join(f"{account},2026-07,{amounts[account]}\n" for account in order))
+    result = flat_actuals_table(path, source_id="gl", mappings=rules)
+    assert result["passed"]
+    assert result["actuals"] == {"revenue": {"2026-07": 1.0}}
 
 
 # The last case is 2026-08 with its year in Arabic-Indic digits, which a Unicode \d accepts.
@@ -111,6 +124,19 @@ def test_reconcile_source_flat_failures(tmp_path, run_cli):
     assert payload["data"]["unmapped"] == ["5000"]
     code, payload = _flat(tmp_path, run_cli, "--allow-unmapped")
     assert code == 0
-    code, payload = _flat(tmp_path, run_cli, "--expected-json", '{"revenue": 10}')
+    for expected in ('{"revenue": 10}', ""):
+        code, payload = _flat(tmp_path, run_cli, "--expected-json", expected)
+        assert code == 1
+        assert "takes no --expected-json" in payload["error"]["message"]
+
+
+# --allow-unmapped waives only unmapped accounts: a repeated month or a gap still fails.
+@pytest.mark.parametrize("body", ["4000,2026-07,10\n4000,2026-07,1\n", "4000,2026-07,10\n4000,2026-09,1\n"])
+@pytest.mark.parametrize("extra", [(), ("--allow-unmapped",)])
+def test_reconcile_source_flat_duplicate_or_gap_fails_even_when_unmapped_allowed(
+    tmp_path, run_cli, body, extra,
+):
+    _workspace(tmp_path, run_cli, body)
+    code, payload = _flat(tmp_path, run_cli, *extra)
     assert code == 1
-    assert "takes no --expected-json" in payload["error"]["message"]
+    assert payload["data"]["passed"] is False

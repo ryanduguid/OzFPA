@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import math
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
@@ -315,15 +315,19 @@ def flat_actuals_table(
         rules[account].target for account in accounts
         if account in rules and rules[account].status == "mapped"
     })
-    actuals = {target: dict.fromkeys(months, 0.0) for target in targets}
+    amounts: dict[tuple[str, str], list[float]] = defaultdict(list)
     for account, period, amount in rows:
         rule = rules.get(account)
-        if rule is None or rule.status == "ignored":
-            continue
-        cell = actuals[rule.target]
-        cell[period] = _finite_reconciliation_value(
-            cell[period] + amount, f"{period} total for {rule.target!r}",
-        )
+        if rule is not None and rule.status == "mapped":
+            amounts[rule.target, period].append(amount)
+    actuals = {target: dict.fromkeys(months, 0.0) for target in targets}
+    for (target, period), values in amounts.items():
+        # fsum is exact, so a total does not depend on row order or lose a small amount.
+        try:
+            total = math.fsum(values)
+        except OverflowError:
+            total = math.inf
+        actuals[target][period] = _finite_reconciliation_value(total, f"{period} total for {target!r}")
     return {
         "source_id": source_id,
         "path": str(path),
