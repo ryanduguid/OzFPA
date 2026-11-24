@@ -61,6 +61,14 @@ source, and exits 1 if there is one:
 uv run --locked --extra dev python examples/lumbridge-services/models/generated/verify_briefing.py
 ```
 
+Each run also writes `manifest.json`, the SHA-256 of every output except the
+workbook. Check the folder against it; the command names each changed, missing
+or extra file and exits 1 if there is one:
+
+```bash
+uv run --locked --extra dev python -m pyfpa.io.manifest examples/lumbridge-services/output
+```
+
 In Excel, change `Assumptions!B2` from 0 to 45. This moves invoice OPEN-V's
 receipt from 14 October to 28 November. Restore 0 after the trial.
 The workbook supports whole calendar-day delays from 0 to 120. Use desktop
