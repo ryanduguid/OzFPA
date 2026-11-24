@@ -53,6 +53,14 @@ has no bank statement to compare. The [recurring example](RECURRING.md) checks
 actual bank transactions against a supplied closing balance.
 The briefing, CSVs and JSON summary are committed so the result can be read without running anything; the workbook is rebuilt locally and ignored by Git.
 
+Check that every figure in the briefing ties to its schedule, input or
+forecast. The command lists any figure that differs, is missing or has no
+source, and exits 1 if there is one:
+
+```bash
+uv run --locked --extra dev python examples/lumbridge-services/models/generated/verify_briefing.py
+```
+
 In Excel, change `Assumptions!B2` from 0 to 45. This moves invoice OPEN-V's
 receipt from 14 October to 28 November. Restore 0 after the trial.
 The workbook supports whole calendar-day delays from 0 to 120. Use desktop

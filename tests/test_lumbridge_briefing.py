@@ -6,22 +6,21 @@
 The generator computes the briefing's two tables, but several sentences carry
 figures as written text. A model change that moved a schedule would leave
 those sentences stale while the tables regenerated, and nothing would fail.
-Each named figure below is read from the committed briefing and compared with
-exactly one source: a committed on-time schedule (`monthly.csv`,
-`daily-cash.csv`, `results.json`), an input file under `data/`, or, for the
-45-day-late case that no committed schedule records, the example's own
-forecast run with that delay. A separate test proves the committed files
-regenerate from the inputs unchanged apart from line endings.
+The example's shipped verifier, `models/generated/verify_briefing.py`, reads
+each named figure from the committed briefing and compares it with exactly one
+source, and reports any number no tie covers. These tests run it and prove it
+catches changed, missing, repeated and untied figures. A separate test proves
+the committed files regenerate from the inputs unchanged apart from line
+endings.
 """
 
 from __future__ import annotations
 
 import json
-import re
 import runpy
 import shutil
-from collections.abc import Callable
-from functools import cache
+import subprocess
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -32,152 +31,64 @@ EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "lumbridge-services
 OUTPUT = EXAMPLE / "output"
 DATA = EXAMPLE / "data"
 GENERATOR = EXAMPLE / "models" / "generated" / "lumbridge.py"
-MONEY = r"\(?\$-?[\d,]+(?:\.\d{2})?\)?"
+VERIFIER = EXAMPLE / "models" / "generated" / "verify_briefing.py"
+VERIFY = runpy.run_path(str(VERIFIER))
 # The late case the briefing compares with on time; the generator uses the same delay.
 LATE_DAYS = 45
 
 
-def money(text: str) -> float:
-    """'$1,234.50', '$-11,960.00' or '($25,160)' as a signed number."""
-    negative = text.startswith("(") or "-" in text
-    value = float(re.sub(r"[^\d.]", "", text))
-    return -value if negative else value
-
-
-def day_month(stamp: pd.Timestamp) -> str:
-    return f"{stamp.day} {stamp.strftime('%B')}"
-
-
-@cache
 def sources() -> dict:
-    monthly = pd.read_csv(OUTPUT / "monthly.csv", index_col=0)
-    daily = pd.read_csv(OUTPUT / "daily-cash.csv", index_col="date", parse_dates=["date"])["ending_cash"]
-    results = json.loads((OUTPUT / "results.json").read_text(encoding="utf-8"))
-    assumptions = json.loads((DATA / "assumptions.json").read_text(encoding="utf-8"))
-    opening = pd.read_csv(DATA / "xero_bs.csv").set_index("Account")["Amount"]
-    invoices = pd.read_csv(DATA / "invoices.csv", parse_dates=["receipt_date"]).set_index("id")
-    pl = pd.read_csv(DATA / "xero_pl.csv")
-    late = runpy.run_path(str(GENERATOR))["forecast"](delay_days=LATE_DAYS)
-    late_daily = late["daily"]["ending_cash"]
-    delayed = invoices.loc[assumptions["delay_invoice"]]
-    return {
-        "monthly": monthly, "daily": daily, "results": results, "assumptions": assumptions,
-        "opening": opening, "delayed": delayed, "late_monthly": late["monthly"], "late_daily": late_daily,
-        "september_revenue": pl.loc[pl["Account"].str.startswith("Sales"), "Amount"].sum(),
-    }
-
-
-def comparison_rows() -> dict[str, tuple[float, float]]:
-    s = sources()
-    m, lm, r = s["monthly"], s["late_monthly"], s["results"]
-    return {
-        "Quarter revenue": (r["quarter_revenue"], lm["Revenue"].sum()),
-        "Quarter profit before tax": (r["quarter_profit_before_tax"], lm["Profit before tax"].sum()),
-        "October closing cash": (m["Closing cash"].iloc[0], lm["Closing cash"].iloc[0]),
-        "Minimum daily cash": (r["minimum_daily_cash"], s["late_daily"].min()),
-        "December closing cash": (r["december_cash"], lm["Closing cash"].iloc[-1]),
-    }
-
-
-def prose_figures() -> list[tuple[str, str, Callable[[], tuple]]]:
-    """(name, pattern with one group per figure, expected values in group order)."""
-    s = sources()
-    m, a, late_daily = s["monthly"], s["assumptions"], s["late_daily"]
-    trough = -late_daily.min()
-    bands = s["results"]["cash_floor_bands"]
-
-    def lever(days: int) -> dict:
-        return next(row for row in s["results"]["pull_forward"] if row["debtor"] == "OPEN-V" and row["days_sooner"] == days)
-    return [
-        ("late case heading", r"\| OPEN-V paid (\d+) days late \|", lambda: (LATE_DAYS,)),
-        ("base-case profit", rf"The base case earns ({MONEY}) before income tax",
-         lambda: (s["results"]["quarter_profit_before_tax"],)),
-        ("table delay", r"This monthly table uses a (\d+)-day receipt delay",
-         lambda: (s["results"]["delay_days"],)),
-        ("opening GST", rf"October includes ({MONEY}) of opening GST",
-         lambda: (-s["opening"]["GST"],)),
-        ("October instalment", rf"and a ({MONEY}) income tax instalment",
-         lambda: (m["Income tax instalment"].iloc[0],)),
-        ("first overdrawn day", r"The late case first becomes negative on (\d{1,2} \w+)",
-         lambda: (day_month(late_daily[late_daily < 0].index[0]),)),
-        ("trough", rf"reaches ({MONEY}) on (\d{{1,2}} \w+)",
-         lambda: (late_daily.min(), day_month(late_daily.idxmin()))),
-        ("delayed receipt date", r"the delayed receipt arrives on (\d{1,2} \w+)",
-         lambda: (day_month(s["delayed"]["receipt_date"] + pd.Timedelta(days=LATE_DAYS)),)),
-        ("December payables",
-         rf"At 31 December, ({MONEY}) GST, ({MONEY}) PAYG withholding and ({MONEY}) supplier invoices remain payable",
-         lambda: (m["GST payable"].iloc[-1], m["PAYG withholding payable"].iloc[-1], m["Supplier payables"].iloc[-1])),
-        ("loan balance", rf"The loan balance is ({MONEY})",
-         lambda: (-s["opening"]["Business Loan"] - m["Loan principal paid"].sum(),)),
-        ("leave provisions", rf"the quarter adds ({MONEY}) of unused leave provisions",
-         lambda: (m["Leave provision"].sum(),)),
-        ("delayed receipt", rf"Confirm the ({MONEY}) OPEN-V receipt date",
-         lambda: (s["delayed"]["net"] + s["delayed"]["gst"],)),
-        ("trough funding", rf"The (\d+)-day delay needs ({MONEY}) of additional cash at the trough",
-         lambda: (LATE_DAYS, trough)),
-        ("buffer funding", rf"or ({MONEY}) to preserve the assumed ({MONEY}) buffer",
-         lambda: (trough + a["minimum_cash_buffer"], a["minimum_cash_buffer"])),
-        ("run-rate revenue", rf"held at September's fabricated ({MONEY}) monthly run rate",
-         lambda: (s["september_revenue"],)),
-        ("run-rate profit", rf"monthly pre-tax profit remains ({MONEY})",
-         lambda: (m["Profit before tax"].iloc[0],)),
-        ("pull-forward levers",
-         rf"if (OPEN-V) were received sooner, lowest daily cash would move from ({MONEY}): 14 days sooner to ({MONEY}), "
-         rf"28 days sooner to ({MONEY}), 45 days sooner to ({MONEY})",
-         lambda: ("OPEN-V", late_daily.min(), *[lever(days)["floor_after"] for days in (14, 28, 45)])),
-        ("band runs and seed", r"In ([\d,]+) seeded runs \(seed (\d+)\)",
-         lambda: (str(f"{bands['runs']:,}"), str(bands["seed"]))),
-        ("band floors", rf"Lowest daily cash is ({MONEY}) at P10, ({MONEY}) at P50 and ({MONEY}) at P90",
-         lambda: tuple(bands["floor"][p] for p in ("p10", "p50", "p90"))),
-        ("band breaches", rf"([\d,]+) runs go below zero and ([\d,]+) below the ({MONEY}) buffer",
-         lambda: (str(bands["runs_below_zero"]), str(bands["runs_below_buffer"]), a["minimum_cash_buffer"])),
-    ]
-
-
-def _same(found: str, expected: float | int | str) -> bool:
-    if isinstance(expected, str):
-        return found == expected
-    if re.fullmatch(r"\d+", found):
-        return int(found) == expected
-    return bool(money(found) == pytest.approx(float(expected), abs=0.005))
+    return VERIFY["sources"](OUTPUT, DATA)
 
 
 def briefing_mismatches(text: str) -> list[str]:
-    """Every named figure that is missing, repeated or different from its source."""
-    problems = []
-    table = re.findall(rf"^\| ([A-Za-z ]+) \| ({MONEY}) \| ({MONEY}) \|$", text, re.MULTILINE)
-    for label, pair in comparison_rows().items():
-        rows = [(on_time, late) for name, on_time, late in table if name == label]
-        if len(rows) != 1:
-            problems.append(f"comparison row {label!r} appears {len(rows)} times")
-            continue
-        for column, value, source in zip(("on time", "late"), rows[0], pair, strict=True):
-            if not _same(value, source):
-                problems.append(f"{label} ({column}): briefing {value}, source {source:,.2f}")
-    monthly = sources()["monthly"]
-    for month, row in monthly.iterrows():
-        pattern = rf"^\| {re.escape(str(month))} \| ({MONEY}) \| ({MONEY}) \| ({MONEY}) \|$"
-        found = re.findall(pattern, text, re.MULTILINE)
-        if len(found) != 1:
-            problems.append(f"monthly review row {month} appears {len(found)} times")
-            continue
-        for value, column in zip(found[0], ("Revenue", "Profit before tax", "Closing cash"), strict=True):
-            if not _same(value, row[column]):
-                problems.append(f"{month} {column}: briefing {value}, source {row[column]:,.2f}")
-    for name, pattern, expected_values in prose_figures():
-        found = re.findall(pattern, text)
-        if len(found) != 1:
-            problems.append(f"{name}: pattern matched {len(found)} times")
-            continue
-        values = found[0] if isinstance(found[0], tuple) else (found[0],)
-        for value, source in zip(values, expected_values(), strict=True):
-            if not _same(value, source):
-                problems.append(f"{name}: briefing {value}, source {source}")
-    return problems
+    return VERIFY["briefing_problems"](text, OUTPUT, DATA)
 
 
 def committed_briefing() -> str:
     return (OUTPUT / "briefing.md").read_text(encoding="utf-8")
+
+
+def test_the_verifier_command_passes_the_committed_briefing_and_fails_an_untied_figure(tmp_path):
+    passed = subprocess.run([sys.executable, str(VERIFIER)], capture_output=True, text=True, check=False)
+    assert passed.returncode == 0, passed.stdout + passed.stderr
+    assert json.loads(passed.stdout)["problems"] == []
+    output = tmp_path / "output"
+    shutil.copytree(OUTPUT, output)
+    (output / "briefing.md").write_text(committed_briefing() + "\nWork in progress is $4,321.\n", encoding="utf-8")
+    failed = subprocess.run([sys.executable, str(VERIFIER), "--output", str(output)], capture_output=True, text=True, check=False)
+    assert failed.returncode == 1
+    assert json.loads(failed.stdout)["problems"] == [f"untied figure '4,321' on line {committed_briefing().count(chr(10)) + 2}"]
+
+
+def test_the_verifier_passes_a_briefing_regenerated_with_the_late_delay(tmp_path):
+    runpy.run_path(str(GENERATOR))["run"](tmp_path, LATE_DAYS)
+    assert "uses a 45-day receipt delay" in (tmp_path / "briefing.md").read_text(encoding="utf-8")
+    assert VERIFY["main"](["--output", str(tmp_path)]) == 0
+
+
+def test_every_number_in_the_briefing_is_tied():
+    text = committed_briefing()
+    for added in ("Debtors total $81,000.", "The review took 3 weeks.", "Cash recovers on 9 December."):
+        assert any(problem.startswith("untied figure") for problem in briefing_mismatches(text + "\n" + added + "\n")), added
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("up to 14 days late and", "up to 15 days late and"),
+        ("1 of 8 invoices is past due", "2 of 8 invoices are past due"),
+        ("OPEN-V 0 to 60 days late", "OPEN-V 0 to 50 days late"),
+        ("28 days sooner to ($11,960.00)", "30 days sooner to ($11,960.00)"),
+        ("gives the 3 paths", "gives the 4 paths"),
+        ("October to December 2026, AUD", "October to December 2027, AUD"),
+        ("At 31 December, $12,600 GST", "At 30 December, $12,600 GST"),
+    ],
+)
+def test_figures_the_old_test_left_untied_are_now_tied(old, new):
+    text = committed_briefing()
+    assert old in text
+    assert briefing_mismatches(text.replace(old, new, 1))
 
 
 def test_every_briefing_figure_matches_its_one_source():

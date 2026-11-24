@@ -32,7 +32,7 @@ The fixed example runs to December. It does not extend the sales plan automatica
 
 `models/generated/invoice_cash.py` prepares opening-book cash from signed invoice and credit balances. Its test combines a $10,000 invoice, $4,000 settlement and a $500 credit: the ledger book is $5,500 and the forecast receives $5,500 once. Credit allocation requires an explicit invoice link. Due date and expected date are distinct. Add this opening-book cash once, separately from new projected sales.
 
-`models/generated/operating_variance.py` demonstrates one supported decomposition. Jobs rise from 200 to 220 and price rises from $100 to $110. Volume contributes $2,000 and price contributes $2,200. Ledger revenue increases by $4,150, leaving an unexplained -$50 residual. The interaction belongs to price because price is measured at current volume. No inferred cause is assigned to the residual.
+`models/generated/operating_variance.py` splits revenue into volume, mix and price with `pyfpa.analysis.pvm.price_volume_mix`. Jobs rise from 200 to 220 and price rises from $100 to $110. Volume contributes $2,000, mix $0 because there is one service, and price $2,200. Ledger revenue increases by $4,150, leaving an unexplained -$50 residual. The interaction belongs to price because price is measured at current volume. With several services, mix measures the shift between them at prior prices. No inferred cause is assigned to the residual.
 
 Run their independent arithmetic and adverse-input checks with:
 

@@ -1,4 +1,6 @@
 from pyfpa.analysis.divestiture import Carveout, divest, net_debt_to_ebitda
+from pyfpa.analysis.figures import FigureTie, figure_problems
+from pyfpa.analysis.pvm import PriceVolumeMix, price_volume_mix
 from pyfpa.analysis.reconcile import reconcile
 from pyfpa.analysis.segments import (
     Segment,
@@ -184,6 +186,7 @@ __all__ = [
     "EntrypointRegistry",
     "EpochEvaluation",
     "Experiment",
+    "FigureTie",
     "ExperimentCheck",
     "ExperimentDecision",
     "Intake",
@@ -198,6 +201,7 @@ __all__ = [
     "MetricObjective",
     "ModelRegistry",
     "ModelVersion",
+    "PriceVolumeMix",
     "OpeningBalances",
     "OpexLine",
     "Override",
@@ -240,6 +244,7 @@ __all__ = [
     "divest",
     "evaluate_challenger",
     "expand_flow",
+    "figure_problems",
     "find_recurring_skills",
     "forecast_to_excel",
     "holdout_backtest",
@@ -279,6 +284,7 @@ __all__ = [
     "promote_challenger",
     "promote_prior",
     "promote_skill",
+    "price_volume_mix",
     "pull_forward_levers",
     "read_pl_csv",
     "reconcile",
