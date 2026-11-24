@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
+import re
 from pathlib import Path
 from types import ModuleType
 
@@ -15,6 +16,106 @@ from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell
 from openpyxl.utils import get_column_letter
 from pydantic import BaseModel
+
+
+class Hardcode(BaseModel):
+    cell: str
+    line: str
+    value: float
+    in_formula: bool
+
+
+class HardcodeReport(BaseModel):
+    passed: bool
+    hardcodes: list[Hardcode]
+    cells_checked: int
+
+
+# The kernel's own constants: zero and one, months per year, its 30-day month
+# and the direct-cash rounding factor. Anything else in a formula is reported.
+KERNEL_LITERALS = frozenset({0.0, 1.0, 12.0, 30.0, 4e-15})
+_STRING = re.compile(r'"(?:[^"]|"")*"')
+_SHEET_PREFIX = re.compile(r"(?:'(?:[^']|'')*'|[A-Za-z_][A-Za-z0-9_.]*)!")
+_TOKEN = re.compile(
+    r"(?P<rows>\$?\d+\s*:\s*\$?\d+)"
+    r"|(?P<ref>\$?[A-Za-z]{1,3}\$?\d+(?![A-Za-z0-9_.(]))"
+    r"|(?P<name>[A-Za-z_\\][A-Za-z0-9_.]*)"
+    r"|(?P<num>(?:\d+\.?\d*|\.\d+)(?:[Ee][+-]?\d+)?)"
+)
+
+
+_OPERAND_START = "(,=<>+-*/^&"
+
+
+def formula_literals(formula: str) -> list[float]:
+    """Numbers typed into a formula, with any unary sign and percent applied.
+
+    Cell references, whole-row ranges, names, text and whole-number powers
+    (the kernel's growth exponent is the year index) are not numbers.
+    """
+    body = _SHEET_PREFIX.sub("", _STRING.sub('""', formula.lstrip("=")))
+    found: list[float] = []
+    for token in _TOKEN.finditer(body):
+        number = token.group("num")
+        if number is None:
+            continue
+        value = float(number)
+        before = body[:token.start()].rstrip()
+        # A sign is unary at the start or after an operator or open bracket.
+        while before[-1:] in ("+", "-") and before[:-1].rstrip()[-1:] in ("", *_OPERAND_START):
+            value = -value if before[-1] == "-" else value
+            before = before[:-1].rstrip()
+        if before.endswith("^") and number.isdigit():
+            continue
+        if body[token.end():].lstrip().startswith("%"):
+            value /= 100
+        found.append(value)
+    return found
+
+
+def hardcode_report(
+    path: str | Path,
+    *,
+    sheet: str = "Model",
+    allowed: frozenset[float] = KERNEL_LITERALS,
+) -> HardcodeReport:
+    """List every hardcoded number in a model sheet's formula range.
+
+    The range is every labelled row from row 2 and every month column the
+    header row names. A number typed over a cell is reported with
+    ``in_formula`` false; a number inside a formula that is not in ``allowed``,
+    nor the negative of one, is reported with ``in_formula`` true, once per
+    occurrence. No formula is
+    evaluated, so ``formulas`` is not needed.
+    """
+    wb = load_workbook(Path(path))
+    if sheet not in wb.sheetnames:
+        raise ValueError(f"{sheet} sheet is missing")
+    ws = wb[sheet]
+    last_col = 1
+    while ws.cell(row=1, column=last_col + 1).value not in (None, ""):
+        last_col += 1
+    found: list[Hardcode] = []
+    checked = 0
+    for row in range(2, ws.max_row + 1):
+        label = ws.cell(row=row, column=1).value
+        if label is None or str(label).strip() == "":
+            continue
+        for col in range(2, last_col + 1):
+            cell = ws.cell(row=row, column=col)
+            value = cell.value
+            if isinstance(value, bool) or value is None:
+                continue
+            checked += 1
+            if isinstance(value, (int, float)):
+                found.append(Hardcode(cell=cell.coordinate, line=str(label), value=float(value), in_formula=False))
+            elif cell.data_type == "f" and isinstance(value, str):
+                found.extend(
+                    Hardcode(cell=cell.coordinate, line=str(label), value=number, in_formula=True)
+                    for number in formula_literals(value)
+                    if abs(number) not in allowed
+                )
+    return HardcodeReport(passed=not found, hardcodes=found, cells_checked=checked)
 
 
 class VerifyReport(BaseModel):
