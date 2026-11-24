@@ -1,5 +1,10 @@
 # Unreleased
 
+- `flat_actuals_table(path, source_id=, mappings=)` and `openfpa reconcile-source --period-column` read an unpivoted
+  actuals table, one row per account id, month (YYYY-MM) and amount, for income statement flows or balance sheet
+  balances. Every account goes through the registered mapping rules and each target's total is reported for every month
+  in order. A repeated account and month, an unmapped account (unless `--allow-unmapped`) or a month missing between
+  the first and last fails; a period that is not a month is refused. `reconcile_account_table` shares its CSV checks.
 - `pyfpa.hardcode_report(path, sheet="Model", allowed=KERNEL_LITERALS)` lists every hardcoded number in a model
   sheet's formula range without evaluating it: a number typed over a cell, and each number inside a formula that is
   not in `allowed`, nor its negative (by default the kernel's 0, 1, 12, 30 and its rounding factor; whole-number

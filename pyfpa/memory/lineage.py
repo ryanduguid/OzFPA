@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import csv
 import math
-from collections import Counter
+import re
+from collections import Counter, defaultdict
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
 
@@ -227,6 +229,119 @@ def _finite_reconciliation_value(value: float, name: str) -> float:
     return value
 
 
+def _account_rows(
+    path: Path, account_column: str, columns: tuple[str, ...],
+) -> Iterator[tuple[int, str, dict[str, str]]]:
+    """Yield each source CSV row that names an account, refusing a malformed table.
+
+    A wholly blank row is skipped; a row with values but no account is refused.
+    """
+    if path.suffix.casefold() != ".csv":
+        raise ValueError("reconcile-source currently supports CSV files")
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        fields = reader.fieldnames or []
+        required = (account_column, *columns)
+        if any(column not in fields for column in required):
+            names = " and ".join(repr(column) for column in required)
+            raise ValueError(f"expected columns {names}, got {fields}")
+        if any(not name.strip() for name in fields):
+            raise ValueError("unnamed source CSV columns")
+        if len(fields) != len(set(fields)):
+            raise ValueError("duplicate source CSV columns")
+        for row in reader:
+            if None in row:
+                raise ValueError(f"extra fields in source CSV row {reader.line_num}")
+            account = (row.get(account_column) or "").strip()
+            if not account:
+                if any((value or "").strip() for value in row.values()):
+                    raise ValueError(f"missing account in source CSV row {reader.line_num}")
+                continue
+            yield reader.line_num, account, row
+
+
+_MONTH = re.compile(r"[0-9]{4}-(?:0[1-9]|1[0-2])")
+
+
+def _flat_rows(
+    path: Path, account_column: str, period_column: str, amount_column: str,
+) -> list[tuple[str, str, float]]:
+    rows: list[tuple[str, str, float]] = []
+    for line, account, row in _account_rows(path, account_column, (period_column, amount_column)):
+        period = (row.get(period_column) or "").strip()
+        if not _MONTH.fullmatch(period):
+            raise ValueError(f"period in source CSV row {line} must be a month written YYYY-MM, got {period!r}")
+        rows.append((account, period, _parse_amount(row.get(amount_column))))
+    if not rows:
+        raise ValueError("source CSV has no account rows")
+    return rows
+
+
+def flat_actuals_table(
+    path: str | Path,
+    *,
+    source_id: str,
+    mappings: MappingRegistry,
+    account_column: str = "account_id",
+    period_column: str = "period",
+    amount_column: str = "amount",
+) -> dict[str, Any]:
+    """Map an unpivoted actuals table, one row per account and month, to targets.
+
+    Each row holds an account id, a month written YYYY-MM and an amount, so one
+    file can carry income statement flows or balance sheet balances for any
+    number of months. It is read with the same refusals as
+    reconcile_account_table and mapped through the same exact rules.
+
+    The table fails on a repeated account and month, an account with no rule,
+    or a month missing between its first and last month. Ignored accounts are
+    listed and left out. ``actuals`` gives each target's total for every month
+    in order, zero where none of its accounts has a row that month.
+    """
+    path = Path(path)
+    rows = _flat_rows(path, account_column, period_column, amount_column)
+
+    keys = Counter((account, period) for account, period, _ in rows)
+    duplicates = sorted(f"{account} {period}" for (account, period), count in keys.items() if count > 1)
+    rules = {item.source_value: item for item in mappings.mappings if item.source_id == source_id}
+    accounts = sorted({account for account, _, _ in rows})
+    unmapped = [account for account in accounts if account not in rules]
+    ignored = [account for account in accounts if account in rules and rules[account].status == "ignored"]
+    seen = {period for _, period, _ in rows}
+    months = [str(month) for month in pd.period_range(min(seen), max(seen), freq="M")]
+    missing_periods = [month for month in months if month not in seen]
+
+    targets = sorted({
+        rules[account].target for account in accounts
+        if account in rules and rules[account].status == "mapped"
+    })
+    amounts: dict[tuple[str, str], list[float]] = defaultdict(list)
+    for account, period, amount in rows:
+        rule = rules.get(account)
+        if rule is not None and rule.status == "mapped":
+            amounts[rule.target, period].append(amount)
+    actuals = {target: dict.fromkeys(months, 0.0) for target in targets}
+    for (target, period), values in amounts.items():
+        # fsum is exact, so a total does not depend on row order or lose a small amount.
+        try:
+            total = math.fsum(values)
+        except OverflowError:
+            total = math.inf
+        actuals[target][period] = _finite_reconciliation_value(total, f"{period} total for {target!r}")
+    return {
+        "source_id": source_id,
+        "path": str(path),
+        "row_count": len(rows),
+        "periods": months,
+        "duplicates": duplicates,
+        "unmapped": unmapped,
+        "ignored": ignored,
+        "missing_periods": missing_periods,
+        "actuals": actuals,
+        "passed": not duplicates and not unmapped and not missing_periods,
+    }
+
+
 def reconcile_account_table(
     path: str | Path,
     *,
@@ -260,29 +375,10 @@ def reconcile_account_table(
         for target, amount in (expected or {}).items()
     }
     path = Path(path)
-    if path.suffix.casefold() != ".csv":
-        raise ValueError("reconcile-source currently supports CSV files")
-    rows: list[tuple[str, float]] = []
-    with path.open(encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        fields = reader.fieldnames or []
-        if account_column not in fields or amount_column not in fields:
-            raise ValueError(
-                f"expected columns {account_column!r} and {amount_column!r}, got {fields}"
-            )
-        if any(not name.strip() for name in fields):
-            raise ValueError("unnamed source CSV columns")
-        if len(fields) != len(set(fields)):
-            raise ValueError("duplicate source CSV columns")
-        for row in reader:
-            if None in row:
-                raise ValueError(f"extra fields in source CSV row {reader.line_num}")
-            account = (row.get(account_column) or "").strip()
-            if not account:
-                if any((value or "").strip() for value in row.values()):
-                    raise ValueError(f"missing account in source CSV row {reader.line_num}")
-                continue
-            rows.append((account, _parse_amount(row.get(amount_column))))
+    rows = [
+        (account, _parse_amount(row.get(amount_column)))
+        for _, account, row in _account_rows(path, account_column, (amount_column,))
+    ]
 
     source_total = _finite_reconciliation_value(sum(amount for _, amount in rows), "source total")
     accounts = [account for account, _ in rows]

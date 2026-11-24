@@ -89,6 +89,13 @@ openfpa reconcile-source . \
   --amount-column Amount \
   --expected-json '{"income_statement.product_revenue": 100000}'
 
+# An unpivoted table, one row per account and month (YYYY-MM), for income
+# statement flows or balance sheet balances: --period-column maps every month
+# through the same rules and reports each target's total by month. It fails on
+# a repeated account and month, an unmapped account or a month missing between
+# the first and last, and takes no --expected-json.
+openfpa reconcile-source .   --source-id gl-actuals   --account-column account_id   --period-column period   --amount-column amount
+
 openfpa connector-scaffold . \
   --name accounting-pl \
   --source-id monthly-pl \
