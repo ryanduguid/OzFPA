@@ -71,13 +71,14 @@ def test_formula_literals(formula, numbers):
     assert formula_literals(formula) == numbers
 
 
-def test_unlabelled_rows_and_booleans_are_skipped_and_a_missing_sheet_is_refused(tmp_path):
+def test_unlabelled_rows_booleans_and_text_are_skipped_and_a_missing_sheet_is_refused(tmp_path):
     path = _model(tmp_path)
     wb = load_workbook(path)
     model = wb["Model"]
     model.cell(row=model.max_row + 2, column=2, value=99.0)
     model.cell(row=model.max_row + 1, column=1, value="flag")
     model.cell(row=model.max_row, column=2, value=True)
+    model.cell(row=model.max_row, column=3, value="n/a")
     wb.save(path)
     assert hardcode_report(path).passed
     with pytest.raises(ValueError, match="Forecast sheet is missing"):
