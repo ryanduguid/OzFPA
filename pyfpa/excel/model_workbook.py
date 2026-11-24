@@ -1,7 +1,8 @@
-"""Canonical monthly translator: EntityConfig -> 2-sheet live-formula workbook.
+"""Canonical monthly translator: EntityConfig -> live-formula workbook.
 
 Assumptions sheet: named driver cells (editable).
 Model sheet: every line a formula referencing those names.
+Checks sheet: every check_ row rolled up to one status, shown atop each tab.
 Formula vocabulary: arithmetic, ^, SUM, MIN, MAX, IF only.
 """
 from __future__ import annotations
@@ -21,6 +22,7 @@ from pyfpa.excel.toolkit import (
     DAYS_FORMAT,
     MONEY_FORMAT,
     PERCENT_FORMAT,
+    add_checks_sheet,
     add_named_cell,
     add_named_row,
     fill_formula_row,
@@ -244,7 +246,7 @@ def _build_revenue_block(
 
 def _build_opex_block(
     cfg: EntityConfig, opex_names: list[str], r_rev: int, alloc: _RowAlloc,
-) -> int:
+) -> tuple[list[int], int]:
     """Opex per line then the opex total row."""
     opex_rows: list[int] = []
     for j, (line, nm) in enumerate(zip(cfg.opex, opex_names)):
@@ -258,11 +260,11 @@ def _build_opex_block(
         opex_rows.append(alloc.emit_fn(f"opex_{j + 1}", template))
 
     if opex_rows:
-        return alloc.emit_fn(
+        return opex_rows, alloc.emit_fn(
             "opex",
             lambda m, col: f"=SUM({col}{opex_rows[0]}:{col}{opex_rows[-1]})",
         )
-    return alloc.emit_fn("opex", lambda m, col: "=0")
+    return opex_rows, alloc.emit_fn("opex", lambda m, col: "=0")
 
 
 def _debt_balance_formulas(
@@ -437,13 +439,13 @@ def _build_model(
     _emit_header(ws, idx)
 
     # -- Revenue, COGS, gross profit --
-    _ch_rev_rows, r_rev, r_cogs = _build_revenue_block(
+    ch_rev_rows, r_rev, r_cogs = _build_revenue_block(
         ws, cfg, channel_refs, idx, alloc)
     r_gp = alloc.emit_fn("gross_profit",
                          lambda m, col: f"={col}{r_rev}-{col}{r_cogs}")
 
     # -- Opex, EBITDA, D&A --
-    r_opex = _build_opex_block(cfg, opex_names, r_rev, alloc)
+    opex_rows, r_opex = _build_opex_block(cfg, opex_names, r_rev, alloc)
     r_ebitda = alloc.emit_fn("ebitda",
                              lambda m, col: f"={col}{r_gp}-{col}{r_opex}")
     r_da = alloc.emit_fn("da", lambda m, col: "=da_monthly")
@@ -545,11 +547,34 @@ def _build_model(
     alloc.emit_cells("check_direct_cash", direct_checks, fmt="0.00E+00")
     alloc.emit_cells("direct_cash_rounding", rounding_budgets, fmt="0.00E+00")
 
+    # Sum-of-parts: each schedule total against its lines, written in the
+    # other form (a SUM range against explicit terms, or the reverse), so an
+    # overtyped total or an edited range shows as a non-zero check.
+    for label, total_row, parts, summed in (
+        ("check_revenue_parts", r_rev, ch_rev_rows, False),
+        ("check_opex_parts", r_opex, opex_rows, False),
+        ("check_interest_parts", r_int, debt_int_rows, True),
+        ("check_principal_parts", r_prin, debt_prin_rows, True),
+    ):
+        if parts:
+            alloc.emit_fn(label, _parts_check(total_row, parts, summed))
+
     ws.freeze_panes = "B2"
 
 
+def _parts_check(total_row: int, parts: list[int], summed: bool) -> _RowTemplate:
+    def t(m: int, col: str) -> str:
+        cells = [f"{col}{r}" for r in parts]
+        terms = f"SUM({','.join(cells)})" if summed else "(" + "+".join(cells) + ")"
+        return f"={col}{total_row}-{terms}"
+    return t
+
+
 def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
-    """Compile an EntityConfig into a 2-sheet live-formula workbook at `path`.
+    """Compile an EntityConfig into a live-formula workbook at `path`.
+
+    Model!A1 and Assumptions!B1 show the Checks sheet's status: it names the
+    first check_ row that is non-zero beyond its tolerance, or says all pass.
 
     The Python engine runs first and its ValueError propagates before anything is
     written, so the workbook never shows a forecast the engine refuses, such as
@@ -570,6 +595,12 @@ def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
 
     channel_refs, opex_names, debt_refs = _build_assumptions(wb, cfg)
     _build_model(wb, cfg, channel_refs, opex_names, debt_refs)
+    add_checks_sheet(
+        wb, wb["Model"], first_col=_MODEL_START_COL,
+        last_col=_MODEL_START_COL + cfg.horizon_months - 1,
+        banners=[(wb["Model"], "A1"), (ws_assump, "B1")],
+        allowances={"check_direct_cash": "direct_cash_rounding"},
+    )
 
     with staged_output(path) as staged:
         with staged.open("wb") as stream:
