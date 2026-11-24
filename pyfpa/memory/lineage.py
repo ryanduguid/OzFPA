@@ -263,6 +263,20 @@ def _account_rows(
 _MONTH = re.compile(r"\d{4}-(?:0[1-9]|1[0-2])")
 
 
+def _flat_rows(
+    path: Path, account_column: str, period_column: str, amount_column: str,
+) -> list[tuple[str, str, float]]:
+    rows: list[tuple[str, str, float]] = []
+    for line, account, row in _account_rows(path, account_column, (period_column, amount_column)):
+        period = (row.get(period_column) or "").strip()
+        if not _MONTH.fullmatch(period):
+            raise ValueError(f"period in source CSV row {line} must be a month written YYYY-MM, got {period!r}")
+        rows.append((account, period, _parse_amount(row.get(amount_column))))
+    if not rows:
+        raise ValueError("source CSV has no account rows")
+    return rows
+
+
 def flat_actuals_table(
     path: str | Path,
     *,
@@ -285,14 +299,7 @@ def flat_actuals_table(
     in order, zero where none of its accounts has a row that month.
     """
     path = Path(path)
-    rows: list[tuple[str, str, float]] = []
-    for line, account, row in _account_rows(path, account_column, (period_column, amount_column)):
-        period = (row.get(period_column) or "").strip()
-        if not _MONTH.fullmatch(period):
-            raise ValueError(f"period in source CSV row {line} must be a month written YYYY-MM, got {period!r}")
-        rows.append((account, period, _parse_amount(row.get(amount_column))))
-    if not rows:
-        raise ValueError("source CSV has no account rows")
+    rows = _flat_rows(path, account_column, period_column, amount_column)
 
     keys = Counter((account, period) for account, period, _ in rows)
     duplicates = sorted(f"{account} {period}" for (account, period), count in keys.items() if count > 1)
