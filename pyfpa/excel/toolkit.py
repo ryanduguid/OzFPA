@@ -81,6 +81,34 @@ def fill_formula_row(
         if number_format:
             cell.number_format = number_format
 
+def _check_rows(
+    source: Worksheet, allowances: Mapping[str, str],
+) -> tuple[dict[str, int], list[tuple[str, int]]]:
+    """Row of every labelled line, and the check_ lines in order; refuses none or a bad allowance."""
+    labels = {
+        str(source.cell(row=r, column=1).value): r
+        for r in range(2, source.max_row + 1)
+        if source.cell(row=r, column=1).value is not None
+    }
+    checks = [(label, row) for label, row in labels.items() if label.startswith("check_")]
+    if not checks:
+        raise ValueError(f"{source.title} has no check_ rows to roll up")
+    unknown = sorted(label for pair in allowances.items() for label in pair if label not in labels)
+    if unknown:
+        raise ValueError(f"allowance rows name labels {source.title} does not have: {unknown}")
+    return labels, checks
+
+
+def _write_excess_row(
+    ws: Worksheet, source: Worksheet, row: int, check: int, allowance: int,
+    first_col: int, last_col: int,
+) -> None:
+    """Each month's absolute check value less that month's own allowance."""
+    for col in range(first_col, last_col + 1):
+        month = f"'{source.title}'!{get_column_letter(col)}"
+        ws.cell(row=row, column=col, value=f"=MAX({month}{check},-{month}{check})-{month}{allowance}")
+
+
 def add_checks_sheet(
     wb: Workbook,
     source: Worksheet,
@@ -100,18 +128,8 @@ def add_checks_sheet(
     largest monthly excess over the allowance, worked out month by month in a
     row below the table. Returns the check count.
     """
-    labels = {
-        str(source.cell(row=r, column=1).value): r
-        for r in range(2, source.max_row + 1)
-        if source.cell(row=r, column=1).value is not None
-    }
-    checks = [(label, row) for label, row in labels.items() if label.startswith("check_")]
-    if not checks:
-        raise ValueError(f"{source.title} has no check_ rows to roll up")
     allowances = dict(allowances or {})
-    unknown = sorted(label for pair in allowances.items() for label in pair if label not in labels)
-    if unknown:
-        raise ValueError(f"allowance rows name labels {source.title} does not have: {unknown}")
+    labels, checks = _check_rows(source, allowances)
     first, last = get_column_letter(first_col), get_column_letter(last_col)
 
     def span(row: int, sheet: str = source.title) -> str:
@@ -128,12 +146,8 @@ def add_checks_sheet(
         r = _CHECKS_FIRST_ROW + offset
         largest = f"=MAX(MAX({span(row)}),-MIN({span(row)}))"
         if label in allowances:
-            excess = labels[allowances[label]]
             ws.cell(row=helper, column=1, value=f"{label} less {allowances[label]}, by month")
-            for col in range(first_col, last_col + 1):
-                month = f"'{source.title}'!{get_column_letter(col)}"
-                ws.cell(row=helper, column=col,
-                        value=f"=MAX({month}{row},-{month}{row})-{month}{excess}")
+            _write_excess_row(ws, source, helper, row, labels[allowances[label]], first_col, last_col)
             largest = f"=MAX({span(helper, CHECKS_SHEET)})"
             helper += 1
         ws.cell(row=r, column=1, value=label)
