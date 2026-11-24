@@ -59,8 +59,8 @@ def test_every_tab_shows_the_checks_status_from_one_sheet(tmp_path):
     assert wb["Assumptions"]["B1"].value == "=Checks!$B$1"
     model_checks = [k for k in _labels(wb["Model"]) if str(k).startswith("check_")]
     checks = wb["Checks"]
-    listed = [checks.cell(row=r, column=1).value for r in range(4, checks.max_row + 1)]
-    assert listed == model_checks
+    listed = [checks.cell(row=r, column=1).value for r in range(4, 4 + len(model_checks) + 1)]
+    assert listed == [*model_checks, None]
     assert set(_PARTS) <= set(listed)
 
 
@@ -98,11 +98,50 @@ def test_a_line_dropped_from_a_total_fails_its_parts_check(tmp_path):
     assert _status(path) == "CHECK FAILS: check_revenue_parts"
 
 
-def test_direct_cash_tolerance_carries_its_rounding_allowance(tmp_path):
+def test_direct_cash_is_measured_against_each_month_own_allowance(tmp_path):
     checks = load_workbook(_build(tmp_path))["Checks"]
     rows = _labels(checks)
-    assert checks.cell(row=rows["check_direct_cash"], column=3).value.startswith("=0.000001+MAX(")
-    assert checks.cell(row=rows["check_cash_roll"], column=3).value == 0.000001
+    assert checks.cell(row=rows["check_direct_cash"], column=2).value.startswith("=MAX('Checks'!")
+    assert rows["check_direct_cash less direct_cash_rounding, by month"] > rows["check_direct_cash"]
+
+
+def _two_months(tmp_path, check, allowance):
+    from openpyxl import Workbook
+
+    from pyfpa.excel.toolkit import add_checks_sheet
+
+    wb = Workbook()
+    model = wb.active
+    model.title = "Model"
+    for row, (label, values) in enumerate((("check_x", check), ("rounding", allowance)), start=2):
+        model.cell(row=row, column=1, value=label)
+        for col, value in enumerate(values, start=2):
+            model.cell(row=row, column=col, value=value)
+    add_checks_sheet(wb, model, first_col=2, last_col=3, banners=[(model, "A1")],
+                     allowances={"check_x": "rounding"})
+    path = tmp_path / "two.xlsx"
+    wb.save(path)
+    formulas = pytest.importorskip("formulas")
+    solution = formulas.ExcelModel().loads(str(path)).finish().calculate()
+    return solution[f"'[{path.name}]CHECKS'!B1"].value[0][0]
+
+
+def test_another_month_larger_allowance_does_not_hide_a_failure(tmp_path):
+    # Month 1 is 0.5 over its zero allowance; month 2's allowance of 1 must not cover it.
+    assert _two_months(tmp_path, [0.5, 0.0], [0.0, 1.0]) == "CHECK FAILS: check_x"
+    assert _two_months(tmp_path, [0.5, 0.0], [0.5, 0.0]) == "All 1 checks pass"
+
+
+def test_an_allowance_naming_a_missing_row_is_refused():
+    from openpyxl import Workbook
+
+    from pyfpa.excel.toolkit import add_checks_sheet
+
+    wb = Workbook()
+    wb.active.cell(row=2, column=1, value="check_x")
+    with pytest.raises(ValueError, match=r"\['rounding'\]"):
+        add_checks_sheet(wb, wb.active, first_col=2, last_col=3, banners=[],
+                         allowances={"check_x": "rounding"})
 
 
 def test_schedules_without_lines_get_no_parts_check(tmp_path):

@@ -95,8 +95,10 @@ def add_checks_sheet(
     Each check gets its largest absolute monthly value, its tolerance and OK or
     FAIL. Checks!B1 names the first failing check, or says all pass, and each
     ``(sheet, cell)`` in ``banners`` shows that status at the top of its tab.
-    ``allowances`` maps a check label to the label of a row whose largest value
-    widens that check's tolerance (a rounding budget). Returns the check count.
+    ``allowances`` maps a check label to the label of a row holding each
+    month's own allowance (a rounding budget): that check's difference is its
+    largest monthly excess over the allowance, worked out month by month in a
+    row below the table. Returns the check count.
     """
     labels = {
         str(source.cell(row=r, column=1).value): r
@@ -106,26 +108,37 @@ def add_checks_sheet(
     checks = [(label, row) for label, row in labels.items() if label.startswith("check_")]
     if not checks:
         raise ValueError(f"{source.title} has no check_ rows to roll up")
+    allowances = dict(allowances or {})
+    unknown = sorted(label for pair in allowances.items() for label in pair if label not in labels)
+    if unknown:
+        raise ValueError(f"allowance rows name labels {source.title} does not have: {unknown}")
     first, last = get_column_letter(first_col), get_column_letter(last_col)
 
-    def span(row: int) -> str:
-        return f"'{source.title}'!${first}${row}:${last}${row}"
+    def span(row: int, sheet: str = source.title) -> str:
+        return f"'{sheet}'!${first}${row}:${last}${row}"
 
     ws = wb.create_sheet(CHECKS_SHEET)
     ws.cell(row=1, column=1, value="Model status")
-    ws.cell(row=2, column=1, value="Every check is the largest absolute monthly value of its row on the model sheet.")
+    ws.cell(row=2, column=1, value="Each difference is the largest absolute monthly value of its check row, less that month's allowance where it has one.")
     for col, heading in enumerate(("Check", "Largest difference", "Tolerance", "Status"), start=1):
         ws.cell(row=_CHECKS_FIRST_ROW - 1, column=col, value=heading)
     status = f'"All {len(checks)} checks pass"'
+    helper = _CHECKS_FIRST_ROW + len(checks) + 1
     for offset, (label, row) in reversed(list(enumerate(checks))):
         r = _CHECKS_FIRST_ROW + offset
-        allowance = (allowances or {}).get(label)
-        tolerance: float | str = CHECK_TOLERANCE
-        if allowance is not None:
-            tolerance = f"={CHECK_TOLERANCE:.6f}+MAX({span(labels[allowance])})"
+        largest = f"=MAX(MAX({span(row)}),-MIN({span(row)}))"
+        if label in allowances:
+            excess = labels[allowances[label]]
+            ws.cell(row=helper, column=1, value=f"{label} less {allowances[label]}, by month")
+            for col in range(first_col, last_col + 1):
+                month = f"'{source.title}'!{get_column_letter(col)}"
+                ws.cell(row=helper, column=col,
+                        value=f"=MAX({month}{row},-{month}{row})-{month}{excess}")
+            largest = f"=MAX({span(helper, CHECKS_SHEET)})"
+            helper += 1
         ws.cell(row=r, column=1, value=label)
-        ws.cell(row=r, column=2, value=f"=MAX(MAX({span(row)}),-MIN({span(row)}))")
-        ws.cell(row=r, column=3, value=tolerance)
+        ws.cell(row=r, column=2, value=largest)
+        ws.cell(row=r, column=3, value=CHECK_TOLERANCE)
         ws.cell(row=r, column=4, value=f'=IF(B{r}<=C{r},"OK","FAIL")')
         status = f'IF(D{r}="OK",{status},"CHECK FAILS: {label}")'
     ws.cell(row=1, column=2, value=f"={status}").font = Font(bold=True)
