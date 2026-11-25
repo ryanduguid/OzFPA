@@ -116,72 +116,13 @@ also its own marketplace, so Claude Code installs the skills with:
 /plugin install au-fpa-pack@au-fpa-pack
 ```
 
-## Alternatives
+## Alternatives and scope
 
-OzFPA is built for Australian cash, GST and BAS timing. As read on 5 November 2026, these
-tools cover nearby ground:
+OzFPA is built for local Australian cash, GST, BAS and tax-timing modelling from records a firm supplies, rather than a hosted subscription or live bank-feed service:
 
 - [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
-- A comparable plugin collection offered variance analysis and a 30/60/90-day cash flow forecast.
-  Its listing showed no 13-week forecast.
-- A skills collection for US practice offered budget-versus-actual analysis, narratives explaining
-  variances and board packs, with scripts.
-- Commercial cash flow forecasting products also cover this work.
-
-Read on 12 November 2026:
-
-- A financial modelling training provider's free Claude skills (11 November): one builds a three-statement, DCF,
-  LBO, budget or forecast model to the provider's guidelines and one reviews a model against them, in the Claude app
-  and Claude in Excel, after a name and email form. Its page states no Australian rules.
-- [Xero New Budgets](https://blog.xero.com/product-updates/new-budgets/) (11 November): scenario budgets inside Xero,
-  from zeros or last month's or the last 12 months' actuals, per tracking category, with an adjustment history. The
-  post does not mention GST, BAS or tax due dates. This pack adds the Australian cash timing a budget leaves out: BAS,
-  PAYG and FBT due dates moved past whole-of-state public holidays, lodgment-channel dates and the GIC cost of paying an
-  ATO debt by instalments.
-
-Read on 15 November 2026:
-
-- A 13-week cash flow plugin for accountants (the plugin last changed on 23 July 2026): it pulls the bank balance,
-  receivables, payables, payroll and tax obligations from a client's live Xero, MYOB or QuickBooks Online ledger and
-  bank feed through its vendor's service. Its instructions put each open invoice in the week of its due date plus that
-  debtor's average delay past due (the median when skewed), name each week below a chosen cash threshold with its
-  drivers, and suggest 3 actions for each: chase debtors, delay suppliers or draw on a facility. It needs an account
-  with the vendor and at least 90 days of bank feed history. This pack needs no account and works
-  from the records the firm supplies. From those records, `predicted_receipts` places each open invoice on the median
-  days to pay of its customer's paid invoices that took at least as long as the open one is old (every customer's
-  below 6 of those, and no date below 6 again), and `risk_week_actions` ranks up to 3 actions for each risk week:
-  chase an overdue invoice or pay a bill on its due date instead of earlier, never later than due and never a
-  facility draw.
-- [Xero's Cash flow manager](https://central.xero.com/0/article/Cash-flow-manager-with-Analytics-powered-by-Syft), in
-  Analytics: projects 7 to 180 days from the bank balances in Xero, the amounts owing on invoices and bills, quotes,
-  cash movements entered by hand and [recurring weekly and monthly payments](https://central.xero.com/0/article/About-cash-flow-predictions-in-Analytics-powered-by-Syft)
-  predicted from the previous 3 months. [ITBrief reported](https://itbrief.co.nz/story/xero-adds-ai-analytics-cash-flow-forecasting-in-anz)
-  on 11 March 2026 that its forecasts use predicted payment dates based on observed payment behaviour; the Xero Central
-  articles do not say how. The articles, the report and Xero's [Australian cash flow page](https://www.xero.com/au/accounting-software/analytics/cash-flow/)
-  do not mention GST, BAS or PAYG due dates.
-- A cash flow forecasting subscription connected to Xero or QuickBooks, with a 13-week view and 8 scenarios, after a
-  14-day trial. Its small business plan, for companies below £2m in revenue, forecasts 12 months for A$155 a month
-  billed annually or A$189 monthly; its growth plan, for companies over £2m, forecasts 36 months for A$300 a month
-  billed annually or A$379 monthly. Prices exclude VAT.
-- A forecasting service for online brands: 13-week and 12-month forecasts from Xero or QuickBooks beside Shopify,
-  refreshed overnight and checked against actuals every night.
-  This pack's `weekly_actuals_score` is a check a person runs on their own closed weeks: it scores the 13-week
-  forecast against actual receipts, payments and bank balances, week by week and together, and refuses actuals that
-  do not line up. It does not fetch actuals or run nightly. `reforecast_from_actuals` then rolls the forecast past
-  the closed weeks from their actual closing balance and places open invoices again from the latest payments.
-- A small-business plugin collection's cash flow snapshot skill: a 30/60/90-day forecast that times each customer's
-  receipts by its mean days from invoice to receipt, using every customer's mean below 3 payments. It is written
-  instructions without scripts.
-- An MIT-licensed skills collection's cash flow forecaster: a 13-week method that places open invoices at their due
-  date plus the customer's historical lateness and lists levers for each crunch week. It is a single instruction file
-  and names no Australian tax dates.
-
-Read on 15 November 2026: Xero Central's [Export a budget](https://central.xero.com/s/article/Export-a-budget) article
-says New Budgets, in early access, cannot export a budget; Budget Manager exports CSV, Excel or Google Sheets files.
-This pack reads a Budget Manager budget from Xero's Accounting API (`pyfpa.io.xero_budget`, see the
-[Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries it through the BAS timing above. The
-reader is built to Xero's published API documentation and has not been run against a live Xero organisation. The
-13-week plugin above does not mention a budget as an input in its README or skill.
+- **Offline receipts, actions and reforecasting:** `predicted_receipts` times open invoices from observed customer payment lag, `risk_week_actions` ranks debtor-chase and payment-timing levers (never facility draws), `weekly_actuals_score` checks closed weeks against actuals, and `reforecast_from_actuals` rolls the 13-week forecast forward without nightly polling or live bank feeds.
+- **Budgets and BAS timing:** `pyfpa.io.xero_budget` reads exported Xero Budget Manager files (see the [Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries them through BAS, PAYG, FBT and public-holiday-adjusted payment dates (`built to published API documentation; not run against a live Xero organisation`).
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>

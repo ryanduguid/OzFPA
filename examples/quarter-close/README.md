@@ -2,7 +2,7 @@
 
 The included fabricated case starts on 30 September 2026 and closes October, November and December. It retains original document IDs, linked credits, unique bank settlements and explicit dated plans. It is separate from the Lumbridge forecast.
 
-From the au-fpa-pack checkout:
+From the OzFPA checkout:
 
 ```powershell
 uv run --locked python examples/quarter-close/quarter.py --output path/to/new-quarter
