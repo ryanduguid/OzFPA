@@ -1,6 +1,6 @@
 # Grant workpapers to restricted cash
 
-Build the fabricated workpaper with the grant workpapers CLI, `apps/grant-acquittal-workpapers/grant_workpaper.py` in Accounting Review Pipeline, then run this consumer from the au-fpa-pack checkout:
+Build the fabricated workpaper with the grant workpapers CLI, `apps/grant-acquittal-workpapers/grant_workpaper.py` in Accounting Review Pipeline, then run this consumer from the OzFPA checkout:
 
 ```powershell
 uv run --locked python examples/restricted-cash/grant_cash.py --workpaper path/to/workpaper.json --workpaper-sha256 EXPECTED_SHA256 --plan examples/restricted-cash/grant-plan.json

@@ -1,6 +1,6 @@
 # Supplier invoices to planned cash
 
-Run from the au-fpa-pack checkout:
+Run from the OzFPA checkout:
 
 ```powershell
 uv run --locked python examples/creditor-cash/supplier_cash.py

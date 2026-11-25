@@ -1,4 +1,4 @@
-# au-fpa-pack agent instructions
+# OzFPA agent instructions
 
 This repository adds Australian accounting workflows to the openfpa workbench.
 The distribution is `au-fpa-pack`; `pyfpa` and `openfpa` remain the import and CLI names.
