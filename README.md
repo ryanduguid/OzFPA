@@ -122,7 +122,7 @@ OzFPA is built for local Australian cash, GST, BAS and tax-timing modelling from
 
 - [openfpa](https://github.com/JeffBrines/openfpa): the upstream workbench, for work that needs no Australian rules.
 - **Offline receipts, actions and reforecasting:** `predicted_receipts` times open invoices from observed customer payment lag, `risk_week_actions` ranks debtor-chase and payment-timing levers (never facility draws), `weekly_actuals_score` checks closed weeks against actuals, and `reforecast_from_actuals` rolls the 13-week forecast forward without nightly polling or live bank feeds.
-- **Budgets and BAS timing:** `pyfpa.io.xero_budget` reads exported Xero Budget Manager files (see the [Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries them through BAS, PAYG, FBT and public-holiday-adjusted payment dates (`built to published API documentation; not run against a live Xero organisation`).
+- **Budgets and BAS timing:** `pyfpa.io.xero_budget` reads 2 saved JSON responses from Xero's Accounting API (`GET /Budgets/{BudgetID}` and `GET /Accounts`, without credentials or network calls; see the [Xero recipe](docs/recipes/xero-au.md#budget-from-the-xero-api)) and carries them through BAS, PAYG, FBT and public-holiday-adjusted payment dates (built to published API documentation; not run against a live Xero organisation).
 
 <details>
 <summary>Kernel packages, upstream workbench and reference</summary>
