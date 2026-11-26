@@ -31,6 +31,7 @@ openfpa experiment-list
 openfpa context-pack
 openfpa onboarding-render
 openfpa model-export
+openfpa mcp-serve
 openfpa model-assumptions
 ```
 
@@ -146,3 +147,24 @@ The generated `extract_live()` function intentionally fails until the agent
 implements host-authenticated access. After the live path has its own
 fixture-backed tests and safe failure behaviour, register the recurring command
 with `entrypoint-register --kind connector`.
+
+### Local MCP server
+
+`openfpa mcp-serve <folder>` speaks the Model Context Protocol over stdin and
+stdout (newline-delimited JSON-RPC 2.0, the initialize handshake of revisions
+2024-11-05 to 2025-11-25) until stdin closes. It opens no network port. Every
+path a tool reads or writes must resolve inside `<folder>`: an absolute path, a
+`..` that climbs out or a symbolic link that leads out is refused.
+
+- `cash13_workbook` takes `config` (a Cash13Config YAML file) and `out` (an
+  `.xlsx` path), writes the 13-week direct-method forecast with
+  `forecast_to_excel` and returns the cash trough, its week, closing cash and
+  every week below zero (`runway_summary`).
+- `variance_summary` takes `model` and `actual` objects of line name to amount
+  and an optional `tolerance` (default 0.01) and returns `reconcile`'s lines,
+  the lines outside tolerance, the line with the largest absolute variance and
+  the net variance. A percentage against a zero actual is `null`.
+
+A tool that refuses its arguments returns a result with `isError: true` and the
+reason, so the agent can correct the call. Register it with a client as a stdio
+server whose command is `openfpa mcp-serve /path/to/folder`.
