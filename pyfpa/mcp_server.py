@@ -12,7 +12,7 @@ import math
 from collections.abc import Callable, Mapping
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, NoReturn, TextIO
 
 import yaml
 
@@ -178,11 +178,12 @@ def _call_tool(root: Path, message_id: object, params: Mapping[str, Any]) -> dic
         return _error(message_id, _INVALID_PARAMS, "arguments must be an object")
     try:
         result = TOOLS[name][1](root, arguments)
+        # A result JSON cannot carry (a total that overflowed to infinity) is a tool failure too.
+        text = json.dumps(result, allow_nan=False)
     except (ValueError, OverflowError, OSError, yaml.YAMLError) as exc:
         # Tool failures go back as results the model can read and act on.
         return {"jsonrpc": "2.0", "id": message_id, "result": {
             "content": [{"type": "text", "text": str(exc)}], "isError": True}}
-    text = json.dumps(result, allow_nan=False)
     return {"jsonrpc": "2.0", "id": message_id, "result": {
         "content": [{"type": "text", "text": text}], "structuredContent": result}}
 
@@ -216,6 +217,19 @@ def handle(root: Path, message: object) -> dict[str, Any] | None:
     return _error(message_id, _METHOD_NOT_FOUND, f"method not found: {method}")
 
 
+def _finite(text: str) -> float:
+    """Parse a JSON number, refusing one that overflows to infinity (1e400)."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError(f"number out of range: {text}")
+    return value
+
+
+def _not_a_number(name: str) -> NoReturn:
+    """Refuse the NaN and Infinity literals Python's parser accepts but JSON does not."""
+    raise ValueError(f"{name} is not JSON")
+
+
 def serve(root: str | Path, stdin: TextIO, stdout: TextIO) -> None:
     """Answer messages from ``stdin`` until it closes, confined to ``root``."""
     folder = Path(root).expanduser().resolve()
@@ -225,8 +239,8 @@ def serve(root: str | Path, stdin: TextIO, stdout: TextIO) -> None:
         if not raw.strip():
             continue
         try:
-            message = json.loads(raw)
-        except json.JSONDecodeError:
+            message = json.loads(raw, parse_float=_finite, parse_constant=_not_a_number)
+        except ValueError:  # bad JSON, a non-finite number or an integer past Python's digit limit
             reply: dict[str, Any] | None = _error(None, _PARSE_ERROR, "message is not valid JSON")
         else:
             reply = handle(folder, message)

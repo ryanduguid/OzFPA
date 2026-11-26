@@ -222,6 +222,23 @@ def test_malformed_calls_leave_the_session_running(folder):
     assert replies[4]["result"] == {}
 
 
+def test_numbers_json_cannot_echo_leave_the_session_running(folder):
+    replies = _session(
+        folder,
+        '{"jsonrpc": "2.0", "id": 1e400, "method": "ping"}',
+        '{"jsonrpc": "2.0", "id": NaN, "method": "ping"}',
+        '{"jsonrpc": "2.0", "id": ' + "1" * 5000 + ', "method": "ping"}',
+        {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {
+            "name": "variance_summary",
+            "arguments": {"model": {"a": 1e308, "b": 1e308}, "actual": {"a": 0, "b": 0}}}},
+        {"jsonrpc": "2.0", "id": 5, "method": "ping"},
+    )
+    assert [r["id"] for r in replies] == [None, None, None, 4, 5]
+    assert [r["error"]["code"] for r in replies[:3]] == [-32700] * 3
+    assert replies[3]["result"]["isError"] is True
+    assert replies[4]["result"] == {}
+
+
 def test_serve_refuses_a_missing_folder(tmp_path):
     with pytest.raises(ValueError, match="does not exist"):
         serve(tmp_path / "nope", io.StringIO(""), io.StringIO())
