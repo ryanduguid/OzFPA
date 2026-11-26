@@ -9,6 +9,11 @@ from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.worksheet import Worksheet
 
 MONEY_FORMAT = "#,##0"
+# Model outputs: plain commas under 100,000, K from 100,000 and M from 1,000,000.
+# Excel allows 2 conditions in a format, so negatives take the third section and
+# show plain commas. The cell value is unchanged; only its display is scaled.
+AMOUNT_KM_FORMAT = '[>=1000000]#,##0.0,,"M";[>=100000]#,##0,"K";#,##0'
+DATE_FORMAT = "dd/mm/yyyy"
 PERCENT_FORMAT = "0.0%"
 DAYS_FORMAT = "0.0"
 # Editable drivers carry the spreadsheet convention for inputs: blue font.

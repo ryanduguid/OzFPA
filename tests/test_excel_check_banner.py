@@ -160,3 +160,38 @@ def test_a_sheet_without_checks_is_refused():
     wb.active.cell(row=2, column=1, value="revenue")
     with pytest.raises(ValueError, match="no check_ rows"):
         add_checks_sheet(wb, wb.active, first_col=2, last_col=3, banners=[])
+
+
+def test_model_amounts_use_k_and_m_formats_and_inputs_keep_commas(tmp_path):
+    from pyfpa.excel.toolkit import AMOUNT_KM_FORMAT, MONEY_FORMAT
+
+    assert AMOUNT_KM_FORMAT == '[>=1000000]#,##0.0,,"M";[>=100000]#,##0,"K";#,##0'  # nosec B101: pytest outcome assertion
+    out = tmp_path / "m.xlsx"
+    model_to_excel(EntityConfig(**_BASE), out)
+    wb = load_workbook(out)
+    model = wb["Model"]
+    labels = {model.cell(row=r, column=1).value: r for r in range(2, model.max_row + 1)}
+    for label in ("revenue", "ending_cash", "nol_opening", "interest_1", "gross_profit"):
+        formats = {model.cell(row=labels[label], column=c).number_format for c in range(2, 8)}
+        assert formats == {AMOUNT_KM_FORMAT}, label  # nosec B101: pytest outcome assertion
+    assumptions = wb["Assumptions"]
+    money = {cell.number_format for row in assumptions.iter_rows(min_row=2) for cell in row
+             if isinstance(cell.value, float) and cell.value >= 100_000}
+    assert money == {MONEY_FORMAT}  # nosec B101: pytest outcome assertion
+
+
+def test_inputs_last_updated_stamp_sits_beside_the_status(tmp_path):
+    from datetime import date, datetime
+
+    from pyfpa.excel.toolkit import DATE_FORMAT
+
+    out = tmp_path / "m.xlsx"
+    model_to_excel(EntityConfig(**_BASE), out, inputs_updated=date(2026, 11, 26))
+    ws = load_workbook(out)["Assumptions"]
+    assert ws["C1"].value == "Inputs last updated"  # nosec B101: pytest outcome assertion
+    assert ws["D1"].value == datetime(2026, 11, 26)  # nosec B101: pytest outcome assertion
+    assert ws["D1"].number_format == DATE_FORMAT == "dd/mm/yyyy"  # nosec B101: pytest outcome assertion
+    assert ws["B1"].value == "=Checks!$B$1"  # nosec B101: pytest outcome assertion
+
+    model_to_excel(EntityConfig(**_BASE), out)
+    assert load_workbook(out)["Assumptions"]["D1"].value == "not given"  # nosec B101: pytest outcome assertion

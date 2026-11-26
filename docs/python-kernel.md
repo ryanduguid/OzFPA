@@ -255,7 +255,12 @@ Checks sheet. The Checks sheet takes the largest absolute monthly value of every
 show: it names the first failing check or says all pass. Each schedule total
 (revenue, operating expenses, interest and principal) has a `check_*_parts` row
 that sums its lines in the other form, so an overtyped total or an edited range
-fails on whichever tab is open. `pyfpa.excel.toolkit.add_checks_sheet` builds the
+fails on whichever tab is open. Assumptions!D1 stamps the date the inputs were last
+updated (`inputs_updated=`; `openfpa model-export` passes the configuration file's
+modification date). Model amounts use `AMOUNT_KM_FORMAT`: plain commas under
+100,000, K from 100,000 and M from 1,000,000 (negatives keep plain commas); only
+the display is scaled, and the Assumptions inputs keep plain commas.
+`pyfpa.excel.toolkit.add_checks_sheet` builds the
 same roll-up for a company exporter. The `verify_workbook`
 function evaluates the workbook with a Python formula engine and compares every line
 and month to `cashflow_from_config`, so the workbook is verified against the engine
