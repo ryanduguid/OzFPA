@@ -78,7 +78,8 @@ def command_mcp_serve(args: argparse.Namespace) -> int:
     if not root.is_dir():
         return _failure("mcp-serve", root, "invalid_folder", f"server folder does not exist: {root}")
     # MCP's stdio transport is UTF-8 with bare newlines, whatever the platform's defaults.
-    cast(io.TextIOWrapper, sys.stdin).reconfigure(encoding="utf-8")
+    # Undecodable bytes reach serve as surrogates, which it answers as a parse error.
+    cast(io.TextIOWrapper, sys.stdin).reconfigure(encoding="utf-8", errors="surrogateescape")
     cast(io.TextIOWrapper, sys.stdout).reconfigure(encoding="utf-8", newline="\n")
     serve(root, sys.stdin, sys.stdout)
     return 0

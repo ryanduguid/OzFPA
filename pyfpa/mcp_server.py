@@ -247,8 +247,10 @@ def serve(root: str | Path, stdin: TextIO, stdout: TextIO) -> None:
         if not raw.strip():
             continue
         try:
-            # Bad JSON, a non-finite number, an integer past Python's digit limit
-            # or nesting past the recursion limit.
+            # Bytes that were not UTF-8 (surrogates fail to encode), bad JSON, a
+            # non-finite number, an integer past Python's digit limit or nesting
+            # past the recursion limit.
+            raw.encode("utf-8")
             message = json.loads(raw, parse_float=_finite, parse_constant=_not_a_number)
         except (ValueError, RecursionError):
             line = json.dumps(_error(None, _PARSE_ERROR, "message is not valid JSON"))

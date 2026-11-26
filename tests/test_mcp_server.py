@@ -267,15 +267,24 @@ def test_nesting_and_odd_ids_leave_the_session_running(folder, monkeypatch):
         serve(folder, io.StringIO('{"jsonrpc": "2.0", "id": 8, "method": "ping"}\n'), out)
     assert json.loads(out.getvalue())["error"]["code"] == -32700
 
-    def broken(root, message):
-        raise RuntimeError("boom")
+    real_handle, calls = mcp_server.handle, []
 
-    monkeypatch.setattr(mcp_server, "handle", broken)
+    def broken_once(root, message):
+        calls.append(message)
+        if len(calls) == 1:
+            raise RuntimeError("boom")
+        return real_handle(root, message)
+
+    monkeypatch.setattr(mcp_server, "handle", broken_once)
     (crash, again) = _session(folder, {"jsonrpc": "2.0", "id": 9, "method": "ping"},
                               {"jsonrpc": "2.0", "id": 10, "method": "ping"})
     assert crash == {"jsonrpc": "2.0", "id": 9,
                      "error": {"code": -32603, "message": "internal error: boom"}}
-    assert again["id"] == 10
+    assert again == {"jsonrpc": "2.0", "id": 10, "result": {}}
+
+    surrogate = _session(folder, '{"jsonrpc": "2.0", "id": 11, "method": "\udcff"}',
+                         {"jsonrpc": "2.0", "id": 12, "method": "ping"})
+    assert [r.get("error", {}).get("code") for r in surrogate] == [-32700, None]
 
 
 def test_serve_refuses_a_missing_folder(tmp_path):
@@ -319,12 +328,15 @@ def test_stdio_session_in_a_real_process(folder):
     ]
     done = subprocess.run(  # nosec B603: fixed argv, this interpreter, no shell
         [sys.executable, "-m", "pyfpa.cli", "mcp-serve", str(folder)],
-        input="".join(json.dumps(m) + "\n" for m in messages).encode(),
+        # A line that is not UTF-8 gets a parse error and the session carries on.
+        input=b'{"jsonrpc": "2.0", "id": 0, "method": "\xff"}\n'
+        + "".join(json.dumps(m) + "\n" for m in messages).encode(),
         capture_output=True, timeout=120, cwd=ROOT, check=True,
     )
     replies = [json.loads(line) for line in done.stdout.decode("utf-8").splitlines()]
-    assert [r["id"] for r in replies] == [1, 2, 3]
-    assert replies[0]["result"]["protocolVersion"] == "2025-11-25"
-    assert replies[1]["result"]["structuredContent"]["workbook"] == "cash13.xlsx"
-    assert replies[2]["result"]["structuredContent"]["outside_tolerance"] == ["cash"]
+    assert [r["id"] for r in replies] == [None, 1, 2, 3]
+    assert replies[0]["error"]["code"] == -32700
+    assert replies[1]["result"]["protocolVersion"] == "2025-11-25"
+    assert replies[2]["result"]["structuredContent"]["workbook"] == "cash13.xlsx"
+    assert replies[3]["result"]["structuredContent"]["outside_tolerance"] == ["cash"]
     assert (folder / "cash13.xlsx").exists()
