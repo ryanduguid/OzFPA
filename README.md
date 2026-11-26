@@ -93,6 +93,21 @@ Read the [assumptions and limits](examples/lumbridge-services/README.md) before 
 
 On Python 3.14 or newer, run `python -m pip install au-fpa-pack`. Never install the PyPI distribution named `pyfpa`: it is an unrelated project that also installs a top-level `pyfpa` package.
 
+### Connect a local MCP client
+
+Install the release that includes the stdio server with
+`python -m pip install au-fpa-pack==0.8.1`. Configure the client's command
+as `openfpa` and its arguments as `mcp-serve` and the absolute path to an
+existing working folder. To launch the server manually from that folder,
+run `openfpa mcp-serve .`. The client sends one JSON-RPC message per line
+on standard input.
+
+Version 0.8.1 negotiates `2025-11-25`, `2025-06-18`, `2025-03-26` and
+`2024-11-05` through `initialize`. An unknown version receives an offer of
+`2025-11-25`. After initialisation, `tools/list` exposes `cash13_workbook`,
+which writes a 13-week cash forecast workbook under the working folder, and
+`variance_summary`, which summarises supplied budget and actual figures.
+
 ## Skills
 
 The OzFPA [`skills/`](skills/) folder holds 17 skills. Sixteen are the pack's own, grouped by what
