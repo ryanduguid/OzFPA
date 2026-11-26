@@ -30,6 +30,7 @@ _PARSE_ERROR = -32700
 _INVALID_REQUEST = -32600
 _METHOD_NOT_FOUND = -32601
 _INVALID_PARAMS = -32602
+_INTERNAL_ERROR = -32603
 
 
 class ToolError(ValueError):
@@ -188,15 +189,22 @@ def _call_tool(root: Path, message_id: object, params: Mapping[str, Any]) -> dic
         "content": [{"type": "text", "text": text}], "structuredContent": result}}
 
 
+def _request_id(message: object) -> str | int | None:
+    """The message's id when it is one MCP allows (a string or an integer), else None."""
+    found = message.get("id") if isinstance(message, dict) else None
+    return found if isinstance(found, (str, int)) and not isinstance(found, bool) else None
+
+
 def handle(root: Path, message: object) -> dict[str, Any] | None:
     """Answer one decoded JSON-RPC message; notifications get no answer."""
     if not isinstance(message, dict) or message.get("jsonrpc") != "2.0" \
             or not isinstance(message.get("method"), str):
-        return _error(message.get("id") if isinstance(message, dict) else None,
-                      _INVALID_REQUEST, "not a JSON-RPC 2.0 request")
+        return _error(_request_id(message), _INVALID_REQUEST, "not a JSON-RPC 2.0 request")
     if "id" not in message:
         return None
     message_id, method = message["id"], message["method"]
+    if _request_id(message) is None:
+        return _error(None, _INVALID_REQUEST, "id must be a string or an integer")
     params = message.get("params", {})
     if not isinstance(params, dict):
         return _error(message_id, _INVALID_PARAMS, "params must be an object")
@@ -239,11 +247,19 @@ def serve(root: str | Path, stdin: TextIO, stdout: TextIO) -> None:
         if not raw.strip():
             continue
         try:
+            # Bad JSON, a non-finite number, an integer past Python's digit limit
+            # or nesting past the recursion limit.
             message = json.loads(raw, parse_float=_finite, parse_constant=_not_a_number)
-        except ValueError:  # bad JSON, a non-finite number or an integer past Python's digit limit
-            reply: dict[str, Any] | None = _error(None, _PARSE_ERROR, "message is not valid JSON")
+        except (ValueError, RecursionError):
+            line = json.dumps(_error(None, _PARSE_ERROR, "message is not valid JSON"))
         else:
-            reply = handle(folder, message)
-        if reply is not None:
-            stdout.write(json.dumps(reply, allow_nan=False) + "\n")
-            stdout.flush()
+            try:
+                reply = handle(folder, message)
+                if reply is None:
+                    continue
+                line = json.dumps(reply, allow_nan=False)
+            except Exception as exc:
+                # One message must not end the session: answer it as an internal error.
+                line = json.dumps(_error(_request_id(message), _INTERNAL_ERROR, f"internal error: {exc}"))
+        stdout.write(line + "\n")
+        stdout.flush()

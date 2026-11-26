@@ -93,12 +93,14 @@ select = ["BLE", "E4", "E7", "E9", "F", "I"]
 # month, each capturing the loop variables as default arguments. Named
 # functions would move that capture away from where it is read.
 "examples/lumbridge-services/models/generated/lumbridge.py" = ["E731"]
-# BLE001: the CLI and doctor boundaries deliberately turn any failure into a
-# structured JSON result instead of a traceback, which is what a blind
-# `except Exception` is for. Everywhere else the rule stays on.
+# BLE001: the CLI, doctor and MCP server boundaries deliberately turn any failure
+# into a structured JSON result instead of a traceback (the server so one bad
+# message cannot end its session), which is what a blind `except Exception` is
+# for. Everywhere else the rule stays on.
 "pyfpa/cli.py" = ["BLE001"]
 "pyfpa/cli_commands/*.py" = ["BLE001"]
 "pyfpa/memory/diagnostics.py" = ["BLE001"]
+"pyfpa/mcp_server.py" = ["BLE001"]
 
 [tool.mypy]
 files = ["pyfpa", "tests"]

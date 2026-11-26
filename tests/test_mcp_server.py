@@ -239,6 +239,33 @@ def test_numbers_json_cannot_echo_leave_the_session_running(folder):
     assert replies[4]["result"] == {}
 
 
+def test_nesting_and_odd_ids_leave_the_session_running(folder, monkeypatch):
+    deep = "[" * 100_000 + "]" * 100_000
+    nested_id = '{"jsonrpc": "2.0", "id": ' + "[" * 900 + "]" * 900 + ', "method": "ping"}'
+    replies = _session(
+        folder,
+        deep,
+        nested_id,
+        {"jsonrpc": "2.0", "id": True, "method": "ping"},
+        {"jsonrpc": "2.0", "id": 1.5, "method": "ping"},
+        {"jsonrpc": "2.0", "id": {"a": 1}, "method": 3},
+        {"jsonrpc": "2.0", "id": "s", "method": "ping"},
+    )
+    assert [r.get("error", {}).get("code") for r in replies] == [
+        -32700, -32600, -32600, -32600, -32600, None]
+    assert [r["id"] for r in replies] == [None, None, None, None, None, "s"]
+
+    def broken(root, message):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(mcp_server, "handle", broken)
+    (crash, again) = _session(folder, {"jsonrpc": "2.0", "id": 9, "method": "ping"},
+                              {"jsonrpc": "2.0", "id": 10, "method": "ping"})
+    assert crash == {"jsonrpc": "2.0", "id": 9,
+                     "error": {"code": -32603, "message": "internal error: boom"}}
+    assert again["id"] == 10
+
+
 def test_serve_refuses_a_missing_folder(tmp_path):
     with pytest.raises(ValueError, match="does not exist"):
         serve(tmp_path / "nope", io.StringIO(""), io.StringIO())
