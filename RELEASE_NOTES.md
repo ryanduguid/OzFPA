@@ -1,3 +1,22 @@
+# v0.8.1
+
+Version 0.8.0 was tagged and has a GitHub release, but its PyPI publish failed, so it was never on PyPI. This is the
+first PyPI release with the 0.8.0 changes below as well as these.
+
+Includes PRs #372-#376.
+
+Added:
+
+- `openfpa mcp-serve <folder>` runs a local stdio MCP server over the 13-week cash flow and variance summary. It opens
+  no network listener, and every path a tool reads or writes must resolve inside the folder named at start-up (#376).
+- Model Excel exports show amounts in K and M formats and the Inputs sheet carries a last-updated stamp (#375).
+
+Changed:
+
+- Workflows aligned, `cargo-deny` wired in and docs updated (#372); 3 development dependency bumps, including `numpy`
+  2.5.5 and `diff-cover` 11.0.3, in the fuzz and dev pins (#373); docs replace the Alternatives comparisons and stale checkout
+  references (#374).
+
 # v0.8.0
 
 Includes PRs #349-#356 and #362-#369 (#370 updates `.github/workflows/release.yml`
