@@ -171,14 +171,14 @@ def _error(message_id: object, code: int, message: str) -> dict[str, Any]:
 
 def _call_tool(root: Path, message_id: object, params: Mapping[str, Any]) -> dict[str, Any]:
     name = params.get("name")
-    if name not in TOOLS:
+    if not isinstance(name, str) or name not in TOOLS:
         return _error(message_id, _INVALID_PARAMS, f"unknown tool: {name!r}")
     arguments = params.get("arguments", {})
     if not isinstance(arguments, dict):
         return _error(message_id, _INVALID_PARAMS, "arguments must be an object")
     try:
         result = TOOLS[name][1](root, arguments)
-    except (ValueError, OSError, yaml.YAMLError) as exc:
+    except (ValueError, OverflowError, OSError, yaml.YAMLError) as exc:
         # Tool failures go back as results the model can read and act on.
         return {"jsonrpc": "2.0", "id": message_id, "result": {
             "content": [{"type": "text", "text": str(exc)}], "isError": True}}

@@ -121,8 +121,7 @@ def test_cash13_tool_writes_the_workbook_and_returns_the_runway(folder):
     ],
 )
 def test_cash13_tool_refuses_paths_outside_the_folder_and_bad_files(folder, arguments, message):
-    result = _call(folder / "inner" if "../" in arguments.get("config", "") else folder,
-                   "cash13_workbook", arguments) if False else _call(folder, "cash13_workbook", arguments)
+    result = _call(folder, "cash13_workbook", arguments)
     assert result["isError"] is True
     assert message in result["content"][0]["text"]
     assert not list(folder.glob("*.xlsx"))
@@ -203,6 +202,24 @@ def test_variance_summary_refuses_bad_arguments(folder, arguments, message):
     result = _call(folder, "variance_summary", arguments)
     assert result["isError"] is True
     assert message in result["content"][0]["text"]
+
+
+def test_malformed_calls_leave_the_session_running(folder):
+    huge = "1" + "0" * 400  # a JSON integer too large for a float
+    replies = _session(
+        folder,
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": ["variance_summary"]}},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": {"a": 1}}},
+        '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "variance_summary",'
+        f' "arguments": {{"model": {{"a": {huge}}}, "actual": {{"a": 1}}}}}}}}',
+        '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "variance_summary",'
+        f' "arguments": {{"model": {{"a": 1}}, "actual": {{"a": 1}}, "tolerance": {huge}}}}}}}',
+        {"jsonrpc": "2.0", "id": 5, "method": "ping"},
+    )
+    assert [r["id"] for r in replies] == [1, 2, 3, 4, 5]
+    assert [r["error"]["code"] for r in replies[:2]] == [-32602, -32602]
+    assert [r["result"]["isError"] for r in replies[2:4]] == [True, True]
+    assert replies[4]["result"] == {}
 
 
 def test_serve_refuses_a_missing_folder(tmp_path):
