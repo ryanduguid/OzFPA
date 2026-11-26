@@ -25,7 +25,11 @@ from pyfpa.cli_commands.lineage import (
     command_source_profile,
     command_source_register,
 )
-from pyfpa.cli_commands.reporting import command_model_assumptions, command_model_export
+from pyfpa.cli_commands.reporting import (
+    command_mcp_serve,
+    command_model_assumptions,
+    command_model_export,
+)
 from pyfpa.cli_helpers import (
     JsonArgumentParser,
     _failure,
@@ -520,6 +524,13 @@ def build_parser() -> JsonArgumentParser:
     model_export_parser.add_argument("--config", required=True)
     model_export_parser.add_argument("--out", required=True)
     model_export_parser.set_defaults(handler=command_model_export)
+
+    mcp_parser = subparsers.add_parser(
+        "mcp-serve",
+        parents=[common],
+        help="Serve the 13-week cash flow and variance tools over stdio MCP, confined to the folder",
+    )
+    mcp_parser.set_defaults(handler=command_mcp_serve)
 
     assumptions_parser = subparsers.add_parser(
         'model-assumptions', parents=[common], help='Review effective model assumptions and defaults as JSON',

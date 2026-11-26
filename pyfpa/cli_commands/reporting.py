@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
+import sys
 from datetime import date
 from pathlib import Path
+from typing import cast
 
 import yaml
 
@@ -65,3 +68,17 @@ def command_model_export(args: argparse.Namespace) -> int:
             "entity": cfg.name,
         },
     )
+
+
+def command_mcp_serve(args: argparse.Namespace) -> int:
+    """Serve the MCP tools over stdin and stdout until stdin closes."""
+    from pyfpa.mcp_server import serve
+
+    root = _root(args.path)
+    if not root.is_dir():
+        return _failure("mcp-serve", root, "invalid_folder", f"server folder does not exist: {root}")
+    # MCP's stdio transport is UTF-8 with bare newlines, whatever the platform's defaults.
+    cast(io.TextIOWrapper, sys.stdin).reconfigure(encoding="utf-8")
+    cast(io.TextIOWrapper, sys.stdout).reconfigure(encoding="utf-8", newline="\n")
+    serve(root, sys.stdin, sys.stdout)
+    return 0
