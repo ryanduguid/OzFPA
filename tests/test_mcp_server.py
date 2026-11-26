@@ -251,9 +251,21 @@ def test_nesting_and_odd_ids_leave_the_session_running(folder, monkeypatch):
         {"jsonrpc": "2.0", "id": {"a": 1}, "method": 3},
         {"jsonrpc": "2.0", "id": "s", "method": "ping"},
     )
-    assert [r.get("error", {}).get("code") for r in replies] == [
-        -32700, -32600, -32600, -32600, -32600, None]
+    codes = [r.get("error", {}).get("code") for r in replies]
+    # Whether 100,000 levels exceed the parser's stack depends on the platform's
+    # stack size: a parse error where they do, an invalid request where they do not.
+    assert codes[0] in (-32700, -32600)
+    assert codes[1:] == [-32600, -32600, -32600, -32600, None]
     assert [r["id"] for r in replies] == [None, None, None, None, None, "s"]
+
+    def too_deep(*args, **kwargs):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(json, "loads", too_deep)
+        out = io.StringIO()
+        serve(folder, io.StringIO('{"jsonrpc": "2.0", "id": 8, "method": "ping"}\n'), out)
+    assert json.loads(out.getvalue())["error"]["code"] == -32700
 
     def broken(root, message):
         raise RuntimeError("boom")
