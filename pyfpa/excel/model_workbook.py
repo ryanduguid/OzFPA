@@ -8,6 +8,7 @@ Formula vocabulary: arithmetic, ^, SUM, MIN, MAX, IF only.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,6 +20,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 from pyfpa.config._snapshot import _validated_snapshot
 from pyfpa.config.schemas import DebtInstrument, EntityConfig
 from pyfpa.excel.toolkit import (
+    AMOUNT_KM_FORMAT,
+    DATE_FORMAT,
     DAYS_FORMAT,
     MONEY_FORMAT,
     PERCENT_FORMAT,
@@ -327,7 +330,7 @@ def _build_debt_block(
         bal_row = alloc.alloc()
         alloc._ws.cell(row=bal_row, column=1, value=f"debt_balance_{k + 1}")
         alloc.write_cells(bal_row, _debt_balance_formulas(inst, dref, bal_row,
-                                                          alloc._n), MONEY_FORMAT)
+                                                          alloc._n), AMOUNT_KM_FORMAT)
 
         int_row = alloc.emit_cells(f"interest_{k + 1}",
                                    _debt_interest_formulas(dref, bal_row,
@@ -375,17 +378,17 @@ def _build_nol_block(
         nol_o = ("=open_nol" if m_idx == 0
                  else f"={get_column_letter(_MODEL_START_COL + m_idx - 1)}{nol_close_row}")
         alloc._ws.cell(row=nol_open_row, column=_MODEL_START_COL + m_idx,
-                       value=nol_o).number_format = MONEY_FORMAT
+                       value=nol_o).number_format = AMOUNT_KM_FORMAT
         # nol_used
         alloc._ws.cell(
             row=nol_used_row, column=_MODEL_START_COL + m_idx,
             value=f"=MIN({cl}{nol_open_row},MAX(0,{cl}{r_pretax}))",
-        ).number_format = MONEY_FORMAT
+        ).number_format = AMOUNT_KM_FORMAT
         # nol_closing
         alloc._ws.cell(
             row=nol_close_row, column=_MODEL_START_COL + m_idx,
             value=f"={cl}{nol_open_row}-{cl}{nol_used_row}",
-        ).number_format = MONEY_FORMAT
+        ).number_format = AMOUNT_KM_FORMAT
     return nol_open_row, nol_used_row, nol_close_row
 
 
@@ -434,7 +437,7 @@ def _build_model(
     ws = wb["Model"]
     idx = month_index(cfg.start_month, cfg.horizon_months)
     n = cfg.horizon_months
-    alloc = _RowAlloc(ws, n_cols=n, default_fmt=MONEY_FORMAT)
+    alloc = _RowAlloc(ws, n_cols=n, default_fmt=AMOUNT_KM_FORMAT)
 
     _emit_header(ws, idx)
 
@@ -494,7 +497,7 @@ def _build_model(
 
     end_row = alloc.alloc()
     ws.cell(row=end_row, column=1, value="ending_cash")
-    alloc.write_cells(end_row, _ending_cash_formulas(n, r_chg, end_row), MONEY_FORMAT)
+    alloc.write_cells(end_row, _ending_cash_formulas(n, r_chg, end_row), AMOUNT_KM_FORMAT)
 
     # Self-check rows: each evaluates to zero while the model is intact.
     alloc.emit_fn(
@@ -570,11 +573,16 @@ def _parts_check(total_row: int, parts: list[int], summed: bool) -> _RowTemplate
     return t
 
 
-def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
+def model_to_excel(
+    cfg: EntityConfig, path: str | Path, *, inputs_updated: date | None = None,
+) -> None:
     """Compile an EntityConfig into a live-formula workbook at `path`.
 
     Model!A1 and Assumptions!B1 show the Checks sheet's status: it names the
     first check_ row that is non-zero beyond its tolerance, or says all pass.
+    Assumptions!D1 stamps ``inputs_updated``, the date the inputs were last
+    changed, or says it was not given. Model amounts read in K from 100,000 and
+    in M from 1,000,000; the Assumptions inputs keep plain commas.
 
     The Python engine runs first and its ValueError propagates before anything is
     written, so the workbook never shows a forecast the engine refuses, such as
@@ -601,6 +609,12 @@ def model_to_excel(cfg: EntityConfig, path: str | Path) -> None:
         banners=[(wb["Model"], "A1"), (ws_assump, "B1")],
         allowances={"check_direct_cash": "direct_cash_rounding"},
     )
+    ws_assump["C1"] = "Inputs last updated"
+    if inputs_updated is None:
+        ws_assump["D1"] = "not given"
+    else:
+        ws_assump["D1"] = inputs_updated
+        ws_assump["D1"].number_format = DATE_FORMAT
 
     with staged_output(path) as staged:
         with staged.open("wb") as stream:

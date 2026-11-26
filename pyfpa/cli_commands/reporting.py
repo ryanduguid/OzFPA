@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -48,7 +49,9 @@ def command_model_export(args: argparse.Namespace) -> int:
             raise ValueError("model export requires an .xlsx output path")
         if out_path.exists() and out_path.samefile(args.config):
             raise ValueError("model export must not overwrite the source configuration")
-        model_to_excel(cfg, out_path)
+        # The configuration file's own modification date is when the inputs last changed.
+        inputs_updated = date.fromtimestamp(Path(args.config).stat().st_mtime)
+        model_to_excel(cfg, out_path, inputs_updated=inputs_updated)
     except Exception as exc:
         return _failure("model-export", root, "export_failed", str(exc))
     return _success(
@@ -58,6 +61,7 @@ def command_model_export(args: argparse.Namespace) -> int:
             "workbook_path": str(out_path),
             "sheets": ["Assumptions", "Model", "Checks"],
             "config": str(args.config),
+            "inputs_updated": inputs_updated.isoformat(),
             "entity": cfg.name,
         },
     )

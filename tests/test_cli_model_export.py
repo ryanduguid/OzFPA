@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -52,6 +53,9 @@ def test_model_export_writes_xlsx_with_both_sheets(tmp_path, run_cli, existing, 
     assert out_path.exists()
     wb = load_workbook(out_path)
     assert set(wb.sheetnames) == {"Assumptions", "Model", "Checks"}
+    stamped = date.fromtimestamp(config_path.stat().st_mtime)
+    assert data["inputs_updated"] == stamped.isoformat()
+    assert wb["Assumptions"]["D1"].value.date() == stamped
     wb.close()
     assert config_path.read_bytes() == before
 
