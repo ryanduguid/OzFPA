@@ -150,9 +150,9 @@ jobs:
         if: matrix.python-version != '3.14'
         run: uv run --locked --extra dev pytest -q -n 4  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
-      - name: Run tests with branch coverage over the whole package
+      - name: Run tests with branch coverage over the whole package and the eval grader
         if: matrix.python-version == '3.14'
-        run: uv run --locked --extra dev coverage run --branch --source=pyfpa -m pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
+        run: uv run --locked --extra dev coverage run --branch --source=pyfpa,evals -m pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       # The CLI tests run in-process, so this covers pyfpa/cli.py and
       # pyfpa/cli_commands/ as well as the memory, research and portfolio
