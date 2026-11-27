@@ -26,6 +26,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=9.0.3",
+    # Runs the suite on 4 workers in the CI lanes without coverage measurement.
+    "pytest-xdist>=3.8.0",
     # pandas.read_html needs an HTML parser; examples/foxfactory/pull_edgar.py
     # parses the SEC segment footnote with it.
     "lxml>=6.1.0",

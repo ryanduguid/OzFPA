@@ -49,9 +49,9 @@ jobs:
           echo "${SHELLCHECK_SHA256}  shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | sha256sum --check
           tar -xJf "shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
 
-      - name: Shellcheck the commit-msg hook
+      - name: Shellcheck the commit-msg hook and the joined fixtures script
         run: |
-          "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck" -x .githooks/commit-msg
+          "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck" -x .githooks/commit-msg .github/ci/joined-fixtures.sh
 
       - name: Download and verify actionlint
         run: |
@@ -87,7 +87,6 @@ jobs:
         run: uv run --locked --extra dev mypy  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   test:
-    needs: lint
     env:
       UV_PYTHON: ${{ matrix.python-version }}
     timeout-minutes: 15
@@ -149,7 +148,7 @@ jobs:
 
       - name: Run tests
         if: matrix.python-version != '3.14'
-        run: uv run --locked --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
+        run: uv run --locked --extra dev pytest -q -n 4  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
       - name: Run tests with branch coverage over the whole package
         if: matrix.python-version == '3.14'
@@ -187,7 +186,6 @@ jobs:
 
   minimum-resolution:
     name: minimum-resolution (${{ matrix.os }}, ${{ matrix.python-version }})
-    needs: lint
     timeout-minutes: 15
     permissions:
       contents: read
@@ -223,10 +221,9 @@ jobs:
         run: uv audit --locked --no-config --python-version 3.14 --resolution lowest-direct
 
       - name: Run tests at declared minimums
-        run: uv run --locked --resolution lowest-direct --extra dev pytest -q  # NOSONAR: unprivileged job; uv installs the hash-locked set
+        run: uv run --locked --resolution lowest-direct --extra dev pytest -q -n 4  # NOSONAR: unprivileged job; uv installs the hash-locked set
 
   connector-security-windows:
-    needs: lint
     env:
       UV_PYTHON: "3.15"
     timeout-minutes: 10
