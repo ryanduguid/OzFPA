@@ -183,6 +183,26 @@ The OzFPA guides are grouped as how-to and reference pages.
 
 </details>
 
+## Frequently asked questions
+
+**Which PyPI package should I install?**
+Install `au-fpa-pack` on Python 3.14 or newer (`python -m pip install au-fpa-pack`). Its import name is `pyfpa` and its CLI command is `openfpa`. Never install the PyPI package named `pyfpa`, which is an unrelated project.
+
+**Does OzFPA connect to live bank feeds or Xero accounts?**
+No. All calculations, forecasts and MCP tools run locally on files you supply, with no credentials or network calls. For Xero budgets, `pyfpa.io.xero_budget` reads saved JSON responses from `GET /Budgets/{BudgetID}` and `GET /Accounts`.
+
+**Do I need desktop Excel to check the generated workbooks?**
+Yes, to verify live formula recalculation. Python generates the `.xlsx` workbooks without running Excel's calculation engine, so open them in desktop Excel with automatic calculation enabled before relying on calculated outputs.
+
+**How does cross-client learning prevent client data leakage?**
+`pyfpa/portfolio` is default-deny. Mining and validation only propose candidates; nothing enters the shared library until a practitioner records an explicit `PromotionApproval` for that candidate. Read [SECURITY.md](SECURITY.md) and [`skills/fpa-portfolio-learn`](skills/fpa-portfolio-learn/SKILL.md) before promoting anything.
+
+**What does the local MCP server expose?**
+`openfpa mcp-serve <folder>` speaks newline-delimited JSON-RPC 2.0 over stdio and confines every file path to `<folder>`. It exposes `cash13_workbook` (build a 13-week cash forecast workbook) and `variance_summary` (compare modelled and actual amounts).
+
+**Is OzFPA financial or tax advice?**
+No. It is a local planning aid; assumptions, rates, thresholds and funding decisions remain with a qualified practitioner. See [DISCLAIMER.md](DISCLAIMER.md).
+
 ## Licence
 
 Ryan Duguid's original work is licensed under the [Apache License, Version 2.0](LICENSE). Guiderail's upstream code remains under MIT, as recorded in [NOTICE](NOTICE). When redistributing this work or a derivative, preserve the applicable attribution notices in [NOTICE](NOTICE) as required by section 4(d). Versions released before this change keep the licence they were released with.
