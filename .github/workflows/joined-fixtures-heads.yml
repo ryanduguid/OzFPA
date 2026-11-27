@@ -1,0 +1,19 @@
+name: Joined fixtures at companion heads
+
+# The gating joined-fixtures run pins its companions. This weekly run joins
+# this repository's main with both companions' main, so drift between the 3
+# heads shows up before a pin moves. It gates nothing: no branch protection
+# rule or release check names this workflow.
+on:
+  schedule:
+    - cron: "41 6 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  companion-heads:
+    uses: ./.github/workflows/joined-fixtures.yml
+    with:
+      companion-ref: main

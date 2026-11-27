@@ -7,21 +7,64 @@ kind; this is a side-of-the-desk project.
 
 ## Getting set up
 
+CI installs with [uv](https://docs.astral.sh/uv/) from the hash-locked `uv.lock`; do the same:
+
 ```bash
 git clone https://github.com/ryanduguid/OzFPA
 cd OzFPA
-pip install -e ".[dev]"
-ruff check .       # lint and import order, part of the merge gate
-mypy               # strict type check of pyfpa, part of the merge gate
-pytest -q          # the merge gate, and it should be green
-pytest -m network  # the live checks, which fetch RBA CSVs over the internet
+uv sync --locked --extra dev
+uv run --locked --extra dev ruff check .
+uv run --locked --extra dev mypy
+uv run --locked --extra dev pytest -q -n 4
 ```
 
-CI runs `ruff check .` and `mypy` before the test matrix, so a lint or typing
-failure stops the run early. `ruff check . --fix` applies the safe fixes.
+`ruff check . --fix` applies the safe fixes. `mypy` checks against Python 3.14, the
+minimum in `requires-python`; run lint and type checks in a Python 3.14 environment,
+as CI does. Lint and the test lanes start together, so a lint failure does not hide a
+test result.
 
-`mypy` checks against Python 3.14, the minimum in `requires-python`.
-Run lint and type checks in a Python 3.14 environment, as CI does.
+## The checks CI runs
+
+`ci-gates`, `public-fixtures-gates` and `codeql-gates` fail unless every job they cover
+succeeded. These are the commands each job runs (`ci.yml` unless named):
+
+- **lint:** `shellcheck -x .githooks/commit-msg`; `actionlint` over the workflows, with
+  shellcheck on their scripts; `uv run --locked --extra dev ruff check .`;
+  `uv run --locked --extra dev mypy`.
+- **test (3.14):** builds the wheel and imports a fixture from it in a separate
+  environment, away from the checkout; then
+  `uv run --locked --extra dev coverage run --branch --source=pyfpa -m pytest -q` (serial,
+  so coverage sees every test), `uv run --locked --extra dev coverage report --fail-under=100`,
+  `diff-cover coverage.xml --compare-branch=origin/main --branch-coverage --fail-under=100`
+  over `pyfpa/memory/connectors.py` and `pyfpa/memory/workspace.py`, and
+  `uv audit --locked --no-config --python-version 3.14`. Codecov receives the same
+  coverage and requires 100% of the project and of each patch.
+- **test (3.15):** `uv run --locked --extra dev pytest -q -n 4`.
+- **minimum-resolution** (Linux and Windows, Python 3.14):
+  `uv sync --upgrade --resolution lowest-direct --extra dev`, then
+  `uv audit --locked --no-config --python-version 3.14 --resolution lowest-direct` and
+  `uv run --locked --resolution lowest-direct --extra dev pytest -q -n 4`.
+- **connector-security-windows** (Python 3.15):
+  `uv run --locked --extra dev pytest -q tests/test_memory_connectors.py`.
+- **fixture-screen**, in `tools/fixture-screen` on Rust 1.99: `cargo fmt --check`,
+  `cargo clippy --locked --all-targets -- -D warnings`,
+  `cargo deny --locked --config ../../deny.toml check sources` and
+  `cargo test --locked --release`.
+- **fuzzing** (weekly and on demand, not a gate):
+  `python -m pip install --require-hashes --only-binary :all: --requirement requirements-fuzz.txt`,
+  then `python -m fuzz.xero_import fuzz/corpus -max_total_time=60 -max_len=4096 -timeout=2 -rss_limit_mb=1024`.
+- **live-network** (weekly and on demand, not a gate):
+  `uv run --locked --extra dev pytest -m network`.
+- **public-fixtures** (`joined-fixtures.yml`, Linux and Windows): runs
+  `utility_workflows.py` from Accounting Review Pipeline for the close-forecast, quarter,
+  job-cash and grant-cash workflows; see 'The workflow' below.
+- **Analyze (python)** and **Analyze (actions)** (`codeql.yml`): CodeQL, with no build.
+- **secrets** (`secrets.yml`): the shared secrets scan, with this repository's `.gitleaks.toml`.
+- **Attribution policy** (`no-ai-attribution.yml`): refuses AI authorship credit in PR
+  titles, commit trailers and identities. `.githooks/commit-msg` is the local equivalent.
+- Outside pull requests: `scorecard.yml` (weekly OpenSSF Scorecard),
+  `joined-fixtures-heads.yml` (weekly, see below), `release.yml` and `virustotal.yml`
+  (tagged releases).
 
 `pytest.ini` deselects the `network` marker by default, so a Reserve Bank outage or a
 published layout change cannot fail a branch that did not cause it. Run `pytest -m
@@ -43,7 +86,9 @@ and Windows.
 job-to-cash and grant-to-cash examples on weekly scheduled runs, pull requests, pushes to `main` and manual
 runs. Linux and Windows jobs use the proposed FPA checkout with full commit pins for
 Accounting Review Pipeline and Australian Accounting. Update those pins deliberately
-when adopting compatible changes. Each owner runs in a separate process and fresh
+when adopting compatible changes. `joined-fixtures-heads.yml` runs the same jobs weekly
+with both companions at `main`; it gates nothing, and a failure there is the signal to
+look at the drift before moving a pin. Each owner runs in a separate process and fresh
 environment, using its workspace lock where applicable.
 
 The existing [joined example driver](https://github.com/ryanduguid/accounting-review-pipeline/blob/3dcb5304f4c67c01de98b34638999b5f274d1810/packages/monthly-close-control-plane/docs/utility-workflows.md)

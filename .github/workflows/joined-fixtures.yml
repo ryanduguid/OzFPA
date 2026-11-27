@@ -7,6 +7,13 @@ on:
   schedule:
     - cron: "17 6 * * 1"
   workflow_dispatch:
+  # joined-fixtures-heads.yml calls this weekly with both companions at main.
+  workflow_call:
+    inputs:
+      companion-ref:
+        description: Ref for both companion checkouts; empty keeps the pinned commits.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -29,12 +36,13 @@ jobs:
     timeout-minutes: 20
     steps:
       # The current repository uses the event revision, including the PR merge.
-      # Companion commits stay fixed until deliberately updated.
+      # Companion commits stay fixed until deliberately updated; only the
+      # weekly companion-heads call passes another ref.
       - name: Check out accounting-review-pipeline
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ryanduguid/accounting-review-pipeline
-          ref: 5f9730007fd540fd76f3d5a9f6b62162fbc66483
+          ref: ${{ inputs.companion-ref || '5f9730007fd540fd76f3d5a9f6b62162fbc66483' }}
           path: sources/accounting-review-pipeline
           persist-credentials: false
       - name: Check out au-fpa-pack
@@ -46,7 +54,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ryanduguid/australian-accounting
-          ref: f3d749e7e5dfd57e330b4579e6767093fe9985b6
+          ref: ${{ inputs.companion-ref || 'f3d749e7e5dfd57e330b4579e6767093fe9985b6' }}
           path: sources/australian-accounting
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
