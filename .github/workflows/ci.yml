@@ -49,9 +49,9 @@ jobs:
           echo "${SHELLCHECK_SHA256}  shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | sha256sum --check
           tar -xJf "shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
 
-      - name: Shellcheck the commit-msg hook
+      - name: Shellcheck the commit-msg hook and the joined fixtures script
         run: |
-          "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck" -x .githooks/commit-msg
+          "./shellcheck-v${SHELLCHECK_VERSION}/shellcheck" -x .githooks/commit-msg .github/ci/joined-fixtures.sh
 
       - name: Download and verify actionlint
         run: |

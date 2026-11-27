@@ -28,7 +28,7 @@ test result.
 `ci-gates`, `public-fixtures-gates` and `codeql-gates` fail unless every job they cover
 succeeded. These are the commands each job runs (`ci.yml` unless named):
 
-- **lint:** `shellcheck -x .githooks/commit-msg`; `actionlint` over the workflows, with
+- **lint:** `shellcheck -x .githooks/commit-msg .github/ci/joined-fixtures.sh`; `actionlint` over the workflows, with
   shellcheck on their scripts; `uv run --locked --extra dev ruff check .`;
   `uv run --locked --extra dev mypy`.
 - **test (3.14):** builds the wheel and imports a fixture from it in a separate
