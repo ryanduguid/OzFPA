@@ -45,7 +45,7 @@ Keep these three categories apart when reporting or citing a result.
    checks and maintainer observations must not be described as an independent review.
 
 Steps 2 and 4 below also exist as an agent eval case,
-[`evals/lumbridge-cash-trough.json`](../../evals/lumbridge-cash-trough.json), graded by
+[`evals/lumbridge_cash_trough.py`](../../evals/lumbridge_cash_trough.py), graded by
 regular expressions with no model or API key. It is an author-built check in category 1,
 written against this key, and not an independent evaluation.
 

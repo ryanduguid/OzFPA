@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """The Lumbridge eval case: its graders accept the model's answers and refuse wrong ones."""
-import json
+import io
 import re
 import runpy
 from pathlib import Path
@@ -11,10 +11,9 @@ from typing import Any
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-CASE_PATH = ROOT / "evals" / "lumbridge-cash-trough.json"
-CASE = json.loads(CASE_PATH.read_text(encoding="utf-8"))
-GRADER: dict[str, Any] = runpy.run_path(str(ROOT / "evals" / "grade.py"))
+CASE: dict[str, Any] = runpy.run_path(str(ROOT / "evals" / "lumbridge_cash_trough.py"))
 MODEL = ROOT / "examples" / "lumbridge-services" / "models" / "generated" / "lumbridge.py"
+NAMES = [name for name, _ in CASE["GRADERS"]]
 
 
 def money(value: float) -> str:
@@ -39,14 +38,12 @@ def model_reply() -> str:
 
 
 def test_the_model_answer_passes_every_grader() -> None:
-    results = GRADER["grade"](CASE, model_reply())
-    assert [name for name, _ in results] == [grader["name"] for grader in CASE["graders"]]
-    assert all(passed for _, passed in results)
+    assert CASE["grade"](model_reply()) == [(name, True) for name in NAMES]
 
 
 def test_negative_amounts_may_be_written_in_brackets() -> None:
     reply = model_reply().replace("-$25,160", "($25,160)").replace("-$11,960", "($11,960.00)")
-    assert all(passed for _, passed in GRADER["grade"](CASE, reply))
+    assert all(passed for _, passed in CASE["grade"](reply))
 
 
 @pytest.mark.parametrize(("wrong", "right", "failed"), [
@@ -64,34 +61,27 @@ def test_negative_amounts_may_be_written_in_brackets() -> None:
 def test_a_wrong_answer_fails_its_grader(wrong: str, right: str, failed: str) -> None:
     reply = model_reply()
     assert wrong in reply
-    results = dict(GRADER["grade"](CASE, reply.replace(wrong, right)))
-    assert [name for name, passed in results.items() if not passed] == [failed]
+    results = CASE["grade"](reply.replace(wrong, right))
+    assert [name for name, passed in results if not passed] == [failed]
 
 
 def test_the_prompt_withholds_the_key() -> None:
-    prompt = CASE["prompt"]
-    assert CASE["independent"] is False
-    assert "examples/lumbridge-services/REVIEWER-KEY.md" in CASE["withhold"]
+    prompt = CASE["PROMPT"]
+    assert "examples/lumbridge-services/REVIEWER-KEY.md" in CASE["WITHHOLD"]
     assert "Do not open REVIEWER-KEY.md or anything under evals/" in prompt
-    for grader in CASE["graders"]:
-        for answer in re.findall(r"\d{4}-\d{2}-\d{2}|\d{2},\?\d{3}", grader["pattern"]):
+    for _, pattern in CASE["GRADERS"]:
+        for answer in re.findall(r"\d{4}-\d{2}-\d{2}|\d{2},\?\d{3}", pattern.pattern):
             assert answer.replace(",?", ",") not in prompt
             assert answer.replace(",?", "") not in prompt
 
 
-def test_a_case_without_graders_is_refused() -> None:
-    with pytest.raises(ValueError, match="no graders"):
-        GRADER["grade"]({"graders": []}, "anything")
-
-
-def test_main_prints_each_result_and_exits_on_the_outcome(tmp_path: Path,
-                                                           capsys: pytest.CaptureFixture[str]) -> None:
-    reply = tmp_path / "reply.txt"
-    reply.write_text(model_reply(), encoding="utf-8")
-    assert GRADER["main"]([str(CASE_PATH), str(reply)]) == 0
-    assert capsys.readouterr().out.splitlines() == [f"PASS {g['name']}" for g in CASE["graders"]]
-    reply.write_text(model_reply().replace("PROFIT_CHANGED: no", "PROFIT_CHANGED: yes"), encoding="utf-8")
-    assert GRADER["main"]([str(CASE_PATH), str(reply)]) == 1
+def test_main_prints_the_prompt_or_grades_stdin(capsys: pytest.CaptureFixture[str]) -> None:
+    assert CASE["main"](["--prompt"], io.StringIO()) == 0
+    assert capsys.readouterr().out == CASE["PROMPT"] + "\n"
+    assert CASE["main"]([], io.StringIO(model_reply())) == 0
+    assert capsys.readouterr().out.splitlines() == [f"PASS {name}" for name in NAMES]
+    wrong = model_reply().replace("PROFIT_CHANGED: no", "PROFIT_CHANGED: yes")
+    assert CASE["main"]([], io.StringIO(wrong)) == 1
     assert "FAIL profit unchanged by the delay" in capsys.readouterr().out.splitlines()
-    assert GRADER["main"]([]) == 2
+    assert CASE["main"](["reply.txt"], io.StringIO()) == 2
     assert "usage" in capsys.readouterr().err
