@@ -58,33 +58,11 @@ jobs:
           enable-cache: false
       - name: Verify the public fixture workflows
         shell: bash
-        run: |
-          fixture_status=0
-          for workflow in close-forecast quarter job-cash grant-cash; do
-            # Only the grant route reads the grant workpapers, which the pipeline checkout holds.
-            grants=()
-            if [ "$workflow" = grant-cash ]; then
-              grants=(--grants "$GITHUB_WORKSPACE/sources/accounting-review-pipeline/apps/grant-acquittal-workpapers")
-            fi
-            python sources/accounting-review-pipeline/packages/monthly-close-control-plane/examples/utility_workflows.py \
-              --workflow "$workflow" \
-              --fpa "$GITHUB_WORKSPACE/sources/au-fpa-pack" \
-              --accounting "$GITHUB_WORKSPACE/sources/australian-accounting" \
-              "${grants[@]}" \
-              --output "$RUNNER_TEMP/public-fixtures/$workflow/results" \
-              --environment-root "$RUNNER_TEMP/public-fixtures/$workflow/environments" || fixture_status=1
-          done
-          exit "$fixture_status"
+        run: bash sources/au-fpa-pack/.github/ci/joined-fixtures.sh run
       - name: Summarise fixture results
         if: ${{ !cancelled() }}
         shell: bash
-        run: |
-          for workflow in close-forecast quarter job-cash grant-cash; do
-            summary="$RUNNER_TEMP/public-fixtures/$workflow/results/summary.md"
-            if [ -f "$summary" ]; then
-              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
-            fi
-          done
+        run: bash sources/au-fpa-pack/.github/ci/joined-fixtures.sh summary
       - name: Retain fabricated results and failure diagnostics
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
