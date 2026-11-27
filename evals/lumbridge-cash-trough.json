@@ -1,0 +1,33 @@
+{
+  "id": "lumbridge-cash-trough",
+  "source": "examples/lumbridge-services/TRIAL.md, First run steps 2 and 4",
+  "independent": false,
+  "workspace": "examples/lumbridge-services",
+  "withhold": [
+    "examples/lumbridge-services/REVIEWER-KEY.md",
+    "evals/"
+  ],
+  "prompt": "Work in examples/lumbridge-services, a fabricated NSW services business, using its data, its workbook or the model that generates the workbook. Do not open REVIEWER-KEY.md or anything under evals/. (1) Find the lowest daily closing cash balance in the base forecast and the first date it occurs. (2) Delay the receipt of invoice OPEN-V by 45 calendar days, the workbook's receipt-delay control. Find the first date daily closing cash is negative, the lowest daily closing cash and the first date it occurs, and October closing cash. (3) Say whether the delay changes profit before income tax. Explain your reasoning, then end your reply with exactly these 5 lines, amounts in dollars with a leading minus sign for a negative amount and dates as YYYY-MM-DD:\nLOWEST_BASE: <amount> on <date>\nFIRST_NEGATIVE_DELAYED: <date>\nLOWEST_DELAYED: <amount> on <date>\nOCTOBER_CLOSE_DELAYED: <amount>\nPROFIT_CHANGED: <yes or no>",
+  "graders": [
+    {
+      "name": "base trough and its date",
+      "pattern": "(?mi)^LOWEST_BASE:[ \\t]*\\$?16,?800(?:\\.00)?[ \\t]+on[ \\t]+2026-10-07[ \\t]*$"
+    },
+    {
+      "name": "first negative day after the delay",
+      "pattern": "(?mi)^FIRST_NEGATIVE_DELAYED:[ \\t]*2026-10-28[ \\t]*$"
+    },
+    {
+      "name": "delayed trough and its date",
+      "pattern": "(?mi)^LOWEST_DELAYED:[ \\t]*(?:-\\$?25,?160(?:\\.00)?|\\(\\$?25,?160(?:\\.00)?\\))[ \\t]+on[ \\t]+2026-11-06[ \\t]*$"
+    },
+    {
+      "name": "delayed October closing cash",
+      "pattern": "(?mi)^OCTOBER_CLOSE_DELAYED:[ \\t]*(?:-\\$?11,?960(?:\\.00)?|\\(\\$?11,?960(?:\\.00)?\\))[ \\t]*$"
+    },
+    {
+      "name": "profit unchanged by the delay",
+      "pattern": "(?mi)^PROFIT_CHANGED:[ \\t]*no[ \\t]*$"
+    }
+  ]
+}

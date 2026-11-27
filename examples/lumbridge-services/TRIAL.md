@@ -44,6 +44,11 @@ Keep these three categories apart when reporting or citing a result.
    building the case. **None is recorded.** The trial route is retired. Author-run
    checks and maintainer observations must not be described as an independent review.
 
+Steps 2 and 4 below also exist as an agent eval case,
+[`evals/lumbridge-cash-trough.json`](../../evals/lumbridge-cash-trough.json), graded by
+regular expressions with no model or API key. It is an author-built check in category 1,
+written against this key, and not an independent evaluation.
+
 ## First run
 
 If you received the workbook, open it in desktop Excel and enable automatic
